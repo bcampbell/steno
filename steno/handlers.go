@@ -89,7 +89,7 @@ func handleOp(w http.ResponseWriter, req *http.Request) {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
-			fmt.Printf("%d articles tagged\n", changed)
+			dbug.Printf("%d articles tagged\n", changed)
 		}
 		// redirect back to search with same query
 		http.Redirect(w, req, fmt.Sprintf("/?q=%s", url.QueryEscape(queryString)), http.StatusSeeOther)
@@ -102,14 +102,14 @@ func handleOp(w http.ResponseWriter, req *http.Request) {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
-			fmt.Printf("removed tag from %d articles\n", changed)
+			dbug.Printf("removed tag from %d articles\n", changed)
 		}
 		// redirect back to search with same query
 		http.Redirect(w, req, fmt.Sprintf("/?q=%s", url.QueryEscape(queryString)), http.StatusSeeOther)
 		return
 	case "delete":
 		zapped := zap(q)
-		fmt.Printf("deleted %d articles.\n", zapped)
+		dbug.Printf("deleted %d articles.\n", zapped)
 		// redirect back to search with same query
 		http.Redirect(w, req, fmt.Sprintf("/?q=%s", url.QueryEscape(queryString)), http.StatusSeeOther)
 		return
@@ -221,7 +221,7 @@ func handleBulkTag(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 			changed, _ := addTag(q, line[1])
-			fmt.Printf("%s => %d articles tagged %s\n", line[0], changed, line[1])
+			dbug.Printf("%s => %d articles tagged %s\n", line[0], changed, line[1])
 			tagSet[line[1]] = struct{}{}
 		}
 

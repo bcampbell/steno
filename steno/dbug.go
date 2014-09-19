@@ -1,0 +1,49 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"time"
+)
+
+/*
+type Logger interface {
+	Printf(format string, v ...interface{})
+}
+
+type NullLogger struct{}
+
+func (l NullLogger) Printf(format string, v ...interface{}) {
+}
+*/
+
+type dbugLog struct {
+	log *os.File
+}
+
+func NewDbugLog() *dbugLog {
+
+	d := &dbugLog{}
+	f, err := os.Create("stenolog.txt")
+	if err == nil {
+		d.log = f
+	}
+
+	d.Printf("startup %s\n", time.Now().Format("2006-01-02 15:04:05"))
+	return d
+}
+
+func (d *dbugLog) Close() {
+	d.Printf("shutdown %s\n", time.Now().Format("2006-01-02 15:04:05"))
+	if d.log != nil {
+		d.log.Close()
+		d.log = nil
+	}
+}
+
+func (d *dbugLog) Printf(format string, v ...interface{}) {
+	fmt.Fprintf(os.Stderr, format, v...)
+	if d.log != nil {
+		fmt.Fprintf(d.log, format, v...)
+	}
+}
