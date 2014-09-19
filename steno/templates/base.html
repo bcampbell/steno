@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <title>{{template "title" .}}</title>
+  <link href="/style.css" rel="stylesheet"/>
+
+
+</head>
+<body>
+
+
+<header class="site-header">
+
+<h1 class="site-logo"><a href="/">Eurobot Article browser</a></h1>
+<nav>
+<a href="/help">help</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="/bulktag">bulk tag</a>
+</nav>
+</header>
+<div class="site-main">
+{{ template "body" . }}
+</div>
+<footer class="site-footer">
+</footer>
+
+</body>
+</html> 

@@ -1,0 +1,42 @@
+{{define "title"}}Eurobot - {{.Art.Publication.Domain}} - {{.Art.Headline}}{{end}}
+
+{{define "body"}}
+{{with .Art}}
+<h2>{{.Headline}}</h2>
+<table>
+  <tr>
+    <th>Publication</th>
+    <td>{{.Publication.Domain}}</td>
+  </tr>
+  <tr>
+    <th>Published</th>
+    <td>{{.Published}}</td>
+  </tr>
+  <tr>
+    <th>Updated</th>
+    <td>{{.Updated}}</td>
+  </tr>
+  <tr>
+    <th>Authors</th>
+    <td>{{.Authors}}</td>
+  </tr>
+  <tr>
+    <th>Canonical URL</th>
+    <td><a href="{{.CanonicalURL}}">{{.CanonicalURL}}</a></td>
+  </tr>
+  <tr>
+    <th>URLs</th>
+    <td>{{range .URLs}}<a href="{{.}}">{{.}}</a><br/>{{end}}</td>
+  </tr>
+  <tr>
+    <th>Content</th>
+    <td><div class="readable">{{.TextContent}}</div></td>
+  </tr>
+  <tr>
+    <th>Content (raw html)</th>
+    <td><pre>{{.Content}}</pre></td>
+  </tr>
+</table>
+{{end}}
+{{end}}
+

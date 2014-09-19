@@ -1,0 +1,78 @@
+{{define "title"}}Help{{end}}
+
+{{define "body"}}
+<h2>Query Syntax</h2>
+
+<h3>Examples</h3>
+<dl>
+<dt><code>"David cameron" europe tags:blog</code></dt>
+<dd>Blog articles with "David cameron" AND "europe" in the content. Note the use of quotes to include the space.</dd>
+
+<dt><code>headline:"david cameron"</code></dt>
+<dd>All articles with the prime minister's name in the headline.</dd>
+
+<dt><code>headline:(green OR (yellow blue))</code></dt>
+<dd>returns articles with either "green" in the title, or both "yellow" and "blue".</dd>
+
+<dt><code>tags:(grapefruit -citrus)</code></dt>
+<dd>Find articles tagged <code class="tag">grapefruit</code>, but not <code class="tag">citrus</code>.</dd>
+
+<dt><code>tory</code></dt>
+<dd>Equivalent to "<code>content: tory</code>". NOTE: this will match both "tory" and "victory". This will likely change in future.</dt>
+
+<dt><code>published:[2014-01-01 TO 2014-01-31]</code></dt>
+<dd>Articles published during January (the range is inclusive - the start/end dates are included)</dd>
+
+<dt><code>published:[ TO 2014-05-01]</code></dt>
+<dd>Articles published before or on 2014-05-01</dd>
+
+<dt><code>published:[ 2014-05-01 TO ]</code></dt>
+<dd>Articles published on or after 2014-05-01</dd>
+
+<dt><code>content:ukip</code> </dt>
+<dd>All articles containing ukip in the main text (or just plain "<code>ukip</code>" will do, as <code>content</code> is the default field)</dd>
+
+<dt><code>pub:spectator</code></dt>
+<dd>all articles from the spectator</dd>
+
+<dt><code>urls:/commentisfree/ -tags:comment</code></dt>
+<dd>any article with a url containing <code>/commentisfree/</code> URL, and <em>isn't</em> tagged as
+<code class="tag">comment</code>.</dd>
+
+
+<dt><code>headline:="weekly roundup"</code></dt>
+<dd>Match all articles with the exact title "Weekly Roundup" (but not, say, "Bob's weekly roundup").
+The equals sign (<code>=</code>) means that the whole field must match.</dd>
+
+<dt><code>published:=""</code></dt>
+<dd>Match all articles with a blank publication date.</dd>
+
+
+</dl>
+
+
+<h3>Fields</h3>
+
+These are the fields you can query:
+
+<dl>
+  <dt><code>headline</code></dt><dd>The title of the article</dd>
+  <dt><code>content</code></dt><dd>The article text (in html). If no field is specified in a
+    search term, then <code>content</code> is assumed.</dd>
+  <dt><code>authors</code></dt><dd>Authors (can be more than one, and each author can have multiple fields (name, email, twitter etc)</dd>
+  <dt><code>published</code></dt><dd>the date (and, optionally, time) that the article was first published</dd>
+  <dt><code>updated</code></dt><dd>the date (and, optionally, time) that the article was last updated. Might be blank.</dd>
+  <dt><code>tags</code></dt><dd>a list of tags that have been applied to the article</dd>
+  <dt><code>pub</code></dt>
+  <dd>The publication. One of:
+    <ul>
+      {{range .Publications}}<li><code>{{.}}</code></li>{{end}}
+    </ul>
+  </dd>
+  <dt><code>urls</code></dt><dd>the URLs of the article (can be more than one)</dd>
+  <dt><code>canonicalurl</code></dt><dd>the canonical URL of the article (if known)</dd>
+</dl>
+
+{{end}}
+
+

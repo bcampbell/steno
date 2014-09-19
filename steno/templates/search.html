@@ -1,0 +1,122 @@
+{{define "title"}}Articles{{end}}
+
+
+{{define "body"}}
+
+        <form class="searchform" method="GET" action="/">
+          <input type="text" name="q" value="{{.Query}}" />
+          <input type="submit" value="Search" />
+        </form>
+        {{if .Err}}
+        <div><strong>error:</strong> <code>{{.Err}}</code></div>
+        {{end}}
+        <div id="helpers">
+        </div>
+
+        {{if .Arts}}
+
+        <form action="/op" method="POST">
+          <input type="hidden" name="q" value="{{.Query}}" />
+          <div class="tools">
+            <div class="tool result-summary">
+              <strong>{{.Total}} matches</strong>
+              {{if .Clipped}} (showing {{len .Arts}}){{end}}
+            </div>
+            <div class="tool">
+              <a href="/csv?q={{.Query}}">download as .csv</a> 
+            </div>
+            <div class="tool">
+              <a href="/barchart?q={{.Query}}">barchart (by day)</a> 
+            </div>
+            <div class="tool">
+              <select name="op" id="op">
+                <option value="tag">tag</option>
+                <option value="untag">untag</option>
+                <option value="delete">delete</option>
+              </select>
+              <input type="text" id="tag" name="tag" placeholder="enter tag" value="" />
+              <button type="submit">Apply</button>
+            </div>
+          </div>
+
+          <div class="results">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Headline</th>
+                <th>Pub</th>
+                <th>Published</th>
+                <th>URLs</th>
+                <th>Tags</th>
+              </tr>
+            </thead>
+            <tbody>
+          {{range .Arts}}
+          <tr class="art">
+            <td><input name="id" value="{{.ID}}" type="checkbox"></td>
+            <td><a href="/arts/{{.ID}}">{{.Headline}}</a></td>
+            <td>{{.Pub}}</td>
+            <td>{{.Published}}</td>
+            <td>{{range .URLs}}<a href="{{.}}">{{.}}</a><br/>{{end}}</td>
+            <td>{{range .Tags}}<span class="tag tag-{{.}}">{{.}}</span>{{end}}</td>
+          </tr>
+          {{end}}
+            </tbody>
+          </table>
+        </div>
+        <div style="clear:both;"></div>
+      </form>
+      {{end}}
+  <template id="tmpl-twiddler">
+  <div class="twiddler">
+    <span class="placeholder"></span>
+    <button type="button" class="close " aria-hidden="true">&times;</button>
+  </div>
+  </template>
+
+  <template id="tmpl-edit-daterange">
+    <input type="date" name="from" />..<input type="date" name="to" />
+  </template>
+
+  <template id="tmpl-edit-date">
+    <input type="date" name="day" />
+  </template>
+
+  <template id="tmpl-edit-publication">
+    <input name="pub" list="publication-list" placeholder="publication" />
+    <datalist id="publication-list">
+      {{range .Publications}}
+      <option value="{{.}}"></option>
+      {{end}}
+    </datalist>
+  </template>
+
+  <template id="tmpl-helpers">
+  <button type="button" class="btn btn-link helper-addpub">+ publication filter</button>
+  <button type="button" class="btn btn-link helper-addrange">+ date filter</button>
+  </template>
+<script src="/helpers.js"></script>
+<script>
+  toolup(
+    document.getElementById("helpers"),
+    document.querySelector('.searchform input[name="q"]')
+    );
+
+  var opSel = document.getElementById("op");
+  var tagInp = document.getElementById("tag");
+
+  function opChanged() {
+    var op = opSel.value;
+    if( op=="tag" || op=="untag" ) {
+      tagInp.style.display = '';
+    } else {
+      tagInp.style.display = 'none';
+    }
+  };
+  document.getElementById("op").addEventListener("change", opChanged);
+  opChanged();
+
+</script>
+{{end}}
+
