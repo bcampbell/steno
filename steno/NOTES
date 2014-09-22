@@ -1,0 +1,4 @@
+$ GOOS=darwin GOARCH=amd64 go build -o steno_osx
+$ GOOS=windows GOARCH=amd64 go build -o steno_win64.exe
+$ GOOS=windows GOARCH=386 go build -o steno_win32.exe
+

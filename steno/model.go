@@ -32,7 +32,9 @@ func getPublications() ([]string, error) {
 	}
 	var pubs []string
 	for pub, _ := range pubSet {
-		pubs = append(pubs, pub)
+		if pub != "" {
+			pubs = append(pubs, pub)
+		}
 	}
 	sort.Strings(pubs)
 

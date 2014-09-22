@@ -5,8 +5,8 @@
 <h2>{{.Headline}}</h2>
 <table>
   <tr>
-    <th>Publication</th>
-    <td>{{.Publication.Domain}}</td>
+    <th>Pub</th>
+    <td>{{.Pub}} ({{.Publication.Domain}})</td>
   </tr>
   <tr>
     <th>Published</th>
@@ -15,6 +15,14 @@
   <tr>
     <th>Updated</th>
     <td>{{.Updated}}</td>
+  </tr>
+  <tr>
+    <th>Tags</th>
+    <td>{{range .Tags}}<span class="tag tag-{{.}}">{{.}}</span>{{end}}</td>
+  </tr>
+  <tr>
+    <th>KW</th>
+    <td>{{range .KW}}{{.}}, </span>{{end}}</td>
   </tr>
   <tr>
     <th>Authors</th>

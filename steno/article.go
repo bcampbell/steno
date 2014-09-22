@@ -12,6 +12,7 @@ type Article struct {
 	arts.Article `json:",inline"`
 	ID           string   `json:"id"`
 	Pub          string   `json:"pub"`
+	KW           []string `json:"kw"`
 	Tags         []string `json:"tags"`
 }
 

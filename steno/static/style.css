@@ -231,6 +231,25 @@ td:hover {
 }
 */
 
+/* keyword container */
+.kws {
+    max-width: 8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kws:hover {
+    background: #ffc;
+    border: 1px solid #ccc;
+    white-space: normal;
+    position: relative;
+    display: block;
+    max-width: none;
+    overflow: auto;
+}
+
+
 .searchform {
     margin: 0;
 }

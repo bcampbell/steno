@@ -39,21 +39,21 @@ func main() {
 	flag.Parse()
 
 	baseDir := "."
-	if os.Getenv("EUROBOT") != "" {
-		baseDir = path.Join(os.Getenv("EUROBOT"), "browse")
+	if os.Getenv("STENO") != "" {
+		baseDir = os.Getenv("STENO")
 	}
 
-	if flag.NArg() < 1 {
-		fmt.Fprintf(os.Stderr, "no database specified\n")
-		os.Exit(1)
+	var databaseFile string
+	if flag.NArg() > 0 {
+		databaseFile = flag.Arg(0)
+	} else {
+		databaseFile = path.Join(baseDir, "scotref.db")
 	}
-
-	databaseFile := flag.Arg(0)
 
 	var err error
 	coll, err = loadDB(databaseFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error loading db: %s\n", err)
+		dbug.Printf("Error loading db: %s\n", err)
 		os.Exit(1)
 	}
 	coll.EnableAutosave(databaseFile)
@@ -68,7 +68,7 @@ func main() {
 
 	tmpls, err = NewTemplateMgr(path.Join(baseDir, "templates"), templateSources)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		dbug.Printf("%s\n", err)
 		os.Exit(1)
 	}
 	tmpls.Monitor(true)
@@ -78,7 +78,7 @@ func main() {
 	dbug.Printf("fetching list of publications\n")
 	publications, err = getPublications()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error finding publications: %s\n", err)
+		dbug.Printf("Error finding publications: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -90,7 +90,7 @@ func main() {
 		defer wg.Done()
 		err = http.ListenAndServe(fmt.Sprintf(":%d", *port), r)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			dbug.Printf("%s\n", err)
 			os.Exit(1)
 		}
 	}()
@@ -123,7 +123,7 @@ func loadDB(fileName string) (*badger.Collection, error) {
 
 func launch(url string) {
 
-	dbug.Printf("Launch %s\n", url)
+	dbug.Printf("Launching web browser...\n")
 
 	var params []string
 	switch runtime.GOOS {
