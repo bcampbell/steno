@@ -28,6 +28,16 @@ func handleSearch(w http.ResponseWriter, req *http.Request) {
 		performed = true
 	}
 
+	// calculate publication/tag counts
+	pubCnts := map[string]int{}
+	tagCnts := map[string]int{}
+	for _, art := range arts {
+		pubCnts[art.Pub] += 1
+		for _, tag := range art.Tags {
+			tagCnts[tag] += 1
+		}
+	}
+
 	total = len(arts)
 
 	if len(arts) > limit {
@@ -37,6 +47,8 @@ func handleSearch(w http.ResponseWriter, req *http.Request) {
 
 	params := struct {
 		Publications []string
+		PubCnts      map[string]int
+		TagCnts      map[string]int
 		Performed    bool
 		Arts         []*Article
 		Total        int
@@ -45,6 +57,8 @@ func handleSearch(w http.ResponseWriter, req *http.Request) {
 		Query        string
 	}{
 		publications,
+		pubCnts,
+		tagCnts,
 		performed,
 		arts,
 		total,

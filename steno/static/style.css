@@ -257,9 +257,16 @@ td:hover {
 .searchform input[type="text"] {
     width: 80%;
 }
+
+.counts {
+    margin-top: 1rem;
+    -moz-column-width: 12rem;
+    -webkit-column-width: 10rem;
+    display:block;
+}
+
 .results {
     display: block;
-    width: 80%;
 }
 
 .results table {

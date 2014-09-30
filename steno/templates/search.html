@@ -15,6 +15,22 @@
 
         {{if .Arts}}
 
+        {{if .PubCnts}}
+        <div class="counts">
+          {{range $pub,$cnt := .PubCnts}}
+          <div>{{$pub}}: {{$cnt}}</div>
+          {{end}}
+        </div>
+        {{end}}
+        {{if .TagCnts}}
+        <div class="counts">
+          {{range $tag,$cnt := .TagCnts}}
+          <div><span class="tag tag-{{$tag}}">{{$tag}}</span>: {{$cnt}}</div>
+          {{end}}
+        </div>
+        {{end}}
+
+
         <form action="/op" method="POST">
           <input type="hidden" name="q" value="{{.Query}}" />
           <div class="tools">
