@@ -2,27 +2,13 @@
 
 {{define "body"}}
 <h2>Bulk tag</h2>
-<p>Bulk tagging is controlled by csv files with two columns.
-The first column is a query to execute. The second column is the tag to add
-to all articles matching that query.
-</p>
-eg:
-<blockquote>
-<pre>
-query,add
-headline:grapefruit,citrus
-headline:lemon,citrus
-headline:orange,citrus
-</pre>
-</blockquote>
-
-Upon uploading the control file, its queries are run and its tags are applied.
-
-<br/><br/>
 
 <form action="/bulktag" method="POST" enctype="multipart/form-data">
-  <label for="file">Upload a control file:</label><br/>
-  <input type="file" name="file" id="file" /><br/>
+  <p>Pick the script you'd like to run:</p>
+  {{range .Scripts}}
+  <input type="radio" name="script" value="{{.Name}}" id="script_{{.Name}}" />
+  <label for="script_{{.Name}}"><strong>{{.Name}}</strong> - <em>{{.Desc}}</em></label><br/>
+  {{end}}
   <br/>
   <input type="submit" value="Run">
 </form>

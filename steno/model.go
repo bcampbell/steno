@@ -77,28 +77,42 @@ func buildQueryFromIDs(ids []string) (badger.Query, error) {
 	return q, nil
 }
 
-func addTag(q badger.Query, tag string) (int, error) {
+func addTags(q badger.Query, tags []string) (int, error) {
 
 	changed := coll.Update(q, func(doc interface{}) {
 		art := doc.(*Article)
-		for _, t := range art.Tags {
-			if t == tag {
-				return // already got it
-			}
+		// merge tags
+		uniq := map[string]struct{}{}
+		for _, t := range tags {
+			uniq[t] = struct{}{}
 		}
-		art.Tags = append(art.Tags, tag)
+		for _, t := range art.Tags {
+			uniq[t] = struct{}{}
+		}
+
+		newTags := make([]string, 0, len(uniq))
+		for t, _ := range uniq {
+			newTags = append(newTags, t)
+		}
+
+		art.Tags = newTags
 	})
 
 	return changed, nil
 }
 
-func removeTag(q badger.Query, tag string) (int, error) {
+func removeTags(q badger.Query, tags []string) (int, error) {
+
+	toZap := map[string]struct{}{}
+	for _, t := range tags {
+		toZap[t] = struct{}{}
+	}
 
 	changed := coll.Update(q, func(doc interface{}) {
 		art := doc.(*Article)
 		newTags := []string{}
 		for _, t := range art.Tags {
-			if t == tag {
+			if _, got := toZap[t]; !got {
 				continue
 			}
 			newTags = append(newTags, t)

@@ -1,0 +1,10 @@
+# Apply 'citrus' and 'yellow' tags to relevant articles.
+# Still a work in progress.
+# Caveat: doesn't make any fruit/language distinction for 'mandarin'
+
+orange OR tangerine OR mandarin OR pomelo => citrus
+# extra tag for notably yellow fruit
+lemon OR grapefruit => citrus, yellow
+
+# commented out this rule until we have a policy on hybrids
+# rangpur OR kinnow OR "ugli fruit" => citrus

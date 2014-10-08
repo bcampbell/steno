@@ -79,7 +79,17 @@ func handleOp(w http.ResponseWriter, req *http.Request) {
 	queryString := req.FormValue("q")
 	op := strings.ToLower(req.FormValue("op"))
 	ids := req.Form["id"]
-	tag := req.FormValue("tag")
+	tagList := req.FormValue("tag")
+
+	tags := []string{}
+	if tagList != "" {
+		for _, tag := range strings.Split(tagList, ",") {
+			tag = strings.ToLower(strings.TrimSpace(tag))
+			if tag != "" {
+				tags = append(tags, tag)
+			}
+		}
+	}
 
 	// build the query
 	// (if articles were individually selected, that has precedence over query string)
@@ -96,9 +106,9 @@ func handleOp(w http.ResponseWriter, req *http.Request) {
 
 	switch op {
 	case "tag":
-		if tag != "" {
+		if len(tags) > 0 {
 			var changed int
-			changed, err = addTag(q, tag)
+			changed, err = addTags(q, tags)
 			if err != nil {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
@@ -109,9 +119,9 @@ func handleOp(w http.ResponseWriter, req *http.Request) {
 		http.Redirect(w, req, fmt.Sprintf("/?q=%s", url.QueryEscape(queryString)), http.StatusSeeOther)
 		return
 	case "untag":
-		if tag != "" {
+		if len(tags) > 0 {
 			var changed int
-			changed, err = removeTag(q, tag)
+			changed, err = removeTags(q, tags)
 			if err != nil {
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
@@ -210,33 +220,35 @@ func handleHelp(w http.ResponseWriter, req *http.Request) {
 }
 
 func handleBulkTag(w http.ResponseWriter, req *http.Request) {
+
+	scripts, err := loadScripts(path.Join(baseDir, "bulk"))
+	if err != nil {
+		http.Error(w, "error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	if req.Method == "POST" {
-		f, _, err := req.FormFile("file")
-		if err != nil {
-			http.Error(w, "error: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-		r := csv.NewReader(f)
-		lines, err := r.ReadAll()
-		if err != nil {
-			http.Error(w, "error: "+err.Error(), http.StatusInternalServerError)
+		scriptName := req.FormValue("script")
+
+		script, got := scripts[scriptName]
+		if !got {
+			http.Error(w, "error: can't find script "+scriptName, http.StatusInternalServerError)
 			return
 		}
 
 		tagSet := map[string]struct{}{}
 
-		for idx, line := range lines {
-			if idx == 0 {
-				continue // skip label line
-			}
-			q, err := buildQuery(line[0])
+		for _, line := range script.lines {
+			q, err := buildQuery(line.query)
 			if err != nil {
 				http.Error(w, "error: "+err.Error(), http.StatusInternalServerError)
 				return
 			}
-			changed, _ := addTag(q, line[1])
-			dbug.Printf("%s => %d articles tagged %s\n", line[0], changed, line[1])
-			tagSet[line[1]] = struct{}{}
+			changed, _ := addTags(q, line.tags)
+			dbug.Printf("%s => %d articles tagged %v\n", line.query, changed, line.tags)
+			for _, t := range line.tags {
+				tagSet[t] = struct{}{}
+			}
 		}
 
 		// redirect to query showing those tags
@@ -251,7 +263,10 @@ func handleBulkTag(w http.ResponseWriter, req *http.Request) {
 
 	t := tmpls.MustGet("bulktag")
 	params := struct {
-	}{}
+		Scripts map[string]*script
+	}{
+		scripts,
+	}
 	t.Execute(w, params)
 }
 

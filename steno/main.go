@@ -25,6 +25,7 @@ var coll *badger.Collection
 var tmpls *TemplateMgr
 var publications []string
 var dbug *dbugLog
+var baseDir string
 
 func main() {
 
@@ -38,7 +39,7 @@ func main() {
 	var launchBrowser = flag.Bool("launch", true, "launch web browser")
 	flag.Parse()
 
-	baseDir := "."
+	baseDir = "."
 	if os.Getenv("STENO") != "" {
 		baseDir = os.Getenv("STENO")
 	}

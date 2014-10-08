@@ -76,6 +76,40 @@ These are the fields you can query:
   <dt><code>canonicalurl</code></dt><dd>the canonical URL of the article (if known)</dd>
 </dl>
 
+
+<h3>Bulk tag scripts</h3>
+
+<p>Scripts are text files placed in the <code>bulk</code> directory, with a <code>.txt</code> extension
+(if you don't have a decent text editor,
+<a href="http://notepad-plus-plus.org/">Notepad++</a> is free and meant to be pretty good).
+</p>
+
+<p>
+Each line of the script should be of the form:
+<blockquote><code>[QUERY] =&gt; [TAG]</code></blockquote>
+Where [QUERY] is a standard query, and [TAG] the tag to apply to matching articles.
+Multiple tags can be given, separated by commas.
+</p>
+
+<p>Comments begin a hash symbol: '<code>#</code>'. Anything
+after the hash is ignored.</p>
+<p> If the first line of the script has a comment, that comment will be
+used as the scripts description (when listed on the bulk tag page).</p>
+
+<p>Blank lines are ignored.</p>
+<p>a full example:</p>
+<blockquote>
+<code>
+<pre>
+# Tag recent prime ministers
+
+"tony blair" =&gt; recentpm
+"david cameron" =&gt; recentpm,currentpm
+"gordon brown" =&gt; recentpm
+</pre>
+</code>
+</blockquote>
+
 {{end}}
 
 
