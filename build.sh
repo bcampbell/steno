@@ -11,7 +11,7 @@ TARBALL=steno_$STAMP.zip
 mkdir $DEST
 
 pushd steno >/dev/null
-cp -r static templates steno.command $DEST/
+cp -r static templates bulk steno.command $DEST/
 GOOS=darwin GOARCH=amd64 go build -o $DEST/steno
 GOOS=windows GOARCH=amd64 go build -o $DEST/steno.exe
 
