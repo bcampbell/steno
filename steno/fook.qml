@@ -31,9 +31,11 @@ ApplicationWindow {
         Component {
             id: headlineDelegate
             Item {
+                clip: true
                 Text {
+                    anchors.fill: parent
                     color: styleData.textColor
-                    elide: styleData.elideMode
+                    elide: Text.ElideRight
                     text: ctrl.art(styleData.row).article.headline
                 }
             }
@@ -41,7 +43,9 @@ ApplicationWindow {
         Component {
             id: pubDelegate
             Item {
+                clip: true
                 Text {
+                    anchors.fill: parent
                     color: styleData.textColor
                     elide: styleData.elideMode
                     text: ctrl.art(styleData.row).pub
@@ -52,7 +56,11 @@ ApplicationWindow {
         Component {
             id: publishedDelegate
             Item {
+                clip: true
+
+
                 Text {
+                    anchors.fill: parent
                     color: styleData.textColor
                     elide: styleData.elideMode
                     text: ctrl.art(styleData.row).article.published
@@ -63,10 +71,16 @@ ApplicationWindow {
         Component {
             id: urlDelegate
             Item {
+                function asLink(s) {
+                    return '<a href="'+s+'">'+s+'</a>';
+                }
+                clip: true
                 Text {
+                    anchors.fill: parent
                     color: styleData.textColor
-                    elide: styleData.elideMode
-                    text: ctrl.art(styleData.row).article.canonicalURL
+                    elide: Text.ElideMiddle
+                    text: asLink(ctrl.art(styleData.row).article.canonicalURL)
+                        
                 }
             }
         }
@@ -80,11 +94,12 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 id: mainView
+                selectionMode: SelectionMode.ExtendedSelection
                 model: ctrl.len
                 TableViewColumn{ role: "headline"  ; title: "Title" ; width: 100; delegate: headlineDelegate }
                 TableViewColumn{ role: "pub"  ; title: "Publication" ; width: 100; delegate: pubDelegate }
                 TableViewColumn{ role: "published"  ; title: "Published" ; width: 100; delegate: publishedDelegate }
                 TableViewColumn{ role: "url" ; title: "URL" ; width: 200; delegate: urlDelegate  }
             }
-    }
+        }
 }
