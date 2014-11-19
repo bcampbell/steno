@@ -5,13 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"github.com/bcampbell/badger"
-	"net/http"
+	"gopkg.in/qml.v1"
 	"os"
 	"os/exec"
 	"path"
 	"runtime"
-	"sync"
-	"time"
 )
 
 func usage() {
@@ -28,21 +26,27 @@ var dbug *dbugLog
 var baseDir string
 
 func main() {
+	if err := qml.Run(run); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+}
 
+type Control struct {
+	arts ArtList
+	Len  int
+}
+
+func (ctrl *Control) Art(idx int) *Article {
+	return ctrl.arts[idx]
+}
+func (ctrl *Control) Poop(idx int) string {
+	return ctrl.arts[idx].Headline
+}
+
+func run() error {
 	dbug = NewDbugLog()
 	defer dbug.Close()
-
-	//	gob.Register(Article{})
-
-	flag.Usage = usage
-	var port = flag.Int("port", 8080, "port to run on")
-	var launchBrowser = flag.Bool("launch", true, "launch web browser")
-	flag.Parse()
-
-	baseDir = "."
-	if os.Getenv("STENO") != "" {
-		baseDir = os.Getenv("STENO")
-	}
 
 	var databaseFile string
 	if flag.NArg() > 0 {
@@ -59,21 +63,6 @@ func main() {
 	}
 	coll.EnableAutosave(databaseFile)
 
-	templateSources := map[string][]string{
-		"search":   {"base.html", "search.html"},
-		"art":      {"base.html", "art.html"},
-		"help":     {"base.html", "help.html"},
-		"bulktag":  {"base.html", "bulktag.html"},
-		"barchart": {"base.html", "barchart.html"},
-	}
-
-	tmpls, err = NewTemplateMgr(path.Join(baseDir, "templates"), templateSources)
-	if err != nil {
-		dbug.Printf("%s\n", err)
-		os.Exit(1)
-	}
-	tmpls.Monitor(true)
-
 	// create database
 
 	dbug.Printf("fetching list of publications\n")
@@ -83,27 +72,41 @@ func main() {
 		os.Exit(1)
 	}
 
-	r := buildRouter(baseDir)
+	// GUI startup
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err = http.ListenAndServe(fmt.Sprintf(":%d", *port), r)
-		if err != nil {
-			dbug.Printf("%s\n", err)
-			os.Exit(1)
-		}
-	}()
+	ctrl := &Control{}
 
-	dbug.Printf("running at http://localhost:%d\n", *port)
-	if *launchBrowser {
-		time.Sleep(100 * time.Millisecond)
-		serverURL := fmt.Sprintf("http://localhost:%d", *port)
-		launch(serverURL)
+	engine := qml.NewEngine()
+	ctx := engine.Context()
+	ctx.SetVar("ctrl", ctrl)
+
+	component, err := engine.LoadFile("fook.qml")
+	if err != nil {
+		return err
 	}
+	/*
+		for i := 0; i < 1000000; i++ {
+			d := &Doc{Headline: fmt.Sprintf("Headline %d", i), Author: fmt.Sprintf("fred%d bloggs", i)}
+			docs.list = append(docs.list, d)
+		}
+		docs.Len = len(docs.list)
+		qml.Changed(docs, &docs.Len)
+	*/
 
-	wg.Wait()
+	// set the query
+	ctrl.arts, err = allArts()
+	if err != nil {
+		dbug.Printf("Error in allArts(): %s\n", err)
+		os.Exit(1)
+	}
+	ctrl.Len = len(ctrl.arts)
+	fmt.Printf("%d\n", ctrl.Len)
+	qml.Changed(ctrl, &ctrl.Len)
+
+	window := component.CreateWindow(nil)
+	window.Show()
+	window.Wait()
+	return nil
 }
 
 func loadDB(fileName string) (*badger.Collection, error) {
@@ -122,7 +125,7 @@ func loadDB(fileName string) (*badger.Collection, error) {
 	return db, nil
 }
 
-func launch(url string) {
+func openURL(url string) {
 
 	dbug.Printf("Launching web browser...\n")
 

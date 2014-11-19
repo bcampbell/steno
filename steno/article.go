@@ -30,3 +30,14 @@ func (art *Article) TextContent() template.HTML {
 	return template.HTML(txt)
 
 }
+
+func (art *Article) URL() string {
+	if art.CanonicalURL != "" {
+		return art.CanonicalURL
+	}
+
+	if len(art.URLs) > 0 {
+		return art.URLs[0]
+	}
+	return ""
+}

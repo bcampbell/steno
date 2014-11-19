@@ -7,6 +7,8 @@ import (
 	"sort"
 )
 
+type ArtList []*Article
+
 type byPublished []*Article
 
 func (s byPublished) Len() int {
@@ -53,14 +55,25 @@ func getArtByID(objID string) *Article {
 	return results[0]
 }
 
+//standin - return all articles
+func allArts() (ArtList, error) {
+	q := badger.NewAllQuery()
+	var arts ArtList
+	coll.Find(q, &arts)
+
+	sort.Sort(byPublished(arts))
+
+	return arts, nil
+}
+
 // search performs a search and returns the results
-func search(queryString string) ([]*Article, error) {
+func search(queryString string) (ArtList, error) {
 	q, err := query.Parse(queryString, coll.ValidFields(), defaultField)
 	if err != nil {
 		return nil, err
 	}
 
-	var arts []*Article
+	var arts ArtList
 	coll.Find(q, &arts)
 
 	sort.Sort(byPublished(arts))
