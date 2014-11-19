@@ -1,5 +1,11 @@
 package main
 
+// #cgo pkg-config: Qt5Core Qt5Widgets Qt5Quick
+import "C"
+
+// previous gubbins needed to force the app to compile with cgo, and to make sure
+// the linker gets the right -L path passed in
+
 import (
 	//	"encoding/gob"
 	"flag"
