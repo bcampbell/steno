@@ -88,4 +88,14 @@ func (ctrl *Control) LoadDB(fileName string) {
 	if err != nil {
 		dbug.Printf("loadDB error: %s\n", err)
 	}
+	// populate the initial query
+	ctrl.arts, err = allArts()
+	if err != nil {
+		dbug.Printf("Query error: %s\n", err)
+	}
+	ctrl.Len = len(ctrl.arts)
+	ctrl.TotalArts = coll.Count()
+	qml.Changed(ctrl, &ctrl.Len)
+
+	dbug.Printf("Load complete\n")
 }

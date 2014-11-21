@@ -35,7 +35,7 @@ ApplicationWindow {
         onAccepted: {
             console.log("You chose: " + toLocalFile(openDialog.fileUrl))
             ctrl.loadDB(toLocalFile(openDialog.fileUrl))
-            
+             
         }
         onRejected: {
             console.log("Canceled")
@@ -47,16 +47,25 @@ ApplicationWindow {
         id: openFile
         //iconSource: "images/fileopen.png"
         text: "Open..."
+        shortcut: StandardKey.Open
         onTriggered: openDialog.open()
+    }
+    Action {
+        id: close
+        //iconSource: "images/fileopen.png"
+        text: "Close"
+        shortcut: StandardKey.Close
+        onTriggered: window.close()
     }
 
     menuBar: MenuBar {
         Menu {
             title: "File"
-            MenuItem { action: openFile }
             MenuItem {
-                text: "Close"
-                shortcut: StandardKey.Close
+                action: openFile
+            }
+            MenuItem {
+                action: close
             }
         }
     }
@@ -119,38 +128,70 @@ ApplicationWindow {
             Text {
                 anchors.fill: parent
                 color: styleData.textColor
-                elide: Text.ElideMiddle
+                elide: Text.ElideRight
                 text: asLink(ctrl.art(styleData.row).article.canonicalURL)
                     
             }
         }
     }
-    ColumnLayout {
+
+
+    SplitView {
         anchors.fill: parent
-        TextField {
-            objectName: "query"
-            Layout.fillWidth: true
-            text: ""
-            // TODO: no reason we can't validate the query properly
-            onEditingFinished: ctrl.setQuery(text)
-        }
-        Text {
-            text: "" + ctrl.len + " matching articles (of " + ctrl.totalArts + ")"
-        }
-        TableView {
+        orientation: Qt.Vertical
+        ColumnLayout {
+            //anchors.fill: parent
             Layout.fillHeight: true
-            Layout.fillWidth: true
-            objectName: "artlist"
-            selectionMode: SelectionMode.ExtendedSelection
-            model: ctrl.len
-            TableViewColumn{ role: "headline"  ; title: "headline" ; width: 100; delegate: headlineDelegate }
-            TableViewColumn{ role: "pub"  ; title: "pub" ; width: 100; delegate: pubDelegate }
-            TableViewColumn{ role: "published"  ; title: "published" ; width: 100; delegate: publishedDelegate }
-            TableViewColumn{ role: "url" ; title: "url" ; width: 200; delegate: urlDelegate  }
+            TextField {
+                objectName: "query"
+                Layout.fillWidth: true
+                text: ""
+                // TODO: no reason we can't validate the query properly
+                onEditingFinished: ctrl.setQuery(text)
+            }
+            Text {
+                text: "" + ctrl.len + " matching articles (of " + ctrl.totalArts + ")"
+            }
+
+
+            TableView {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                objectName: "artlist"
+                selectionMode: SelectionMode.ExtendedSelection
+                model: ctrl.len
+
+                onClicked: artInfo.showArt(ctrl.art(row))
+                TableViewColumn{ role: "headline"  ; title: "headline" ; width: 400; delegate: headlineDelegate }
+                TableViewColumn{ role: "pub"  ; title: "pub" ; width: 100; delegate: pubDelegate }
+                TableViewColumn{ role: "published"  ; title: "published" ; width: 100; delegate: publishedDelegate }
+                TableViewColumn{ role: "url" ; title: "url" ; width: 400; delegate: urlDelegate  }
+            }
+        }
+
+        Item {
+            id: artInfo
+            Layout.minimumHeight: 100
+            function showArt(art) {
+               content.text = art.article.content 
+            }
+            Text {
+                id: content 
+//                width: artInfo.width
+                anchors.fill: parent
+                anchors.margins: 16
+                text: ""
+
+
+                wrapMode: Text.WordWrap
+                textFormat: Text.StyledText
+            }
+            
         }
     }
 
-
-
-
 }
+
+
+
+

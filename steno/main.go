@@ -10,6 +10,7 @@ import (
 	//	"encoding/gob"
 	"flag"
 	"fmt"
+	//"github.com/bcampbell/arts/arts"
 	"github.com/bcampbell/badger"
 	"gopkg.in/qml.v1"
 	"os"
@@ -62,6 +63,15 @@ func run() error {
 	*/
 
 	coll = badger.NewCollection(&Article{})
+	/*
+		dummyArts := []*Article{
+			&Article{Article: arts.Article{Headline: "Dummy article 1", CanonicalURL: "http://example.com/art1", Published: "2014-01-01"}, Pub: "dailyfilth"},
+		}
+
+		for _, dummyArt := range dummyArts {
+			coll.Put(dummyArt)
+		}
+	*/
 
 	dbug.Printf("fetching list of publications\n")
 	publications, err = getPublications()
