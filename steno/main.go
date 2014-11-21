@@ -14,7 +14,7 @@ import (
 	"gopkg.in/qml.v1"
 	"os"
 	"os/exec"
-	"path"
+	//	"path"
 	"runtime"
 )
 
@@ -38,38 +38,30 @@ func main() {
 	}
 }
 
-type Control struct {
-	arts ArtList
-	Len  int
-}
-
-func (ctrl *Control) Art(idx int) *Article {
-	return ctrl.arts[idx]
-}
-func (ctrl *Control) Poop(idx int) string {
-	return ctrl.arts[idx].Headline
-}
-
 func run() error {
 	dbug = NewDbugLog()
 	defer dbug.Close()
 
-	var databaseFile string
-	if flag.NArg() > 0 {
-		databaseFile = flag.Arg(0)
-	} else {
-		databaseFile = path.Join(baseDir, "scotref.db")
-	}
-
+	/*
+		var databaseFile string
+		if flag.NArg() > 0 {
+			databaseFile = flag.Arg(0)
+		} else {
+			databaseFile = path.Join(baseDir, "scotref.db")
+		}
+	*/
 	var err error
-	coll, err = loadDB(databaseFile)
-	if err != nil {
-		dbug.Printf("Error loading db: %s\n", err)
-		os.Exit(1)
-	}
-	coll.EnableAutosave(databaseFile)
-
 	// create database
+	/*
+		coll, err = loadDB(databaseFile)
+		if err != nil {
+			dbug.Printf("Error loading db: %s\n", err)
+			os.Exit(1)
+		}
+		coll.EnableAutosave(databaseFile)
+	*/
+
+	coll = badger.NewCollection(&Article{})
 
 	dbug.Printf("fetching list of publications\n")
 	publications, err = getPublications()
@@ -79,16 +71,10 @@ func run() error {
 	}
 
 	// GUI startup
-
-	ctrl := &Control{}
-
-	engine := qml.NewEngine()
-	ctx := engine.Context()
-	ctx.SetVar("ctrl", ctrl)
-
-	component, err := engine.LoadFile("fook.qml")
+	ctrl, err := NewControl()
 	if err != nil {
-		return err
+		dbug.Printf("Error starting GUI: %s\n", err)
+		os.Exit(1)
 	}
 	/*
 		for i := 0; i < 1000000; i++ {
@@ -99,19 +85,7 @@ func run() error {
 		qml.Changed(docs, &docs.Len)
 	*/
 
-	// set the query
-	ctrl.arts, err = allArts()
-	if err != nil {
-		dbug.Printf("Error in allArts(): %s\n", err)
-		os.Exit(1)
-	}
-	ctrl.Len = len(ctrl.arts)
-	fmt.Printf("%d\n", ctrl.Len)
-	qml.Changed(ctrl, &ctrl.Len)
-
-	window := component.CreateWindow(nil)
-	window.Show()
-	window.Wait()
+	ctrl.Window.Wait()
 	return nil
 }
 
