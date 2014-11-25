@@ -130,5 +130,4 @@ func (ctrl *Control) LoadDB(fileName string) {
 			dbug.Printf("debadger error: %s\n", err)
 		}
 	*/
-	dbug.Printf("Load complete\n")
 }

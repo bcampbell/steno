@@ -17,10 +17,8 @@ func debadger(srcArts ArtList, outFile string) error {
 
 	// TODO:
 	// Authors
-	// URLs
 	// Publication
 	// Keywords
-	// Tags
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS article (
          id INTEGER PRIMARY KEY,
          canonical_url TEXT NOT NULL,
@@ -33,20 +31,66 @@ func debadger(srcArts ArtList, outFile string) error {
 		return err
 	}
 
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS article_tag (
+         id INTEGER PRIMARY KEY,
+         article_id INTEGER NOT NULL,   -- should be foreign key
+         tag TEXT NOT NULL )`)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS article_url (
+         id INTEGER PRIMARY KEY,
+         article_id INTEGER NOT NULL,   -- should be foreign key
+         url TEXT NOT NULL )`)
+	if err != nil {
+		return err
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	stmt, err := tx.Prepare("insert into article(canonical_url, headline, content,published,updated,pub) values(?,?,?,?,?,?)")
+	artStmt, err := tx.Prepare("insert into article(canonical_url, headline, content,published,updated,pub) values(?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer artStmt.Close()
+
+	urlStmt, err := tx.Prepare("insert into article_url(article_id,url) values(?,?)")
+	if err != nil {
+		return err
+	}
+	defer urlStmt.Close()
+
+	tagStmt, err := tx.Prepare("insert into article_tag(article_id,tag) values(?,?)")
+	if err != nil {
+		return err
+	}
+	defer tagStmt.Close()
+
 	for _, art := range srcArts {
-		_, err = stmt.Exec(art.CanonicalURL, art.Headline, art.Content, art.Published, art.Updated, art.Pub)
+		var result sql.Result
+		result, err = artStmt.Exec(art.CanonicalURL, art.Headline, art.Content, art.Published, art.Updated, art.Pub)
 		if err != nil {
 			return err
 		}
+		artID, err := result.LastInsertId()
+		if err != nil {
+			return err
+		}
+		for _, u := range art.URLs {
+			_, err = urlStmt.Exec(artID, u)
+			if err != nil {
+				return err
+			}
+		}
+		for _, tag := range art.Tags {
+			_, err = tagStmt.Exec(artID, tag)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 	err = tx.Commit()
 	if err != nil {
@@ -62,11 +106,13 @@ func enbadger(inFile string) (ArtList, error) {
 	}
 	defer db.Close()
 
+	tab := map[int]*Article{}
+
 	rows, err := db.Query("SELECT id,canonical_url,headline,content,published,updated,pub FROM article")
 	if err != nil {
 		return nil, err
 	}
-	out := ArtList{}
+
 	for rows.Next() {
 		a := &Article{}
 		var id int
@@ -74,13 +120,62 @@ func enbadger(inFile string) (ArtList, error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(id, a.Headline)
-		out = append(out, a)
+		tab[id] = a
 	}
 	err = rows.Err()
 	if err != nil {
 		return nil, err
 	}
 
+	//
+	fmt.Printf(" reading urls...\n")
+
+	rows, err = db.Query("SELECT article_id,url FROM article_url")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID int
+		var u string
+		err = rows.Scan(&artID, &u)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.URLs = append(art.URLs, u)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf(" reading tags...\n")
+	rows, err = db.Query("SELECT article_id,tag FROM article_tag")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID int
+		var tag string
+		err = rows.Scan(&artID, &tag)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.Tags = append(art.Tags, tag)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf(" done.\n")
+
+	out := ArtList{}
+	for _, a := range tab {
+		out = append(out, a)
+	}
 	return out, nil
 }
