@@ -19,6 +19,8 @@ import QtQuick.Dialogs 1.0
 
 ApplicationWindow {
     id: window
+    width: 900
+    height: 600
 
     title: "Steno"
     visible: true
