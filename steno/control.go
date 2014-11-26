@@ -9,7 +9,7 @@ import (
 type Control struct {
 	Window *qml.Window
 
-	currentQuery string
+	CurrentQuery string
 	arts         ArtList
 	Len          int
 	TotalArts    int
@@ -57,10 +57,10 @@ func (ctrl *Control) Art(idx int) *Article {
 // TODO: provide a function to validate query...
 
 func (ctrl *Control) SetQuery(q string) {
-	if ctrl.currentQuery == q {
+	if ctrl.CurrentQuery == q {
 		return
 	}
-	ctrl.currentQuery = q
+	ctrl.CurrentQuery = q
 
 	fmt.Printf("SetQuery(%s)\n", q)
 	var err error
@@ -130,4 +130,34 @@ func (ctrl *Control) LoadDB(fileName string) {
 			dbug.Printf("debadger error: %s\n", err)
 		}
 	*/
+}
+
+func (ctrl *Control) AddTag(artIndices []int, tag string) {
+
+	cnt := 0
+	for _, artIdx := range artIndices {
+		art := ctrl.arts[artIdx]
+		if art.AddTag(tag) {
+			cnt++
+		}
+	}
+	dbug.Printf("addTag(%s): changed %d articles\n", tag, cnt)
+
+	// TODO: signal changed arts instead of whole list
+	qml.Changed(ctrl, &ctrl.Len)
+}
+
+func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
+	dbug.Printf("removeTag(%s)\n", tag)
+	cnt := 0
+	for _, artIdx := range artIndices {
+		art := ctrl.arts[artIdx]
+		if art.RemoveTag(tag) {
+			cnt++
+
+		}
+	}
+	dbug.Printf("removeTag(%s): changed %d articles\n", tag, cnt)
+	// TODO: signal changed arts instead of whole list
+	qml.Changed(ctrl, &ctrl.Len)
 }

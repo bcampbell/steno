@@ -167,13 +167,28 @@ ApplicationWindow {
             }
             RowLayout {
                 Text {
-                    text: "" + ctrl.len + " matching articles (of " + ctrl.totalArts + "), " + artList.selection.count + " selected"
+                    text: "" + ctrl.len + " matching articles (of " + ctrl.totalArts + ")"
                 }
                 TextField {
                     id: tagEntry
                     objectName: "tagEntry"
                     text: ""
                     placeholderText: "tag"
+                }
+                Button {
+                    id: buttonAddTag
+                    enabled: artList.selection.count > 0 && tagEntry.text!=""
+                    text: "add tag"
+                    onClicked: ctrl.addTag(artList.selectedArts(), tagEntry.text)
+                }
+                Button {
+                    id: buttonRemoveTag
+                    enabled: artList.selection.count > 0 && tagEntry.text!=""
+                    text: "remove tag"
+                    onClicked: ctrl.removeTag(artList.selectedArts(), tagEntry.text)
+                }
+                Text {
+                    text: "" + artList.selection.count + " articles selected"
                 }
             }
 
@@ -185,13 +200,18 @@ ApplicationWindow {
                 objectName: "artlist"
                 selectionMode: SelectionMode.ExtendedSelection
                 model: ctrl.len
+                function selectedArts() {
+                    var sel = [];
+                    selection.forEach( function(rowIndex) { sel.push(rowIndex)} )
+                    return sel
+                }
 
                 onClicked: artInfo.showArt(ctrl.art(row))
                 TableViewColumn{ role: "headline"  ; title: "headline" ; width: 400; delegate: headlineDelegate }
                 TableViewColumn{ role: "pub"  ; title: "pub" ; width: 100; delegate: pubDelegate }
                 TableViewColumn{ role: "published"  ; title: "published" ; width: 100; delegate: publishedDelegate }
+                TableViewColumn{ role: "tags" ; title: "tags" ; width: 100; delegate: tagsDelegate  }
                 TableViewColumn{ role: "url" ; title: "url" ; width: 400; delegate: urlDelegate  }
-                TableViewColumn{ role: "tags" ; title: "tags" ; width: 400; delegate: tagsDelegate  }
             }
         }
 
