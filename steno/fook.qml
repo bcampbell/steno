@@ -137,6 +137,19 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: tagsDelegate
+        Item {
+            clip: true
+            Text {
+                anchors.fill: parent
+                color: styleData.textColor
+                elide: Text.ElideRight
+                text: ctrl.art(styleData.row).tagsString()
+            }
+        }
+    }
+
 
     SplitView {
         anchors.fill: parent
@@ -148,15 +161,25 @@ ApplicationWindow {
                 objectName: "query"
                 Layout.fillWidth: true
                 text: ""
+                placeholderText: "filter"
                 // TODO: no reason we can't validate the query properly
                 onEditingFinished: ctrl.setQuery(text)
             }
-            Text {
-                text: "" + ctrl.len + " matching articles (of " + ctrl.totalArts + ")"
+            RowLayout {
+                Text {
+                    text: "" + ctrl.len + " matching articles (of " + ctrl.totalArts + "), " + artList.selection.count + " selected"
+                }
+                TextField {
+                    id: tagEntry
+                    objectName: "tagEntry"
+                    text: ""
+                    placeholderText: "tag"
+                }
             }
 
 
             TableView {
+                id: artList
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 objectName: "artlist"
@@ -168,6 +191,7 @@ ApplicationWindow {
                 TableViewColumn{ role: "pub"  ; title: "pub" ; width: 100; delegate: pubDelegate }
                 TableViewColumn{ role: "published"  ; title: "published" ; width: 100; delegate: publishedDelegate }
                 TableViewColumn{ role: "url" ; title: "url" ; width: 400; delegate: urlDelegate  }
+                TableViewColumn{ role: "tags" ; title: "tags" ; width: 400; delegate: tagsDelegate  }
             }
         }
 

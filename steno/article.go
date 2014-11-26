@@ -1,9 +1,9 @@
 package main
 
 import (
-	"golang.org/x/net/html"
 	"github.com/bcampbell/arts/arts"
 	"github.com/bcampbell/htmlutil"
+	"golang.org/x/net/html"
 	"html/template"
 	"strings"
 )
@@ -40,4 +40,8 @@ func (art *Article) URL() string {
 		return art.URLs[0]
 	}
 	return ""
+}
+
+func (art *Article) TagsString() string {
+	return strings.Join(art.Tags, " ")
 }
