@@ -40,18 +40,13 @@ func main() {
 }
 
 func run() error {
+	flag.Parse()
 	dbug = NewDbugLog()
 	defer dbug.Close()
 
-	/*
-		var databaseFile string
-		if flag.NArg() > 0 {
-			databaseFile = flag.Arg(0)
-		} else {
-			databaseFile = path.Join(baseDir, "scotref.db")
-		}
-	*/
 	var err error
+
+	coll = badger.NewCollection(&Article{})
 	// create database
 	/*
 		coll, err = loadDB(databaseFile)
@@ -62,7 +57,6 @@ func run() error {
 		coll.EnableAutosave(databaseFile)
 	*/
 
-	coll = badger.NewCollection(&Article{})
 	/*
 		dummyArts := []*Article{
 			&Article{Article: arts.Article{Headline: "Dummy article 1", CanonicalURL: "http://example.com/art1", Published: "2014-01-01"}, Pub: "dailyfilth"},
@@ -85,6 +79,10 @@ func run() error {
 	if err != nil {
 		dbug.Printf("Error starting GUI: %s\n", err)
 		os.Exit(1)
+	}
+	if flag.NArg() > 0 {
+		dbFilename := flag.Arg(0)
+		ctrl.LoadDB(dbFilename)
 	}
 	/*
 		for i := 0; i < 1000000; i++ {
