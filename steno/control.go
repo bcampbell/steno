@@ -52,6 +52,12 @@ func NewControl() (*Control, error) {
 	return ctrl, nil
 }
 
+func (ctrl *Control) Close() {
+	dbug.Printf("Close db\n")
+	ctrl.store.Close()
+	ctrl.Window.Hide()
+}
+
 func (ctrl *Control) Art(idx int) *Article {
 	return ctrl.arts[idx]
 }
@@ -134,30 +140,33 @@ func (ctrl *Control) SetDB(fileName string) {
 
 func (ctrl *Control) AddTag(artIndices []int, tag string) {
 
-	cnt := 0
+	arts := ArtList{}
 	for _, artIdx := range artIndices {
-		art := ctrl.arts[artIdx]
-		if art.AddTag(tag) {
-			cnt++
-		}
+		arts = append(arts, ctrl.arts[artIdx])
 	}
-	dbug.Printf("addTag(%s): changed %d articles\n", tag, cnt)
+	affected, err := ctrl.store.AddTag(arts, tag)
+	if err != nil {
+		dbug.Printf("AddTag(%s): ERROR: %s\n", tag, err)
+	} else {
+		dbug.Printf("AddTag(%s): %d affected\n", tag, len(affected))
+	}
 
 	// TODO: signal changed arts instead of whole list
 	ctrl.forceArtsRefresh()
 }
 
 func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
-	dbug.Printf("removeTag(%s)\n", tag)
-	cnt := 0
+	arts := ArtList{}
 	for _, artIdx := range artIndices {
-		art := ctrl.arts[artIdx]
-		if art.RemoveTag(tag) {
-			cnt++
-
-		}
+		arts = append(arts, ctrl.arts[artIdx])
 	}
-	dbug.Printf("removeTag(%s): changed %d articles\n", tag, cnt)
+	affected, err := ctrl.store.RemoveTag(arts, tag)
+	if err != nil {
+		dbug.Printf("RemoveTag(%s): ERROR: %s\n", tag, err)
+	} else {
+		dbug.Printf("RemoveTag(%s): %d affected\n", tag, len(affected))
+	}
+
 	// TODO: signal changed arts instead of whole list
 	ctrl.forceArtsRefresh()
 }

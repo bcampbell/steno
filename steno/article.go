@@ -60,7 +60,6 @@ func (art *Article) TagsString() string {
 }
 
 func (art *Article) AddTag(tag string) bool {
-	tag = strings.ToLower(tag)
 	for _, t := range art.Tags {
 		if t == tag {
 			return false // already got it
@@ -71,7 +70,6 @@ func (art *Article) AddTag(tag string) bool {
 }
 
 func (art *Article) RemoveTag(tag string) bool {
-	tag = strings.ToLower(tag)
 	dirtied := false
 	newTags := []string{}
 	for _, t := range art.Tags {

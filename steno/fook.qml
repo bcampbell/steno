@@ -57,7 +57,7 @@ ApplicationWindow {
         //iconSource: "images/fileopen.png"
         text: "Close"
         shortcut: StandardKey.Close
-        onTriggered: window.close()
+        onTriggered: ctrl.close()
     }
 
     menuBar: MenuBar {

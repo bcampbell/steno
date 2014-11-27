@@ -9,6 +9,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"regexp"
 	"sort"
+	"strings"
 )
 
 type ArtList []*Article
@@ -192,12 +193,11 @@ func (store *Store) readAllArts() (ArtList, error) {
 
 	for rows.Next() {
 		a := &Article{}
-		var id int
-		err = rows.Scan(&id, &a.CanonicalURL, &a.Headline, &a.Content, &a.Published, &a.Updated, &a.Pub)
+		err = rows.Scan(&a.ID, &a.CanonicalURL, &a.Headline, &a.Content, &a.Published, &a.Updated, &a.Pub)
 		if err != nil {
 			return nil, err
 		}
-		tab[id] = a
+		tab[a.ID] = a
 	}
 	err = rows.Err()
 	if err != nil {
@@ -288,6 +288,97 @@ func fileNameFromQuery(q string) string {
 	f = spc.ReplaceAllString(f, "_")
 	f = chars.ReplaceAllString(f, "")
 	return f
+}
+
+func (store *Store) AddTag(arts ArtList, tag string) (ArtList, error) {
+	tag = strings.ToLower(tag)
+
+	if store.db == nil {
+		return ArtList{}, nil
+	}
+
+	// apply to db
+	tx, err := store.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	delStmt, err := tx.Prepare("DELETE FROM article_tag WHERE article_id=? AND tag=?")
+	if err != nil {
+		return nil, err
+	}
+	defer delStmt.Close()
+	insStmt, err := tx.Prepare("INSERT INTO article_tag(article_id,tag) VALUES(?,?)")
+	if err != nil {
+		return nil, err
+	}
+	defer insStmt.Close()
+
+	for _, art := range arts {
+		_, err = delStmt.Exec(art.ID, tag)
+		if err != nil {
+			return nil, err
+		}
+		_, err = insStmt.Exec(art.ID, tag)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	// apply to index
+	affected := ArtList{}
+	for _, art := range arts {
+		if art.AddTag(tag) {
+			affected = append(affected, art)
+		}
+	}
+
+	return affected, nil
+}
+
+func (store *Store) RemoveTag(arts ArtList, tag string) (ArtList, error) {
+	tag = strings.ToLower(tag)
+
+	if store.db == nil {
+		return ArtList{}, nil
+	}
+
+	// apply to db
+	tx, err := store.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	delStmt, err := tx.Prepare("DELETE FROM article_tag WHERE article_id=? AND tag=?")
+	if err != nil {
+		return nil, err
+	}
+	defer delStmt.Close()
+
+	for _, art := range arts {
+		_, err = delStmt.Exec(art.ID, tag)
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	// apply to index
+	affected := ArtList{}
+	for _, art := range arts {
+		if art.RemoveTag(tag) {
+			affected = append(affected, art)
+		}
+	}
+
+	return affected, nil
 }
 
 /*
