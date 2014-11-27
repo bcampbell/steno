@@ -193,6 +193,28 @@ ApplicationWindow {
                 }
             }
 
+            // show facets
+            GridView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                height: 10
+                cellWidth: 150
+                cellHeight: 20
+                model: ctrl.facetLen
+                delegate: Row {
+                        Rectangle {
+                anchors.fill: parent
+                            color: "white"
+                            border.width:4
+                            border.color:"black"
+                            Row {
+                            spacing: 4
+                            Text { text: ctrl.facet(index).txt }
+                            Text { text: ctrl.facet(index).cnt }
+                            }
+                        }
+                }
+            }
 
             TableView {
                 id: artList

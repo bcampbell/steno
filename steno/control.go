@@ -5,6 +5,11 @@ import (
 	"gopkg.in/qml.v1"
 )
 
+type Facet struct {
+	Txt string
+	Cnt int
+}
+
 type Control struct {
 	Window *qml.Window
 
@@ -13,7 +18,9 @@ type Control struct {
 	Len          int
 	TotalArts    int
 
-	store *Store
+	FacetLen int
+	facets   []*Facet
+	store    *Store
 }
 
 func NewControl() (*Control, error) {
@@ -61,6 +68,9 @@ func (ctrl *Control) Close() {
 func (ctrl *Control) Art(idx int) *Article {
 	return ctrl.arts[idx]
 }
+func (ctrl *Control) Facet(idx int) *Facet {
+	return ctrl.facets[idx]
+}
 
 // TODO: provide a function to validate query...
 
@@ -84,6 +94,8 @@ func (ctrl *Control) SetQuery(q string) {
 	}
 	ctrl.Len = len(ctrl.arts)
 	ctrl.TotalArts = ctrl.store.TotalArts()
+
+	ctrl.updateFacets()
 	ctrl.forceArtsRefresh()
 }
 
@@ -134,8 +146,20 @@ func (ctrl *Control) SetDB(fileName string) {
 	}
 	ctrl.Len = len(ctrl.arts)
 	ctrl.TotalArts = ctrl.store.TotalArts()
-
+	ctrl.updateFacets()
 	ctrl.forceArtsRefresh()
+}
+
+func (ctrl *Control) updateFacets() {
+	tab := map[string]int{}
+	for _, art := range ctrl.arts {
+		tab[art.Pub]++
+	}
+	ctrl.facets = []*Facet{}
+	for txt, cnt := range tab {
+		ctrl.facets = append(ctrl.facets, &Facet{txt, cnt})
+	}
+	ctrl.FacetLen = len(ctrl.facets)
 }
 
 func (ctrl *Control) AddTag(artIndices []int, tag string) {
@@ -179,4 +203,10 @@ func (ctrl *Control) forceArtsRefresh() {
 	qml.Changed(ctrl, &ctrl.Len)
 	ctrl.Len = foo
 	qml.Changed(ctrl, &ctrl.Len)
+
+	foo = ctrl.FacetLen
+	ctrl.FacetLen = 0
+	qml.Changed(ctrl, &ctrl.FacetLen)
+	ctrl.FacetLen = foo
+	qml.Changed(ctrl, &ctrl.FacetLen)
 }
