@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/bcampbell/arts/arts"
 	"github.com/bcampbell/htmlutil"
 	"golang.org/x/net/html"
 	"html/template"
@@ -9,11 +8,21 @@ import (
 )
 
 type Article struct {
-	arts.Article `json:",inline"`
-	ID           string   `json:"id"`
-	Pub          string   `json:"pub"`
-	KW           []string `json:"kw"`
-	Tags         []string `json:"tags"`
+	ID           int
+	CanonicalURL string
+	// all known URLs for article (including canonical)
+	// TODO: first url should be considered "preferred" if no canonical?
+	URLs     []string
+	Headline string
+	//	Authors     []Author
+	Content   string
+	Published string
+	Updated   string
+	//	Publication Publication
+	//Keywords []Keyword
+
+	Pub  string
+	Tags []string
 }
 
 func (art *Article) TextContent() template.HTML {
@@ -29,6 +38,10 @@ func (art *Article) TextContent() template.HTML {
 	txt = strings.Replace(txt, "\n", "<br/>\n", -1)
 	return template.HTML(txt)
 
+}
+
+func (art *Article) Hoo() *string {
+	return &art.Headline
 }
 
 func (art *Article) URL() string {

@@ -76,7 +76,7 @@ func (ctrl *Control) SetQuery(q string) {
 	}
 	ctrl.Len = len(ctrl.arts)
 	ctrl.TotalArts = coll.Count()
-	qml.Changed(ctrl, &ctrl.Len)
+	ctrl.forceArtsRefresh()
 }
 
 func (ctrl *Control) OLDLoadDB(fileName string) {
@@ -95,7 +95,7 @@ func (ctrl *Control) OLDLoadDB(fileName string) {
 	}
 	ctrl.Len = len(ctrl.arts)
 	ctrl.TotalArts = coll.Count()
-	qml.Changed(ctrl, &ctrl.Len)
+	ctrl.forceArtsRefresh()
 
 	dbug.Printf("Save to sqlite!\n")
 	err = debadger(ctrl.arts, "fancy.db")
@@ -122,14 +122,8 @@ func (ctrl *Control) LoadDB(fileName string) {
 	ctrl.arts = arts
 	ctrl.Len = len(ctrl.arts)
 	ctrl.TotalArts = coll.Count()
-	qml.Changed(ctrl, &ctrl.Len)
-	/*
-		dbug.Printf("Save to sqlite!\n")
-		err = debadger(ctrl.arts, "fancy.db")
-		if err != nil {
-			dbug.Printf("debadger error: %s\n", err)
-		}
-	*/
+
+	ctrl.forceArtsRefresh()
 }
 
 func (ctrl *Control) AddTag(artIndices []int, tag string) {
@@ -144,7 +138,7 @@ func (ctrl *Control) AddTag(artIndices []int, tag string) {
 	dbug.Printf("addTag(%s): changed %d articles\n", tag, cnt)
 
 	// TODO: signal changed arts instead of whole list
-	qml.Changed(ctrl, &ctrl.Len)
+	ctrl.forceArtsRefresh()
 }
 
 func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
@@ -159,5 +153,15 @@ func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
 	}
 	dbug.Printf("removeTag(%s): changed %d articles\n", tag, cnt)
 	// TODO: signal changed arts instead of whole list
+	ctrl.forceArtsRefresh()
+}
+
+func (ctrl *Control) forceArtsRefresh() {
+	// horrible fudge to force tableview to rethink itself,
+	// until go-qml lets you use a proper type as model.
+	foo := ctrl.Len
+	ctrl.Len = 0
+	qml.Changed(ctrl, &ctrl.Len)
+	ctrl.Len = foo
 	qml.Changed(ctrl, &ctrl.Len)
 }

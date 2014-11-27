@@ -88,7 +88,8 @@ ApplicationWindow {
                 anchors.fill: parent
                 color: styleData.textColor
                 elide: Text.ElideRight
-                text: ctrl.art(styleData.row).article.headline
+                text: ctrl.art(styleData.row).headline
+
             }
         }
     }
@@ -115,7 +116,7 @@ ApplicationWindow {
                 anchors.fill: parent
                 color: styleData.textColor
                 elide: styleData.elideMode
-                text: ctrl.art(styleData.row).article.published
+                text: ctrl.art(styleData.row).published
             }
         }
     }
@@ -131,7 +132,7 @@ ApplicationWindow {
                 anchors.fill: parent
                 color: styleData.textColor
                 elide: Text.ElideRight
-                text: asLink(ctrl.art(styleData.row).article.canonicalURL)
+                text: asLink(ctrl.art(styleData.row).canonicalURL)
                     
             }
         }
@@ -219,7 +220,7 @@ ApplicationWindow {
             id: artInfo
             Layout.minimumHeight: 100
             function showArt(art) {
-               content.text = art.article.content 
+               content.text = art.content 
             }
             Text {
                 id: content 

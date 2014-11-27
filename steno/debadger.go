@@ -8,8 +8,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func debadger(srcArts ArtList, outFile string) error {
-	db, err := sql.Open("sqlite3", outFile)
+// write articles out to db
+func debadger(srcArts ArtList, dbFile string) error {
+	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
 		return err
 	}
@@ -99,8 +100,9 @@ func debadger(srcArts ArtList, outFile string) error {
 	return nil
 }
 
-func enbadger(inFile string) (ArtList, error) {
-	db, err := sql.Open("sqlite3", inFile)
+// read in files from DB
+func enbadger(dbFile string) (ArtList, error) {
+	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
 		return nil, err
 	}
