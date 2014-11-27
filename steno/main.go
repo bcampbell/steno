@@ -25,12 +25,7 @@ func usage() {
 	flag.PrintDefaults()
 }
 
-var coll *badger.Collection
-
-var tmpls *TemplateMgr
-var publications []string
 var dbug *dbugLog
-var baseDir string
 
 func main() {
 	if err := qml.Run(run); err != nil {
@@ -46,34 +41,6 @@ func run() error {
 
 	var err error
 
-	coll = badger.NewCollection(&Article{})
-	// create database
-	/*
-		coll, err = loadDB(databaseFile)
-		if err != nil {
-			dbug.Printf("Error loading db: %s\n", err)
-			os.Exit(1)
-		}
-		coll.EnableAutosave(databaseFile)
-	*/
-
-	/*
-		dummyArts := []*Article{
-			&Article{Article: arts.Article{Headline: "Dummy article 1", CanonicalURL: "http://example.com/art1", Published: "2014-01-01"}, Pub: "dailyfilth"},
-		}
-
-		for _, dummyArt := range dummyArts {
-			coll.Put(dummyArt)
-		}
-	*/
-
-	dbug.Printf("fetching list of publications\n")
-	publications, err = getPublications()
-	if err != nil {
-		dbug.Printf("Error finding publications: %s\n", err)
-		os.Exit(1)
-	}
-
 	// GUI startup
 	ctrl, err := NewControl()
 	if err != nil {
@@ -82,7 +49,7 @@ func run() error {
 	}
 	if flag.NArg() > 0 {
 		dbFilename := flag.Arg(0)
-		ctrl.LoadDB(dbFilename)
+		ctrl.SetDB(dbFilename)
 	}
 	/*
 		for i := 0; i < 1000000; i++ {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/bcampbell/badger"
 	"gopkg.in/qml.v1"
 )
 
@@ -13,6 +12,8 @@ type Control struct {
 	arts         ArtList
 	Len          int
 	TotalArts    int
+
+	store *Store
 }
 
 func NewControl() (*Control, error) {
@@ -21,13 +22,14 @@ func NewControl() (*Control, error) {
 	ctx := engine.Context()
 
 	ctrl := &Control{}
+	ctrl.store = DummyStore()
 	// populate the initial query
-	ctrl.arts, err = allArts()
+	ctrl.arts, err = ctrl.store.AllArts()
 	if err != nil {
 		return nil, err
 	}
 	ctrl.Len = len(ctrl.arts)
-	ctrl.TotalArts = coll.Count()
+	ctrl.TotalArts = ctrl.store.TotalArts()
 
 	// expose us to the qml side
 	ctx.SetVar("ctrl", ctrl)
@@ -65,9 +67,9 @@ func (ctrl *Control) SetQuery(q string) {
 	fmt.Printf("SetQuery(%s)\n", q)
 	var err error
 	if q == "" {
-		ctrl.arts, err = allArts()
+		ctrl.arts, err = ctrl.store.AllArts()
 	} else {
-		ctrl.arts, err = search(q)
+		ctrl.arts, err = ctrl.store.Search(q)
 	}
 	if err != nil {
 		// TODO: display error...
@@ -75,10 +77,11 @@ func (ctrl *Control) SetQuery(q string) {
 		//os.Exit(1)
 	}
 	ctrl.Len = len(ctrl.arts)
-	ctrl.TotalArts = coll.Count()
+	ctrl.TotalArts = ctrl.store.TotalArts()
 	ctrl.forceArtsRefresh()
 }
 
+/*
 func (ctrl *Control) OLDLoadDB(fileName string) {
 	fmt.Printf("loadDB(%s)\n", fileName)
 	var err error
@@ -104,24 +107,27 @@ func (ctrl *Control) OLDLoadDB(fileName string) {
 	}
 	dbug.Printf("Load complete\n")
 }
+*/
 
-func (ctrl *Control) LoadDB(fileName string) {
-	fmt.Printf("loadDB(%s)\n", fileName)
-	var err error
+func (ctrl *Control) SetDB(fileName string) {
+	fmt.Printf("SetDB(%s)\n", fileName)
 
-	arts, err := enbadger(fileName)
+	ctrl.store.Close()
+	newStore, err := NewStore(fileName)
 	if err != nil {
-		dbug.Printf("loadDB error: %s\n", err)
-	}
-	coll = badger.NewCollection(&Article{})
-	for _, art := range arts {
-		coll.Put(art)
+		dbug.Printf("SetDB error: %s\n", err)
+		ctrl.store = DummyStore()
+	} else {
+		ctrl.store = newStore
 	}
 
 	// populate the initial query
-	ctrl.arts = arts
+	ctrl.arts, err = ctrl.store.AllArts()
+	if err != nil {
+		return
+	}
 	ctrl.Len = len(ctrl.arts)
-	ctrl.TotalArts = coll.Count()
+	ctrl.TotalArts = ctrl.store.TotalArts()
 
 	ctrl.forceArtsRefresh()
 }
