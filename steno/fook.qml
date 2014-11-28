@@ -194,28 +194,23 @@ ApplicationWindow {
             }
 
             // show facets
-            GridView {
+            Flow {
                 Layout.fillWidth: true
-                Layout.fillHeight: true
-                height: 10
-                cellWidth: 150
-                cellHeight: 20
-                model: ctrl.facetLen
-                delegate: Row {
-                        Rectangle {
-                anchors.fill: parent
-                            color: "white"
-                            border.width:4
-                            border.color:"black"
-                            Row {
-                            spacing: 4
-                            Text { text: ctrl.facet(index).txt }
-                            Text { text: ctrl.facet(index).cnt }
-                            }
-                        }
+               // columns: width/150
+                spacing: 4
+                Repeater {
+                    model: ctrl.facetLen
+                    delegate: Rectangle {
+                        width: childrenRect.width + 8
+                        height: childrenRect.height + 8
+                        border.width: 1
+                        border.color: Qt.darker(color,2)
+                        radius: 4
+                        color: "#eeeeff"
+                        Text { x:4; y:4; text: ctrl.facet(index).txt + ": " +ctrl.facet(index).cnt }
+                    }
                 }
             }
-
             TableView {
                 id: artList
                 Layout.fillHeight: true
