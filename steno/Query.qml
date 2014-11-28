@@ -119,6 +119,7 @@ Item {
                 color: styleData.textColor
                 elide: Text.ElideRight
                 text: asLink(ctrl.art(styleData.row).canonicalURL)
+                onLinkActivated: Qt.openUrlExternally(link)
                     
             }
         }
