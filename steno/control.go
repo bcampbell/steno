@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gopkg.in/qml.v1"
+	"io/ioutil"
 )
 
 type Facet struct {
@@ -21,14 +22,23 @@ type Control struct {
 	FacetLen int
 	facets   []*Facet
 	store    *Store
+
+	HelpText string
 }
 
 func NewControl() (*Control, error) {
 	var err error
+
 	engine := qml.NewEngine()
 	ctx := engine.Context()
 
 	ctrl := &Control{}
+
+	buf, err := ioutil.ReadFile("help.html")
+	if err != nil {
+		return nil, err
+	}
+	ctrl.HelpText = string(buf)
 	ctrl.store = DummyStore()
 	// populate the initial query
 	ctrl.arts, err = ctrl.store.AllArts()
