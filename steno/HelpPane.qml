@@ -5,24 +5,16 @@ import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.0
 import QtQuick.Dialogs 1.0
 
-Item {
+ScrollView {
     property string helpText
     id: pane
-
-    width: 400
-    Column {
-        anchors.fill: parent
-        Text {
-            text: helpText
-            wrapMode: Text.NoWrap
-            textFormat: Text.RichText
-        }
-/*
-        Button {
-            text: "Close"
-            onClicked: {pane.width=0}
-        }
-*/
+    Text {
+        //text: helpText
+        wrapMode: Text.Wrap
+        textFormat: Text.RichText
+        //width: parent.width
+        text: ""+ helpText
+        Layout.maximumWidth: 400
     }
 }
 

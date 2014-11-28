@@ -98,24 +98,30 @@ ApplicationWindow {
                 function showArt(art) {
                    content.text = art.content 
                 }
-                Text {
-                    id: content 
-    //                width: artInfo.width
+                ScrollView {
                     anchors.fill: parent
-                    anchors.margins: 16
-                    text: ""
+                    Text {
+                        id: content 
+        //                width: artInfo.width
+                        //anchors.fill: parent
+                        //anchors.margins: 16
+                        text: ""
 
 
-                    wrapMode: Text.WordWrap
-                    textFormat: Text.StyledText
-                }
+                        wrapMode: Text.WordWrap
+                        textFormat: Text.StyledText
+                    }
                 
+                }
             }
         }
 
         HelpPane {
             id: helpPane
+
+/*
             Layout.fillHeight: true
+*/
             Layout.fillWidth: true
             helpText: ctrl.helpText
         }
