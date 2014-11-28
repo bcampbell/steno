@@ -14,8 +14,8 @@ Item {
         anchors.fill: parent
         Text {
             text: helpText
-            wrapMode: Text.WordWrap
-//            textFormat: Text.StyledText
+            wrapMode: Text.NoWrap
+            textFormat: Text.RichText
         }
 /*
         Button {

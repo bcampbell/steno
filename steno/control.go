@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/qml.v1"
 	"io/ioutil"
+	//	"strings"
 )
 
 type Facet struct {
@@ -39,6 +40,8 @@ func NewControl() (*Control, error) {
 		return nil, err
 	}
 	ctrl.HelpText = string(buf)
+	//	ctrl.HelpText = strings.Replace(ctrl.HelpText, "\n", "<br/>\n", -1)
+
 	ctrl.store = DummyStore()
 	// populate the initial query
 	ctrl.arts, err = ctrl.store.AllArts()
