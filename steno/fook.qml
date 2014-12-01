@@ -36,7 +36,7 @@ ApplicationWindow {
 
         onAccepted: {
             console.log("You chose: " + toLocalFile(openDialog.fileUrl))
-            ctrl.loadDB(toLocalFile(openDialog.fileUrl))
+            ctrl.setDB(toLocalFile(openDialog.fileUrl))
              
         }
         onRejected: {

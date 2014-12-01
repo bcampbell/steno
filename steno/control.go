@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"gopkg.in/qml.v1"
 	"io/ioutil"
+    "path"
+    "semprini/steno/steno/kludge"
 	//	"strings"
 )
 
@@ -30,12 +32,19 @@ type Control struct {
 func NewControl() (*Control, error) {
 	var err error
 
+//    dataPath := "/Users/ben/semprini/steno/steno.app/Contents/Resources"
+    dataPath,err := kludge.DataPath()
+	if err != nil {
+		return nil, err
+	}
+    dbug.Printf("Data path: %s\n",dataPath)
+
 	engine := qml.NewEngine()
 	ctx := engine.Context()
 
 	ctrl := &Control{}
 
-	buf, err := ioutil.ReadFile("help.html")
+	buf, err := ioutil.ReadFile(path.Join(dataPath,"help.html"))
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +63,7 @@ func NewControl() (*Control, error) {
 	// expose us to the qml side
 	ctx.SetVar("ctrl", ctrl)
 
-	component, err := engine.LoadFile("fook.qml")
+	component, err := engine.LoadFile(path.Join(dataPath,"fook.qml"))
 	if err != nil {
 		return nil, err
 	}
