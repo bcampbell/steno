@@ -14,19 +14,69 @@ import (
 
 type ArtList []*Article
 
-// for sorting
-type byPublished []*Article
+/*
+func (s ArtList) Len() int      { return len(s) }
+func (s ArtList) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 
-func (s byPublished) Len() int {
-	return len(s)
+type byPublishedAsc struct{ ArtList }
+
+func (s byPublishedAsc) Less(i, j int) bool
+{
+    return s.ArtList[i].Published < s.ArtList[j].Published
 }
 
-func (s byPublished) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
+type byPublishedDesc struct{ ArtList }
+func (s byPublishedDesc) Less(i, j int) bool
+{
+    return s.ArtList[i].Published > s.ArtList[j].Published
 }
 
-func (s byPublished) Less(i, j int) bool {
-	return s[i].Published > s[j].Published
+
+
+type byPubAsc struct{ ArtList }
+func (s byPubAsc) Less(i, j int) bool
+{
+    return s.ArtList[i].Pub < s.ArtList[j].Pub
+}
+
+
+
+type byPubDesc struct{ ArtList }
+func (s byPubDesc) Less(i, j int) bool
+{
+    return s.ArtList[i].Published > s.ArtList[j].Published
+}
+
+*/
+
+type By func(p1, p2 *Article) bool
+
+func (by By) Sort(arts ArtList) {
+	ps := &artSorter{
+		arts: arts,
+		by:   by,
+	}
+	sort.Sort(ps)
+}
+
+type artSorter struct {
+	arts ArtList
+	by   func(p1, p2 *Article) bool
+}
+
+// Len is part of sort.Interface.
+func (s *artSorter) Len() int {
+	return len(s.arts)
+}
+
+// Swap is part of sort.Interface.
+func (s *artSorter) Swap(i, j int) {
+	s.arts[i], s.arts[j] = s.arts[j], s.arts[i]
+}
+
+// Less is part of sort.Interface. It is implemented by calling the "by" closure in the sorter.
+func (s *artSorter) Less(i, j int) bool {
+	return s.by(s.arts[i], s.arts[j])
 }
 
 //
@@ -259,7 +309,10 @@ func (store *Store) AllArts() (ArtList, error) {
 	var arts ArtList
 	store.coll.Find(q, &arts)
 
-	sort.Sort(byPublished(arts))
+	publishedDesc := func(a1, a2 *Article) bool {
+		return a1.Published > a2.Published
+	}
+	By(publishedDesc).Sort(arts)
 
 	return arts, nil
 }
@@ -274,7 +327,10 @@ func (store *Store) Search(queryString string) (ArtList, error) {
 	var arts ArtList
 	store.coll.Find(q, &arts)
 
-	sort.Sort(byPublished(arts))
+	publishedDesc := func(a1, a2 *Article) bool {
+		return a1.Published > a2.Published
+	}
+	By(publishedDesc).Sort(arts)
 
 	return arts, nil
 }

@@ -144,6 +144,9 @@ Item {
             Layout.fillWidth: true
             objectName: "artlist"
             selectionMode: SelectionMode.ExtendedSelection
+            sortIndicatorVisible: true
+            sortIndicatorColumn: ctrl.sortColumn
+            sortIndicatorOrder: ctrl.sortOrder
             model: ctrl.len
             function selectedArts() {
                 var sel = [];
@@ -152,6 +155,8 @@ Item {
             }
 
             onClicked: artInfo.showArt(ctrl.art(row))
+            onSortIndicatorColumnChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
+            onSortIndicatorOrderChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
             TableViewColumn{ role: "headline"  ; title: "headline" ; width: 400; delegate: headlineDelegate }
             TableViewColumn{ role: "pub"  ; title: "pub" ; width: 100; delegate: pubDelegate }
             TableViewColumn{ role: "published"  ; title: "published" ; width: 100; delegate: publishedDelegate }

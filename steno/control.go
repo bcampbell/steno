@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"gopkg.in/qml.v1"
 	"io/ioutil"
-    "path"
-    "semprini/steno/steno/kludge"
+	"path"
+	"semprini/steno/steno/kludge"
 	//	"strings"
 )
 
@@ -21,10 +21,11 @@ type Control struct {
 	arts         ArtList
 	Len          int
 	TotalArts    int
-
-	FacetLen int
-	facets   []*Facet
-	store    *Store
+	SortColumn   int
+	SortOrder    int
+	FacetLen     int
+	facets       []*Facet
+	store        *Store
 
 	HelpText string
 }
@@ -32,19 +33,20 @@ type Control struct {
 func NewControl() (*Control, error) {
 	var err error
 
-//    dataPath := "/Users/ben/semprini/steno/steno.app/Contents/Resources"
-    dataPath,err := kludge.DataPath()
+	//    dataPath := "/Users/ben/semprini/steno/steno.app/Contents/Resources"
+	dataPath, err := kludge.DataPath()
 	if err != nil {
 		return nil, err
 	}
-    dbug.Printf("Data path: %s\n",dataPath)
+	dbug.Printf("Data path: %s\n", dataPath)
 
 	engine := qml.NewEngine()
 	ctx := engine.Context()
 
 	ctrl := &Control{}
-
-	buf, err := ioutil.ReadFile(path.Join(dataPath,"help.html"))
+	ctrl.SortColumn = 2 // published
+	ctrl.SortOrder = 1  //descending
+	buf, err := ioutil.ReadFile(path.Join(dataPath, "help.html"))
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +65,7 @@ func NewControl() (*Control, error) {
 	// expose us to the qml side
 	ctx.SetVar("ctrl", ctrl)
 
-	component, err := engine.LoadFile(path.Join(dataPath,"fook.qml"))
+	component, err := engine.LoadFile(path.Join(dataPath, "fook.qml"))
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +94,37 @@ func (ctrl *Control) Art(idx int) *Article {
 }
 func (ctrl *Control) Facet(idx int) *Facet {
 	return ctrl.facets[idx]
+}
+
+func (ctrl *Control) ApplySorting(sortColumn, sortOrder int) {
+	// order: 1: ascending, 0: descending
+	dbug.Printf("new sorting: %d %d\n", sortColumn, sortOrder)
+
+	var criteria func(a1, a2 *Article) bool
+
+	if sortOrder == 0 {
+		switch sortColumn {
+		case 0:
+			criteria = func(a1, a2 *Article) bool { return a1.Headline > a2.Headline }
+		case 1:
+			criteria = func(a1, a2 *Article) bool { return a1.Pub > a2.Pub }
+		case 2:
+			criteria = func(a1, a2 *Article) bool { return a1.Published > a2.Published }
+		}
+	} else if sortOrder == 1 {
+		switch sortColumn {
+		case 0:
+			criteria = func(a1, a2 *Article) bool { return a1.Headline < a2.Headline }
+		case 1:
+			criteria = func(a1, a2 *Article) bool { return a1.Pub < a2.Pub }
+		case 2:
+			criteria = func(a1, a2 *Article) bool { return a1.Published < a2.Published }
+		}
+	}
+	if criteria != nil {
+		By(criteria).Sort(ctrl.arts)
+	}
+	ctrl.forceArtsRefresh()
 }
 
 // TODO: provide a function to validate query...
