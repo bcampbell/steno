@@ -15,6 +15,7 @@ type App struct {
 	projComponent qml.Object
 	ctx           *qml.Context
 	project       *Control
+	HasCurrent    bool
 }
 
 func NewApp() (*App, error) {
@@ -65,6 +66,10 @@ func NewApp() (*App, error) {
 	return app, nil
 }
 
+func (app *App) Current() *Control {
+	return app.project
+}
+
 func (app *App) OpenProject(storePath string) {
 	dbug.Printf("open %s\n", storePath)
 
@@ -74,6 +79,8 @@ func (app *App) OpenProject(storePath string) {
 		return
 	}
 	app.project = proj
+	app.HasCurrent = true
+	qml.Changed(app, &app.HasCurrent)
 }
 
 func (app *App) NewProject(storePath string) {
@@ -85,11 +92,8 @@ func (app *App) NewProject(storePath string) {
 		return
 	}
 	app.project = proj
-}
-
-func (app *App) NewProject(storePath string) error {
-	dbug.Printf("New %s\n", storePath)
-	return nil
+	app.HasCurrent = true
+	qml.Changed(app, &app.HasCurrent)
 }
 
 func (app *App) CloseProject() {
@@ -97,6 +101,8 @@ func (app *App) CloseProject() {
 	if app.project != nil {
 		app.project.Close()
 		app.project = nil
+		app.HasCurrent = false
+		qml.Changed(app, &app.HasCurrent)
 	}
 }
 func (app *App) Quit() {

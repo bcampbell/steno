@@ -12,8 +12,9 @@ type Facet struct {
 }
 
 type Control struct {
-	App    *App
-	Window *qml.Window
+	App *App
+
+	obj qml.Object
 
 	CurrentQuery string
 	arts         ArtList
@@ -44,8 +45,8 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 	w := app.Window.Root().ObjectByName("mainSpace")
 	// instantiate the gui
 
-	obj := gui.Create(nil)
-	obj.Set("parent", w)
+	ctrl.obj = gui.Create(nil)
+	ctrl.obj.Set("parent", w)
 
 	/*
 		obj := window.Root().ObjectByName("query")
@@ -58,6 +59,7 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 
 func (ctrl *Control) Close() {
 	dbug.Printf("Close db\n")
+	ctrl.obj.Destroy()
 	ctrl.store.Close()
 	//ctrl.Window.Hide()
 }
@@ -238,4 +240,43 @@ func (ctrl *Control) forceArtsRefresh() {
 	qml.Changed(ctrl, &ctrl.FacetLen)
 	ctrl.FacetLen = foo
 	qml.Changed(ctrl, &ctrl.FacetLen)
+}
+
+func (ctrl *Control) Slurp() {
+
+	gotCnt := 0
+	newCnt := 0
+	for i := 1; i < 10; i++ {
+		n := fmt.Sprintf("%d", i)
+		art := Article{CanonicalURL: "http://foo.com/art-" + n,
+			Headline:  "HEadline " + n,
+			Content:   "Blah blah blah blah blah blah",
+			Published: "2014-12-09",
+			Updated:   "",
+			Pub:       "foo",
+			URLs:      []string{"http://foo.com/art-" + n},
+		}
+
+		got, err := ctrl.store.FindArt(art.URLs)
+		if err != nil {
+			// TODO: display error
+			dbug.Printf("ERROR FindArt() failed: %s\n", err)
+			return
+		}
+		if got > 0 {
+			gotCnt++
+			continue
+		}
+		err = ctrl.store.Stash(&art)
+		if err != nil {
+			// TODO: display error
+			dbug.Printf("ERROR: Stash failed: %s\n", err)
+			return
+		}
+		//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
+		newCnt++
+	}
+
+	dbug.Printf("slurped %d (%d new)\n", gotCnt+newCnt, newCnt)
+	ctrl.forceArtsRefresh()
 }

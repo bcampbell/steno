@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	//"fmt"
+	"fmt"
 	//"github.com/bcampbell/arts/arts"
 	"github.com/bcampbell/badger"
 	"github.com/bcampbell/badger/query"
@@ -456,3 +456,94 @@ func getPublications() ([]string, error) {
 	return pubs, nil
 }
 */
+
+func (store *Store) FindArt(urls []string) (int, error) {
+	placeholders := make([]string, len(urls))
+	params := make([]interface{}, len(urls))
+	for i, _ := range urls {
+		placeholders[i] = "?"
+		params[i] = urls[i]
+	}
+	foo := fmt.Sprintf(`SELECT article_id FROM article_url WHERE url IN(%s)`, strings.Join(placeholders, ","))
+
+	var artID int
+	err := store.db.QueryRow(foo, params...).Scan(&artID)
+	if err != nil {
+		return 0, err
+	}
+	return artID, nil
+}
+
+func (store *Store) Stash(art *Article) error {
+	tx, err := store.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	if art.ID != 0 {
+		panic("article id already set")
+	}
+	err = store.doStash(tx, art)
+	if err == nil {
+		err = tx.Commit()
+	} else {
+		err2 := tx.Rollback()
+		if err2 != nil {
+			err = err2
+		}
+	}
+	return err
+}
+
+func (store *Store) doStash(tx *sql.Tx, art *Article) error {
+	var result sql.Result
+	result, err := tx.Exec(`INSERT INTO article(canonical_url, headline, content,published,updated,pub)
+        values(?,?,?,?,?,?)`,
+		art.CanonicalURL,
+		art.Headline,
+		art.Content,
+		art.Published,
+		art.Updated,
+		art.Pub)
+	if err != nil {
+		return err
+	}
+
+	if artID, err := result.LastInsertId(); err == nil {
+		art.ID = int(artID)
+	} else {
+		return err
+	}
+
+	// add urls
+	urlStmt, err := tx.Prepare("INSERT INTO article_url(article_id,url) VALUES(?,?)")
+	if err != nil {
+		return err
+	}
+	defer urlStmt.Close()
+
+	for _, u := range art.URLs {
+		_, err = urlStmt.Exec(art.ID, u)
+		if err != nil {
+			return err
+		}
+	}
+
+	// add tags
+	tagStmt, err := tx.Prepare("INSERT INTO article_tag(article_id,tag) VALUES(?,?)")
+	if err != nil {
+		return err
+	}
+	defer tagStmt.Close()
+	for _, tag := range art.Tags {
+		_, err = tagStmt.Exec(art.ID, tag)
+		if err != nil {
+			return err
+		}
+	}
+	// TODO: authors, keywords
+
+	store.coll.Put(art)
+
+	return nil
+}

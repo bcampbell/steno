@@ -69,6 +69,7 @@ ApplicationWindow {
         text: "Open..."
         shortcut: StandardKey.Open
         onTriggered: openDialog.open()
+        enabled: !app.hasCurrent
     }
 
     Action {
@@ -77,6 +78,7 @@ ApplicationWindow {
         text: "New..."
         shortcut: StandardKey.New
         onTriggered: newDialog.open()
+        enabled: !app.hasCurrent
     }
     Action {
         id: closeAction
@@ -84,6 +86,7 @@ ApplicationWindow {
         text: "Close"
         shortcut: StandardKey.Close
         onTriggered: app.closeProject()
+        enabled: app.hasCurrent
     }
     Action {
         id: quitAction
@@ -92,14 +95,22 @@ ApplicationWindow {
         shortcut: StandardKey.Quit
         onTriggered: app.quit()
     }
+    Action {
+        id: slurpAction
+        //iconSource: "images/fileopen.png"
+        text: "Slurp articles from server..."
+        onTriggered: app.current().slurp()
+        enabled: app.hasCurrent
+    }
 
     menuBar: MenuBar {
         Menu {
             title: "File"
             MenuItem { action: openAction }
             MenuItem { action: newAction }
-/*            MenuItem { action: closeAction } */
+            MenuItem { action: closeAction }
             MenuItem { action: quitAction }
+            MenuItem { action: slurpAction }
         }
     }
     Item {
