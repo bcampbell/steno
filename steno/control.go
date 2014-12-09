@@ -3,9 +3,6 @@ package main
 import (
 	"fmt"
 	"gopkg.in/qml.v1"
-	"io/ioutil"
-	"path"
-	"semprini/steno/steno/kludge"
 	//	"strings"
 )
 
@@ -15,6 +12,7 @@ type Facet struct {
 }
 
 type Control struct {
+	App    *App
 	Window *qml.Window
 
 	CurrentQuery string
@@ -30,49 +28,24 @@ type Control struct {
 	HelpText string
 }
 
-func NewControl() (*Control, error) {
+func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 	var err error
 
-	//    dataPath := "/Users/ben/semprini/steno/steno.app/Contents/Resources"
-	dataPath, err := kludge.DataPath()
-	if err != nil {
-		return nil, err
-	}
-	dbug.Printf("Data path: %s\n", dataPath)
-
-	engine := qml.NewEngine()
-	ctx := engine.Context()
-
 	ctrl := &Control{}
-	ctrl.SortColumn = 2 // published
-	ctrl.SortOrder = 1  //descending
-	buf, err := ioutil.ReadFile(path.Join(dataPath, "help.html"))
-	if err != nil {
-		return nil, err
-	}
-	ctrl.HelpText = string(buf)
-	//	ctrl.HelpText = strings.Replace(ctrl.HelpText, "\n", "<br/>\n", -1)
+	ctrl.App = app
 
-	ctrl.store = DummyStore()
-	// populate the initial query
-	ctrl.arts, err = ctrl.store.AllArts()
+	err = ctrl.SetDB(storePath)
 	if err != nil {
 		return nil, err
 	}
-	ctrl.Len = len(ctrl.arts)
-	ctrl.TotalArts = ctrl.store.TotalArts()
 
 	// expose us to the qml side
-	ctx.SetVar("ctrl", ctrl)
-
-	component, err := engine.LoadFile(path.Join(dataPath, "fook.qml"))
-	if err != nil {
-		return nil, err
-	}
-
+	app.ctx.SetVar("ctrl", ctrl)
+	w := app.Window.Root().ObjectByName("mainSpace")
 	// instantiate the gui
-	ctrl.Window = component.CreateWindow(nil)
-	ctrl.Window.Show()
+
+	obj := gui.Create(nil)
+	obj.Set("parent", w)
 
 	/*
 		obj := window.Root().ObjectByName("query")
@@ -86,7 +59,7 @@ func NewControl() (*Control, error) {
 func (ctrl *Control) Close() {
 	dbug.Printf("Close db\n")
 	ctrl.store.Close()
-	ctrl.Window.Hide()
+	//ctrl.Window.Hide()
 }
 
 func (ctrl *Control) Art(idx int) *Article {
@@ -182,27 +155,28 @@ func (ctrl *Control) OLDLoadDB(fileName string) {
 }
 */
 
-func (ctrl *Control) SetDB(fileName string) {
+func (ctrl *Control) SetDB(fileName string) error {
 	fmt.Printf("SetDB(%s)\n", fileName)
 
-	ctrl.store.Close()
+	//	ctrl.store.Close()
 	newStore, err := NewStore(fileName)
 	if err != nil {
 		dbug.Printf("SetDB error: %s\n", err)
-		ctrl.store = DummyStore()
-	} else {
-		ctrl.store = newStore
+
+		return err
 	}
+	ctrl.store = newStore
 
 	// populate the initial query
 	ctrl.arts, err = ctrl.store.AllArts()
 	if err != nil {
-		return
+		return err
 	}
 	ctrl.Len = len(ctrl.arts)
 	ctrl.TotalArts = ctrl.store.TotalArts()
 	ctrl.updateFacets()
-	ctrl.forceArtsRefresh()
+	//	ctrl.forceArtsRefresh()
+	return nil
 }
 
 func (ctrl *Control) updateFacets() {

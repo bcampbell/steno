@@ -42,25 +42,17 @@ func run() error {
 	var err error
 
 	// GUI startup
-	ctrl, err := NewControl()
+	app, err := NewApp()
 	if err != nil {
-		dbug.Printf("Error starting GUI: %s\n", err)
+		dbug.Printf("Error starting App: %s\n", err)
 		os.Exit(1)
 	}
 	if flag.NArg() > 0 {
 		dbFilename := flag.Arg(0)
-		ctrl.SetDB(dbFilename)
+		app.OpenProject(dbFilename)
 	}
-	/*
-		for i := 0; i < 1000000; i++ {
-			d := &Doc{Headline: fmt.Sprintf("Headline %d", i), Author: fmt.Sprintf("fred%d bloggs", i)}
-			docs.list = append(docs.list, d)
-		}
-		docs.Len = len(docs.list)
-		qml.Changed(docs, &docs.Len)
-	*/
 
-	ctrl.Window.Wait()
+	app.Window.Wait()
 	return nil
 }
 
