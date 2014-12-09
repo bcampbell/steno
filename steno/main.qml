@@ -4,6 +4,7 @@ import QtQuick 2.3
 import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.0
 import QtQuick.Dialogs 1.0
+import QtQuick.Window 2.2
 
 /* by convention:
     id
@@ -102,6 +103,13 @@ ApplicationWindow {
         onTriggered: app.current().slurp()
         enabled: app.hasCurrent
     }
+    Action {
+        id: helpAction
+        //iconSource: "images/fileopen.png"
+        text: "Help..."
+        shortcut: StandardKey.HelpContents
+        onTriggered: helpWindow.visible = !helpWindow.visible
+    }
 
     menuBar: MenuBar {
         Menu {
@@ -111,6 +119,10 @@ ApplicationWindow {
             MenuItem { action: closeAction }
             MenuItem { action: quitAction }
             MenuItem { action: slurpAction }
+        }
+        Menu {
+            title: "Help"
+            MenuItem { action: helpAction }
         }
     }
     Item {
@@ -125,6 +137,25 @@ ApplicationWindow {
     }
 
 
+    Window {
+        id: helpWindow
+        title: "Help"
+        width: 400
+        height: 500
+        ScrollView {
+            anchors.fill: parent
+            Text {
+                width: 400
+                //text: helpText
+                wrapMode: Text.Wrap
+                textFormat: Text.RichText
+                //width: parent.width
+                text: ""+ app.helpText
+                Layout.maximumWidth: 400
+            }
+        }
+
+    }
 
 }
 

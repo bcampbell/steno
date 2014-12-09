@@ -41,14 +41,5 @@ SplitView {
         }
     }
 
-    HelpPane {
-        id: helpPane
-
-/*
-        Layout.fillHeight: true
-*/
-        Layout.fillWidth: true
-        helpText: app.helpText
-    }
 }
 
