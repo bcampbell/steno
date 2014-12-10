@@ -468,10 +468,13 @@ func (store *Store) FindArt(urls []string) (int, error) {
 
 	var artID int
 	err := store.db.QueryRow(foo, params...).Scan(&artID)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return 0, nil // article not found
+	} else if err != nil {
 		return 0, err
+	} else {
+		return artID, nil
 	}
-	return artID, nil
 }
 
 func (store *Store) Stash(art *Article) error {

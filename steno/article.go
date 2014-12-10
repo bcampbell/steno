@@ -7,22 +7,31 @@ import (
 	"strings"
 )
 
+type Publication struct {
+	Name   string `json:"content"`
+	Domain string `json:"domain"`
+	Code   string `json:"code"`
+}
+
 type Article struct {
 	ID           int
-	CanonicalURL string
+	CanonicalURL string `json:"canonical_url"`
+
 	// all known URLs for article (including canonical)
 	// TODO: first url should be considered "preferred" if no canonical?
-	URLs     []string
-	Headline string
+	URLs []string `json:"urls"`
+
+	Headline string `json:"headline"`
 	//	Authors     []Author
-	Content   string
-	Published string
-	Updated   string
-	//	Publication Publication
+	Content     string      `json:"content"`
+	Published   string      `json:"published"`
+	Updated     string      `json:"updated"`
+	Publication Publication `json:"publication"`
+
 	//Keywords []Keyword
 
 	Pub  string
-	Tags []string
+	Tags []string `json:"tags"`
 }
 
 func (art *Article) TextContent() template.HTML {

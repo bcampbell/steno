@@ -11,6 +11,16 @@ type Facet struct {
 	Cnt int
 }
 
+type SlurpProgress struct {
+	GotCnt   int
+	NewCnt   int
+	InFlight bool
+}
+
+func (p *SlurpProgress) String() string {
+	return fmt.Sprintf("Received %d articles (%d new)", p.GotCnt+p.NewCnt, p.NewCnt)
+}
+
 type Control struct {
 	App *App
 
@@ -26,7 +36,9 @@ type Control struct {
 	facets       []*Facet
 	store        *Store
 
-	HelpText string
+	SlurpProgress SlurpProgress
+	StatusText    string
+	HelpText      string
 }
 
 func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
@@ -242,21 +254,38 @@ func (ctrl *Control) forceArtsRefresh() {
 	qml.Changed(ctrl, &ctrl.FacetLen)
 }
 
-func (ctrl *Control) Slurp() {
+func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 
-	gotCnt := 0
-	newCnt := 0
-	for i := 1; i < 10; i++ {
-		n := fmt.Sprintf("%d", i)
-		art := Article{CanonicalURL: "http://foo.com/art-" + n,
-			Headline:  "HEadline " + n,
-			Content:   "Blah blah blah blah blah blah",
-			Published: "2014-12-09",
-			Updated:   "",
-			Pub:       "foo",
-			URLs:      []string{"http://foo.com/art-" + n},
+	ctrl.SlurpProgress = SlurpProgress{}
+
+	defer func() {
+		ctrl.SlurpProgress.InFlight = false
+		qml.Changed(ctrl, &ctrl.SlurpProgress.InFlight)
+	}()
+
+	ctrl.SlurpProgress.InFlight = true
+	qml.Changed(ctrl, &ctrl.SlurpProgress.InFlight)
+	incoming := Slurp(dayFrom, dayTo)
+
+	for msg := range incoming {
+		/*
+			ctrl.StatusText = fmt.Sprintf("Slurping - receieved %d articles (%d new)",
+				ctrl.SlurpProgress.GotCnt+ctrl.SlurpProgress.NewCnt,
+				ctrl.SlurpProgress.NewCnt)
+			qml.Changed(&ctrl, &ctrl.StatusText)
+		*/
+		ctrl.App.SetError(ctrl.SlurpProgress.String())
+		if msg.Error != "" {
+			dbug.Printf("Slurp error from server: %s\n", msg.Error)
+			ctrl.App.SetError(fmt.Sprintf("Slurp error from server: %s\n", msg.Error))
+			return
+		}
+		if msg.Article == nil {
+			dbug.Printf("Slurp WARN: missing article\n")
+			continue
 		}
 
+		art := msg.Article
 		got, err := ctrl.store.FindArt(art.URLs)
 		if err != nil {
 			// TODO: display error
@@ -264,19 +293,23 @@ func (ctrl *Control) Slurp() {
 			return
 		}
 		if got > 0 {
-			gotCnt++
+			ctrl.SlurpProgress.GotCnt++
+			qml.Changed(ctrl, &ctrl.SlurpProgress.GotCnt)
 			continue
 		}
-		err = ctrl.store.Stash(&art)
+		err = ctrl.store.Stash(art)
 		if err != nil {
-			// TODO: display error
 			dbug.Printf("ERROR: Stash failed: %s\n", err)
+			ctrl.App.SetError(fmt.Sprintf("Stash failed: %s\n", msg.Error))
 			return
 		}
 		//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
-		newCnt++
+		ctrl.SlurpProgress.NewCnt++
+		qml.Changed(ctrl, &ctrl.SlurpProgress.NewCnt)
 	}
 
-	dbug.Printf("slurped %d (%d new)\n", gotCnt+newCnt, newCnt)
+	dbug.Printf("Slurp finished.\n")
+	ctrl.App.SetError("")
+	//dbug.Printf("slurped %d (%d new)\n", gotCnt+newCnt, newCnt)
 	ctrl.forceArtsRefresh()
 }

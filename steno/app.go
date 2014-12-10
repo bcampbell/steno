@@ -16,6 +16,8 @@ type App struct {
 	ctx           *qml.Context
 	project       *Control
 	HasCurrent    bool
+
+	ErrorMsg string
 }
 
 func NewApp() (*App, error) {
@@ -38,6 +40,8 @@ func NewApp() (*App, error) {
 	}
 	app.HelpText = string(buf)
 	//	ctrl.HelpText = strings.Replace(ctrl.HelpText, "\n", "<br/>\n", -1)
+
+	app.ErrorMsg = "Hello"
 
 	// expose us to the qml side
 	ctx.SetVar("app", app)
@@ -68,6 +72,11 @@ func NewApp() (*App, error) {
 
 func (app *App) Current() *Control {
 	return app.project
+}
+
+func (app *App) SetError(msg string) {
+	app.ErrorMsg = msg
+	qml.Changed(app, &app.ErrorMsg)
 }
 
 func (app *App) OpenProject(storePath string) {

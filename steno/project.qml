@@ -6,6 +6,7 @@ import QtQuick.Layouts 1.0
 import QtQuick.Dialogs 1.0
 
 SplitView {
+    visible: !ctrl.slurpProgress.inFlight
     anchors.fill: parent
     orientation: Qt.Horizontal
 
@@ -40,6 +41,5 @@ SplitView {
             }
         }
     }
-
 }
 

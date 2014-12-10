@@ -3,7 +3,7 @@ import QtQml.Models 2.1
 import QtQuick 2.3
 import QtQuick.Controls 1.2
 import QtQuick.Layouts 1.0
-import QtQuick.Dialogs 1.0
+import QtQuick.Dialogs 1.2
 import QtQuick.Window 2.2
 
 /* by convention:
@@ -100,7 +100,7 @@ ApplicationWindow {
         id: slurpAction
         //iconSource: "images/fileopen.png"
         text: "Slurp articles from server..."
-        onTriggered: app.current().slurp()
+        onTriggered: slurpDlg.open()    //app.current().slurp()
         enabled: app.hasCurrent
     }
     Action {
@@ -132,7 +132,7 @@ ApplicationWindow {
 
     statusBar: StatusBar {
         RowLayout {
-            Label { text: "Read Only" }
+            Label { text: app.errorMsg }
         }
     }
 
@@ -157,6 +157,25 @@ ApplicationWindow {
 
     }
 
+
+
+    Dialog {
+        id: slurpDlg
+        title: "Slurp articles from server"
+
+        contentItem: Column {
+            spacing: 4
+            Label { text:"Pick day" }
+            Calendar {
+                id: dayPicker
+                onDoubleClicked: slurpDlg.click(StandardButton.Ok)
+             }
+        }
+        standardButtons: StandardButton.Ok | StandardButton.Cancel
+        onAccepted: app.current().slurp(
+            dayPicker.selectedDate.toISOString().slice(0,10),
+            dayPicker.selectedDate.toISOString().slice(0,10))
+    }
 }
 
 
