@@ -54,8 +54,8 @@ ApplicationWindow {
         }
 
         onAccepted: {
-            console.log("You chose: " + toLocalFile(openDialog.fileUrl))
-            app.openProject(toLocalFile(openDialog.fileUrl))
+            console.log("You chose: " + toLocalFile(newDialog.fileUrl))
+            app.openProject(toLocalFile(newDialog.fileUrl))
              
         }
         onRejected: {
