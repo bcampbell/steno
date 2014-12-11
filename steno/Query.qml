@@ -22,7 +22,7 @@ Item {
         }
         RowLayout {
             Text {
-                text: "" + ctrl.len + " matching articles (of " + ctrl.totalArts + ")"
+                text: "" + ctrl.results.len + " matching articles (of " + ctrl.totalArts + ")"
             }
             TextField {
                 id: tagEntry
@@ -53,7 +53,7 @@ Item {
            // columns: width/150
             spacing: 4
             Repeater {
-                model: ctrl.facetLen
+                model: ctrl.results.facetLen
                 delegate: Rectangle {
                     width: childrenRect.width + 8
                     height: childrenRect.height + 8
@@ -61,7 +61,7 @@ Item {
                     border.color: Qt.darker(color,2)
                     radius: 4
                     color: "#eeeeff"
-                    Text { x:4; y:4; text: ctrl.facet(index).txt + ": " +ctrl.facet(index).cnt }
+                    Text { x:4; y:4; text: ctrl.results.facet(index).txt + ": " +ctrl.results.facet(index).cnt }
                 }
             }
         }
@@ -73,7 +73,7 @@ Item {
                 anchors.fill: parent
                 color: styleData.textColor
                 elide: Text.ElideRight
-                text: ctrl.art(styleData.row).headline
+                text: ctrl.results.art(styleData.row).headline
 
             }
         }
@@ -87,7 +87,7 @@ Item {
                 anchors.fill: parent
                 color: styleData.textColor
                 elide: styleData.elideMode
-                text: ctrl.art(styleData.row).pub
+                text: ctrl.results.art(styleData.row).pub
             }
         }
     }
@@ -102,7 +102,7 @@ Item {
                 anchors.fill: parent
                 color: styleData.textColor
                 elide: styleData.elideMode
-                text: ctrl.art(styleData.row).published
+                text: ctrl.results.art(styleData.row).published
             }
         }
     }
@@ -118,7 +118,7 @@ Item {
                 anchors.fill: parent
                 color: styleData.textColor
                 elide: Text.ElideRight
-                text: asLink(ctrl.art(styleData.row).canonicalURL)
+                text: asLink(ctrl.results.art(styleData.row).canonicalURL)
                 onLinkActivated: Qt.openUrlExternally(link)
                     
             }
@@ -133,7 +133,7 @@ Item {
                 anchors.fill: parent
                 color: styleData.textColor
                 elide: Text.ElideRight
-                text: ctrl.art(styleData.row).tagsString()
+                text: ctrl.results.art(styleData.row).tagsString()
             }
         }
     }
@@ -147,14 +147,14 @@ Item {
             sortIndicatorVisible: true
             sortIndicatorColumn: ctrl.sortColumn
             sortIndicatorOrder: ctrl.sortOrder
-            model: ctrl.len
+            model: ctrl.results.len
             function selectedArts() {
                 var sel = [];
                 selection.forEach( function(rowIndex) { sel.push(rowIndex)} )
                 return sel
             }
 
-            onClicked: artInfo.showArt(ctrl.art(row))
+            onClicked: artInfo.showArt(ctrl.results.art(row))
             onSortIndicatorColumnChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
             onSortIndicatorOrderChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
             TableViewColumn{ role: "headline"  ; title: "headline" ; width: 400; delegate: headlineDelegate }

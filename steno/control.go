@@ -21,71 +21,67 @@ func (p *SlurpProgress) String() string {
 	return fmt.Sprintf("Received %d articles (%d new)", p.GotCnt+p.NewCnt, p.NewCnt)
 }
 
-type Control struct {
-	App *App
+type Results struct {
+	Query string
+	arts  ArtList
+	Len   int
 
-	obj qml.Object
-
-	CurrentQuery string
-	arts         ArtList
-	Len          int
-	TotalArts    int
-	SortColumn   int
-	SortOrder    int
-	FacetLen     int
-	facets       []*Facet
-	store        *Store
-
-	SlurpProgress SlurpProgress
-	StatusText    string
-	HelpText      string
+	FacetLen int
+	facets   []*Facet
 }
 
-func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
+func NewResults(store *Store, query string) (*Results, error) {
+	res := Results{Query: query}
+
 	var err error
-
-	ctrl := &Control{}
-	ctrl.App = app
-
-	err = ctrl.SetDB(storePath)
+	if query == "" {
+		res.arts, err = store.AllArts()
+	} else {
+		res.arts, err = store.Search(query)
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	// expose us to the qml side
-	app.ctx.SetVar("ctrl", ctrl)
-	w := app.Window.Root().ObjectByName("mainSpace")
-	// instantiate the gui
+	res.Len = len(res.arts)
 
-	ctrl.obj = gui.Create(nil)
-	ctrl.obj.Set("parent", w)
+	// calc facets
+	tab := map[string]int{}
+	for _, art := range res.arts {
+		tab[art.Pub]++
+	}
+	res.facets = []*Facet{}
+	for txt, cnt := range tab {
+		res.facets = append(res.facets, &Facet{txt, cnt})
+	}
+	res.FacetLen = len(res.facets)
 
-	/*
-		obj := window.Root().ObjectByName("query")
-		obj.Set("text", "")
-		fmt.Printf("%v\n", obj)
-	*/
-
-	return ctrl, nil
+	return &res, nil
 }
 
-func (ctrl *Control) Close() {
-	dbug.Printf("Close db\n")
-	ctrl.obj.Destroy()
-	ctrl.store.Close()
-	//ctrl.Window.Hide()
+func (res *Results) Art(idx int) *Article {
+	if idx >= 0 && idx < len(res.arts) {
+		return res.arts[idx]
+	}
+
+	// sometimes get here... seems to be tableview doing one last refresh on
+	// old delegates before zapping/recycling them
+	// TODO: investigate!
+	//	dbug.Printf("bad idx: %d\n", idx)
+	return &Article{Headline: fmt.Sprintf("<BAD> %d", idx)}
 }
 
-func (ctrl *Control) Art(idx int) *Article {
-	return ctrl.arts[idx]
-}
-func (ctrl *Control) Facet(idx int) *Facet {
-	return ctrl.facets[idx]
+func (res *Results) Facet(idx int) *Facet {
+	return res.facets[idx]
 }
 
-func (ctrl *Control) ApplySorting(sortColumn, sortOrder int) {
+// returns new Results
+func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 	// order: 1: ascending, 0: descending
 	dbug.Printf("new sorting: %d %d\n", sortColumn, sortOrder)
+
+	sorted := make(ArtList, len(res.arts))
+	copy(sorted, res.arts)
 
 	var criteria func(a1, a2 *Article) bool
 
@@ -109,107 +105,107 @@ func (ctrl *Control) ApplySorting(sortColumn, sortOrder int) {
 		}
 	}
 	if criteria != nil {
-		By(criteria).Sort(ctrl.arts)
+		By(criteria).Sort(sorted)
 	}
-	ctrl.forceArtsRefresh()
+
+	return &Results{
+		Query:    res.Query,
+		arts:     sorted,
+		Len:      len(sorted),
+		facets:   res.facets, // facets don't change
+		FacetLen: res.FacetLen,
+	}
+}
+
+type Control struct {
+	App *App
+
+	obj qml.Object
+
+	Results    *Results
+	TotalArts  int
+	SortColumn int
+	SortOrder  int
+	store      *Store
+
+	SlurpProgress SlurpProgress
+	StatusText    string
+	HelpText      string
+}
+
+func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
+	var err error
+
+	ctrl := &Control{}
+	ctrl.App = app
+
+	newStore, err := NewStore(storePath)
+	if err != nil {
+		return nil, err
+	}
+	ctrl.store = newStore
+
+	ctrl.Results, err = NewResults(ctrl.store, "")
+	if err != nil {
+		return nil, err
+	}
+
+	// expose us to the qml side
+	app.ctx.SetVar("ctrl", ctrl)
+
+	// instantiate the gui
+	w := app.Window.Root().ObjectByName("mainSpace")
+	ctrl.obj = gui.Create(nil)
+	ctrl.obj.Set("parent", w)
+
+	/*
+		obj := window.Root().ObjectByName("query")
+		obj.Set("text", "")
+		fmt.Printf("%v\n", obj)
+	*/
+
+	return ctrl, nil
+}
+
+func (ctrl *Control) Close() {
+	dbug.Printf("Close db\n")
+	ctrl.obj.Destroy()
+	ctrl.store.Close()
+	//ctrl.Window.Hide()
+}
+
+func (ctrl *Control) ApplySorting(sortColumn, sortOrder int) {
+	ctrl.Results = ctrl.Results.Sort(sortColumn, sortOrder)
+	qml.Changed(ctrl, &ctrl.Results)
 }
 
 // TODO: provide a function to validate query...
 
 func (ctrl *Control) SetQuery(q string) {
-	if ctrl.CurrentQuery == q {
+	if q == ctrl.Results.Query {
 		return
 	}
-	ctrl.CurrentQuery = q
+
+	res, err := NewResults(ctrl.store, q)
+	if err != nil {
+		//TODO: show error
+		dbug.Printf("Search error: %s", err)
+		return
+	}
 
 	fmt.Printf("SetQuery(%s)\n", q)
-	var err error
-	if q == "" {
-		ctrl.arts, err = ctrl.store.AllArts()
-	} else {
-		ctrl.arts, err = ctrl.store.Search(q)
-	}
-	if err != nil {
-		// TODO: display error...
-		dbug.Printf("Error in allArts(): %s\n", err)
-		//os.Exit(1)
-	}
-	ctrl.Len = len(ctrl.arts)
 	ctrl.TotalArts = ctrl.store.TotalArts()
+	ctrl.Results = res
+	qml.Changed(ctrl, &ctrl.Results)
+	fmt.Printf("END SetQuery(%s)\n", q)
 
-	ctrl.updateFacets()
-	ctrl.forceArtsRefresh()
-}
-
-/*
-func (ctrl *Control) OLDLoadDB(fileName string) {
-	fmt.Printf("loadDB(%s)\n", fileName)
-	var err error
-
-	coll = badger.NewCollection(&Article{})
-	coll, err = loadDB(fileName)
-	if err != nil {
-		dbug.Printf("loadDB error: %s\n", err)
-	}
-	// populate the initial query
-	ctrl.arts, err = allArts()
-	if err != nil {
-		dbug.Printf("Query error: %s\n", err)
-	}
-	ctrl.Len = len(ctrl.arts)
-	ctrl.TotalArts = coll.Count()
-	ctrl.forceArtsRefresh()
-
-	dbug.Printf("Save to sqlite!\n")
-	err = debadger(ctrl.arts, "fancy.db")
-	if err != nil {
-		dbug.Printf("debadger error: %s\n", err)
-	}
-	dbug.Printf("Load complete\n")
-}
-*/
-
-func (ctrl *Control) SetDB(fileName string) error {
-	fmt.Printf("SetDB(%s)\n", fileName)
-
-	//	ctrl.store.Close()
-	newStore, err := NewStore(fileName)
-	if err != nil {
-		dbug.Printf("SetDB error: %s\n", err)
-
-		return err
-	}
-	ctrl.store = newStore
-
-	// populate the initial query
-	ctrl.arts, err = ctrl.store.AllArts()
-	if err != nil {
-		return err
-	}
-	ctrl.Len = len(ctrl.arts)
-	ctrl.TotalArts = ctrl.store.TotalArts()
-	ctrl.updateFacets()
-	//	ctrl.forceArtsRefresh()
-	return nil
-}
-
-func (ctrl *Control) updateFacets() {
-	tab := map[string]int{}
-	for _, art := range ctrl.arts {
-		tab[art.Pub]++
-	}
-	ctrl.facets = []*Facet{}
-	for txt, cnt := range tab {
-		ctrl.facets = append(ctrl.facets, &Facet{txt, cnt})
-	}
-	ctrl.FacetLen = len(ctrl.facets)
 }
 
 func (ctrl *Control) AddTag(artIndices []int, tag string) {
 
 	arts := ArtList{}
 	for _, artIdx := range artIndices {
-		arts = append(arts, ctrl.arts[artIdx])
+		arts = append(arts, ctrl.Results.arts[artIdx])
 	}
 	affected, err := ctrl.store.AddTag(arts, tag)
 	if err != nil {
@@ -225,7 +221,7 @@ func (ctrl *Control) AddTag(artIndices []int, tag string) {
 func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
 	arts := ArtList{}
 	for _, artIdx := range artIndices {
-		arts = append(arts, ctrl.arts[artIdx])
+		arts = append(arts, ctrl.Results.arts[artIdx])
 	}
 	affected, err := ctrl.store.RemoveTag(arts, tag)
 	if err != nil {
@@ -241,17 +237,11 @@ func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
 func (ctrl *Control) forceArtsRefresh() {
 	// horrible fudge to force tableview to rethink itself,
 	// until go-qml lets you use a proper type as model.
-	foo := ctrl.Len
-	ctrl.Len = 0
-	qml.Changed(ctrl, &ctrl.Len)
-	ctrl.Len = foo
-	qml.Changed(ctrl, &ctrl.Len)
 
-	foo = ctrl.FacetLen
-	ctrl.FacetLen = 0
-	qml.Changed(ctrl, &ctrl.FacetLen)
-	ctrl.FacetLen = foo
-	qml.Changed(ctrl, &ctrl.FacetLen)
+	// create a new Results, with the same data
+	r := *ctrl.Results
+	ctrl.Results = &r
+	qml.Changed(ctrl, &ctrl.Results)
 }
 
 func (ctrl *Control) Slurp(dayFrom, dayTo string) {
@@ -311,5 +301,13 @@ func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 	dbug.Printf("Slurp finished.\n")
 	ctrl.App.SetError("")
 	//dbug.Printf("slurped %d (%d new)\n", gotCnt+newCnt, newCnt)
-	ctrl.forceArtsRefresh()
+
+	// re-run the current query
+	r2, err := NewResults(ctrl.store, ctrl.Results.Query)
+	if err != nil {
+		dbug.Printf("ERROR failed to refresh query: %s\n", err)
+		return
+	}
+	ctrl.Results = r2
+	qml.Changed(ctrl, &ctrl.Results)
 }
