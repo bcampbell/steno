@@ -12,13 +12,19 @@ type Facet struct {
 }
 
 type SlurpProgress struct {
+	TotalCnt int
 	GotCnt   int
 	NewCnt   int
 	InFlight bool
+	ErrorMsg string
 }
 
 func (p *SlurpProgress) String() string {
-	return fmt.Sprintf("Received %d articles (%d new)", p.GotCnt+p.NewCnt, p.NewCnt)
+	if p.ErrorMsg != "" {
+		return p.ErrorMsg
+	} else {
+		return fmt.Sprintf("Received %d articles (%d new)", p.GotCnt+p.NewCnt, p.NewCnt)
+	}
 }
 
 type Results struct {
@@ -246,68 +252,83 @@ func (ctrl *Control) forceArtsRefresh() {
 
 func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 
-	ctrl.SlurpProgress = SlurpProgress{}
+	go func() {
 
-	defer func() {
-		ctrl.SlurpProgress.InFlight = false
-		qml.Changed(ctrl, &ctrl.SlurpProgress.InFlight)
+		ctrl.SlurpProgress = SlurpProgress{}
+		prog := &ctrl.SlurpProgress
+
+		defer func() {
+			prog.InFlight = false
+			qml.Changed(ctrl, &ctrl.SlurpProgress)
+		}()
+
+		ctrl.SlurpProgress.InFlight = true
+		qml.Changed(ctrl, &ctrl.SlurpProgress)
+		incoming := Slurp(dayFrom, dayTo)
+
+		dbug.Printf("Slurping...\n")
+		for msg := range incoming {
+			if ctrl.SlurpProgress.TotalCnt%10 == 0 {
+				dbug.Printf("%s\n", ctrl.SlurpProgress.String())
+			}
+			/*
+				ctrl.StatusText = fmt.Sprintf("Slurping - receieved %d articles (%d new)",
+					ctrl.SlurpProgress.GotCnt+ctrl.SlurpProgress.NewCnt,
+					ctrl.SlurpProgress.NewCnt)
+				qml.Changed(&ctrl, &ctrl.StatusText)
+			*/
+			if msg.Error != "" {
+				uhoh := fmt.Sprintf("Slurp error from server: %s", msg.Error)
+				ctrl.SlurpProgress.ErrorMsg = uhoh
+				qml.Changed(ctrl, &ctrl.SlurpProgress)
+				dbug.Printf("%s\n", uhoh)
+				return
+			}
+			if msg.Article == nil {
+				dbug.Printf("Slurp WARN: missing article\n")
+				continue
+			}
+
+			art := msg.Article
+			got, err := ctrl.store.FindArt(art.URLs)
+			if err != nil {
+				uhoh := fmt.Sprintf("FindArt() failed: %s", err)
+				ctrl.SlurpProgress.ErrorMsg = uhoh
+				qml.Changed(ctrl, &ctrl.SlurpProgress)
+				dbug.Printf("%s\n", uhoh)
+				return
+			}
+			if got > 0 {
+				ctrl.SlurpProgress.GotCnt++
+				ctrl.SlurpProgress.TotalCnt++
+				qml.Changed(ctrl, &ctrl.SlurpProgress)
+				continue
+			}
+			err = ctrl.store.Stash(art)
+			if err != nil {
+				uhoh := fmt.Sprintf("Stash failed: %s", msg.Error)
+				ctrl.SlurpProgress.ErrorMsg = uhoh
+				qml.Changed(ctrl, &ctrl.SlurpProgress)
+				dbug.Printf("%s\n", uhoh)
+				return
+			}
+			//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
+			ctrl.SlurpProgress.NewCnt++
+			ctrl.SlurpProgress.TotalCnt++
+			qml.Changed(ctrl, &ctrl.SlurpProgress)
+		}
+
+		dbug.Printf("Slurp finished.\n")
+		ctrl.App.SetError("")
+		//dbug.Printf("slurped %d (%d new)\n", gotCnt+newCnt, newCnt)
+
+		// re-run the current query
+		r2, err := NewResults(ctrl.store, ctrl.Results.Query)
+		if err != nil {
+			dbug.Printf("ERROR failed to refresh query: %s\n", err)
+			return
+		}
+		ctrl.Results = r2
+		qml.Changed(ctrl, &ctrl.Results)
 	}()
-
-	ctrl.SlurpProgress.InFlight = true
-	qml.Changed(ctrl, &ctrl.SlurpProgress.InFlight)
-	incoming := Slurp(dayFrom, dayTo)
-
-	for msg := range incoming {
-		/*
-			ctrl.StatusText = fmt.Sprintf("Slurping - receieved %d articles (%d new)",
-				ctrl.SlurpProgress.GotCnt+ctrl.SlurpProgress.NewCnt,
-				ctrl.SlurpProgress.NewCnt)
-			qml.Changed(&ctrl, &ctrl.StatusText)
-		*/
-		ctrl.App.SetError(ctrl.SlurpProgress.String())
-		if msg.Error != "" {
-			dbug.Printf("Slurp error from server: %s\n", msg.Error)
-			ctrl.App.SetError(fmt.Sprintf("Slurp error from server: %s\n", msg.Error))
-			return
-		}
-		if msg.Article == nil {
-			dbug.Printf("Slurp WARN: missing article\n")
-			continue
-		}
-
-		art := msg.Article
-		got, err := ctrl.store.FindArt(art.URLs)
-		if err != nil {
-			// TODO: display error
-			dbug.Printf("ERROR FindArt() failed: %s\n", err)
-			return
-		}
-		if got > 0 {
-			ctrl.SlurpProgress.GotCnt++
-			qml.Changed(ctrl, &ctrl.SlurpProgress.GotCnt)
-			continue
-		}
-		err = ctrl.store.Stash(art)
-		if err != nil {
-			dbug.Printf("ERROR: Stash failed: %s\n", err)
-			ctrl.App.SetError(fmt.Sprintf("Stash failed: %s\n", msg.Error))
-			return
-		}
-		//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
-		ctrl.SlurpProgress.NewCnt++
-		qml.Changed(ctrl, &ctrl.SlurpProgress.NewCnt)
-	}
-
-	dbug.Printf("Slurp finished.\n")
-	ctrl.App.SetError("")
-	//dbug.Printf("slurped %d (%d new)\n", gotCnt+newCnt, newCnt)
-
-	// re-run the current query
-	r2, err := NewResults(ctrl.store, ctrl.Results.Query)
-	if err != nil {
-		dbug.Printf("ERROR failed to refresh query: %s\n", err)
-		return
-	}
-	ctrl.Results = r2
-	qml.Changed(ctrl, &ctrl.Results)
 }

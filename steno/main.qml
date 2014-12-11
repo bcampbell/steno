@@ -162,7 +162,6 @@ ApplicationWindow {
     Dialog {
         id: slurpDlg
         title: "Slurp articles from server"
-
         contentItem: Column {
             spacing: 4
             Label { text:"Pick day" }
@@ -176,6 +175,7 @@ ApplicationWindow {
             dayPicker.selectedDate.toISOString().slice(0,10),
             dayPicker.selectedDate.toISOString().slice(0,10))
     }
+
 }
 
 

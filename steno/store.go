@@ -323,6 +323,10 @@ func (store *Store) Search(queryString string) (ArtList, error) {
 	if err != nil {
 		return nil, err
 	}
+	// TODO: fix badger so it's not so silly!
+	if q == nil {
+		return store.AllArts()
+	}
 
 	var arts ArtList
 	store.coll.Find(q, &arts)
