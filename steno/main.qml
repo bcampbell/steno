@@ -64,6 +64,25 @@ ApplicationWindow {
         //Component.onCompleted: visible = true
     }
 
+    FileDialog {
+        id: exportOverallsDialog
+        title: "Export overall summary"
+        nameFilters: [ "CSV files files (*.csv)", "All files (*)" ]
+        selectExisting: false
+        function toLocalFile(f) {
+            return f.toString().replace(/^file:\/\//, "");
+        }
+
+        onAccepted: {
+            console.log("You chose: " + toLocalFile(fileUrl))
+            app.current().exportOveralls(toLocalFile(fileUrl))
+        }
+        onRejected: {
+            console.log("Canceled")
+        }
+        //Component.onCompleted: visible = true
+    }
+
     Action {
         id: openAction
         //iconSource: "images/fileopen.png"
@@ -104,6 +123,13 @@ ApplicationWindow {
         enabled: app.hasCurrent
     }
     Action {
+        id: exportOverallsAction
+        //iconSource: "images/fileopen.png"
+        text: "Export overall summary csv..."
+        onTriggered: exportOverallsDialog.open()
+        enabled: app.hasCurrent
+    }
+    Action {
         id: helpAction
         //iconSource: "images/fileopen.png"
         text: "Help..."
@@ -118,6 +144,10 @@ ApplicationWindow {
             MenuItem { action: newAction }
             MenuItem { action: closeAction }
             MenuItem { action: quitAction }
+        }
+        Menu {
+            title: "Tools"
+            MenuItem { action: exportOverallsAction }
             MenuItem { action: slurpAction }
         }
         Menu {

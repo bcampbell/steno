@@ -34,6 +34,19 @@ type Article struct {
 	Tags []string `json:"tags"`
 }
 
+func (art *Article) Day() string {
+	l := len(art.Published)
+	switch {
+	case l == 10:
+		return art.Published
+	case l < 10:
+		return ""
+	case l > 10:
+		return art.Published[0:10]
+	}
+	return ""
+}
+
 func (art *Article) TextContent() template.HTML {
 
 	r := strings.NewReader(art.Content)
