@@ -254,15 +254,19 @@ func (ctrl *Control) forceArtsRefresh() {
 func (ctrl *Control) ExportOveralls(outFile string) {
 
 	out, err := os.Create(outFile)
+
 	if err != nil {
 		// TODO: error on gui...
 		dbug.Printf("ERROR: %s", err)
+                return
 	}
 	err = exportOverallsCSV(ctrl.Results.arts, out)
 	if err != nil {
 		// TODO: error on gui...
 		dbug.Printf("ERROR exporting overalls: %s", err)
+                return;
 	}
+        dbug.Printf("Wrote to %s\n",outFile);
 }
 
 func (ctrl *Control) Slurp(dayFrom, dayTo string) {

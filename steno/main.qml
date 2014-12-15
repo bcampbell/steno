@@ -70,7 +70,9 @@ ApplicationWindow {
         nameFilters: [ "CSV files files (*.csv)", "All files (*)" ]
         selectExisting: false
         function toLocalFile(f) {
-            return f.toString().replace(/^file:\/\//, "");
+            // TODO: borked on windows!
+            var out = f.toString().replace(/^file:\/\//, "");
+            return out;
         }
 
         onAccepted: {
@@ -126,7 +128,8 @@ ApplicationWindow {
         id: exportOverallsAction
         //iconSource: "images/fileopen.png"
         text: "Export overall summary csv..."
-        onTriggered: exportOverallsDialog.open()
+        //onTriggered: exportOverallsDialog.open()
+        onTriggered: app.current().exportOveralls("overalls.csv")
         enabled: app.hasCurrent
     }
     Action {
