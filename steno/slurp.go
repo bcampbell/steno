@@ -57,6 +57,10 @@ func Slurp(dayFrom, dayTo string) chan Msg {
 
 			// massage the data slightly...
 			if msg.Article != nil {
+				if msg.Article.CanonicalURL == "" && len(msg.Article.URLs) > 0 {
+					msg.Article.CanonicalURL = msg.Article.URLs[0]
+				}
+
 				msg.Article.Pub = msg.Article.Publication.Code
 				// truncate date to day
 				if len(msg.Article.Published) > 10 {
