@@ -42,6 +42,12 @@ Item {
                 text: "remove tag"
                 onClicked: ctrl.removeTag(artList.selectedArts(), tagEntry.text)
             }
+            Button {
+                id: buttonDeleteArts
+                enabled: artList.selection.count > 0
+                text: "delete"
+                onClicked: ctrl.deleteArticles(artList.selectedArts())
+            }
             Text {
                 text: "" + artList.selection.count + " articles selected"
             }

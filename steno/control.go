@@ -38,18 +38,25 @@ type Results struct {
 }
 
 func NewResults(store *Store, query string) (*Results, error) {
-	res := Results{Query: query}
 
+	var arts ArtList
 	var err error
 	if query == "" {
-		res.arts, err = store.AllArts()
+		arts, err = store.AllArts()
 	} else {
-		res.arts, err = store.Search(query)
+		arts, err = store.Search(query)
 	}
 	if err != nil {
 		return nil, err
 	}
 
+	res := Results{Query: query}
+	res.setArts(arts)
+	return &res, nil
+}
+
+func (res *Results) setArts(arts ArtList) {
+	res.arts = arts
 	res.Len = len(res.arts)
 
 	// calc facets
@@ -62,8 +69,6 @@ func NewResults(store *Store, query string) (*Results, error) {
 		res.facets = append(res.facets, &Facet{txt, cnt})
 	}
 	res.FacetLen = len(res.facets)
-
-	return &res, nil
 }
 
 func (res *Results) Art(idx int) *Article {
@@ -204,10 +209,26 @@ func (ctrl *Control) SetQuery(q string) {
 	ctrl.TotalArts = ctrl.store.TotalArts()
 	ctrl.Results = res
 	qml.Changed(ctrl, &ctrl.Results)
-	fmt.Printf("END SetQuery(%s)\n", q)
-
 }
 
+func (ctrl *Control) DeleteArticles(artIndices []int) {
+
+	arts := ArtList{}
+	for _, artIdx := range artIndices {
+		arts = append(arts, ctrl.Results.arts[artIdx])
+	}
+	err := ctrl.store.Delete(arts)
+	if err != nil {
+		dbug.Printf("ERROR: delete failed: %s\n", err)
+		return
+	}
+	//	dbug.Printf("%d articles deleted\n", len(arts))
+
+	// update the display to reflect the deletion
+	newArts := ctrl.Results.arts.Subtract(arts)
+	ctrl.Results.setArts(newArts)
+	ctrl.forceArtsRefresh()
+}
 func (ctrl *Control) AddTag(artIndices []int, tag string) {
 
 	arts := ArtList{}
@@ -242,9 +263,7 @@ func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
 }
 
 func (ctrl *Control) forceArtsRefresh() {
-	// horrible fudge to force tableview to rethink itself,
-	// until go-qml lets you use a proper type as model.
-
+	// fudge to force tableview to rethink itself:
 	// create a new Results, with the same data
 	r := *ctrl.Results
 	ctrl.Results = &r
@@ -258,15 +277,15 @@ func (ctrl *Control) ExportOveralls(outFile string) {
 	if err != nil {
 		// TODO: error on gui...
 		dbug.Printf("ERROR: %s", err)
-                return
+		return
 	}
 	err = exportOverallsCSV(ctrl.Results.arts, out)
 	if err != nil {
 		// TODO: error on gui...
 		dbug.Printf("ERROR exporting overalls: %s", err)
-                return;
+		return
 	}
-        dbug.Printf("Wrote to %s\n",outFile);
+	dbug.Printf("Wrote to %s\n", outFile)
 }
 
 func (ctrl *Control) Slurp(dayFrom, dayTo string) {

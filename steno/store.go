@@ -50,6 +50,7 @@ func DummyStore() *Store {
 
 func (store *Store) Close() {
 	if store.db != nil {
+		dbug.Printf("Close sqlite db\n")
 		store.db.Close()
 		store.db = nil
 	}
@@ -370,6 +371,78 @@ func (store *Store) RemoveTag(arts ArtList, tag string) (ArtList, error) {
 		}
 	}
 
+	return affected, nil
+}
+
+// delete articles
+func (store *Store) Delete(arts ArtList) error {
+	tx, err := store.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	affected, err := store.doDelete(tx, arts)
+	if err != nil {
+		dbug.Printf("error, rolling back\n")
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	dbug.Printf("Deleted %d articles\n", affected)
+	return nil
+}
+
+func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
+	var affected int64 = 0
+	// TODO: maybe use "on delete cascade" to let the db handle the details...
+	// (requires an sqlite pragma to enable foreign keys)
+	delTagsStmt, err := tx.Prepare("DELETE FROM article_tag WHERE article_id=?")
+	if err != nil {
+		return 0, err
+	}
+	defer delTagsStmt.Close()
+	delURLsStmt, err := tx.Prepare("DELETE FROM article_url WHERE article_id=?")
+	if err != nil {
+		return 0, err
+	}
+	defer delURLsStmt.Close()
+	delArtStmt, err := tx.Prepare("DELETE FROM article WHERE id=?")
+	if err != nil {
+		return 0, err
+	}
+	defer delArtStmt.Close()
+
+	for _, art := range arts {
+
+		_, err = delTagsStmt.Exec(art.ID)
+		if err != nil {
+			return 0, err
+		}
+
+		_, err = delURLsStmt.Exec(art.ID)
+		if err != nil {
+			return 0, err
+		}
+		r, err := delArtStmt.Exec(art.ID)
+		if err != nil {
+			return 0, err
+		}
+		// check we actually deleted something...
+		foo, err := r.RowsAffected()
+		if err != nil {
+			return 0, err
+		}
+		affected += foo
+	}
+
+	// now update the index
+	for _, art := range arts {
+		store.coll.Remove(art)
+	}
 	return affected, nil
 }
 

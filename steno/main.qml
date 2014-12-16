@@ -6,6 +6,9 @@ import QtQuick.Layouts 1.0
 import QtQuick.Dialogs 1.2
 import QtQuick.Window 2.2
 
+
+import "helper.js" as Helper
+
 /* by convention:
     id
     property declarations
@@ -29,15 +32,10 @@ ApplicationWindow {
         id: openDialog
         title: "Please choose project to open"
         nameFilters: [ "Steno database files (*.db)", "All files (*)" ]
-        function toLocalFile(f) {
-            return f.toString().replace(/^file:\/\//, "");
-        }
-
-
         onAccepted: {
-            console.log("You chose: " + toLocalFile(openDialog.fileUrl))
-            app.openProject(toLocalFile(openDialog.fileUrl))
-             
+            var f = Helper.filePathFromURL(openDialog.fileUrl);
+            console.log("You chose: " + f)
+            app.openProject(f)
         }
         onRejected: {
             console.log("Canceled")
@@ -49,13 +47,11 @@ ApplicationWindow {
         title: "Create new project"
         nameFilters: [ "Steno database files (*.db)", "All files (*)" ]
         selectExisting: false
-        function toLocalFile(f) {
-            return f.toString().replace(/^file:\/\//, "");
-        }
 
         onAccepted: {
-            console.log("You chose: " + toLocalFile(newDialog.fileUrl))
-            app.openProject(toLocalFile(newDialog.fileUrl))
+            var f = Helper.filePathFromURL(newDialog.fileUrl);
+            console.log("You chose: " + f)
+            app.openProject(f)
              
         }
         onRejected: {
@@ -69,15 +65,11 @@ ApplicationWindow {
         title: "Export overall summary"
         nameFilters: [ "CSV files files (*.csv)", "All files (*)" ]
         selectExisting: false
-        function toLocalFile(f) {
-            // TODO: borked on windows!
-            var out = f.toString().replace(/^file:\/\//, "");
-            return out;
-        }
 
         onAccepted: {
-            console.log("You chose: " + toLocalFile(fileUrl))
-            app.current().exportOveralls(toLocalFile(fileUrl))
+            var f = Helper.filePathFromURL(exportOverallsDialog.fileUrl);
+            console.log("You chose: " + f)
+            app.current().exportOveralls(f)
         }
         onRejected: {
             console.log("Canceled")
@@ -128,8 +120,7 @@ ApplicationWindow {
         id: exportOverallsAction
         //iconSource: "images/fileopen.png"
         text: "Export overall summary csv..."
-        //onTriggered: exportOverallsDialog.open()
-        onTriggered: app.current().exportOveralls("overalls.csv")
+        onTriggered: exportOverallsDialog.open()
         enabled: app.hasCurrent
     }
     Action {
@@ -139,7 +130,6 @@ ApplicationWindow {
         shortcut: StandardKey.HelpContents
         onTriggered: helpWindow.visible = !helpWindow.visible
     }
-
     menuBar: MenuBar {
         Menu {
             title: "File"

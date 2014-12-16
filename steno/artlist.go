@@ -32,6 +32,20 @@ func (arts *ArtList) Pubs() []string {
 	return out
 }
 
+func (arts ArtList) Subtract(other ArtList) ArtList {
+	lookup := map[*Article]struct{}{}
+	for _, art := range other {
+		lookup[art] = struct{}{}
+	}
+	out := make(ArtList, 0, len(arts)-len(other))
+	for _, art := range arts {
+		if _, got := lookup[art]; !got {
+			out = append(out, art)
+		}
+	}
+	return out
+}
+
 //***************************
 // support for ArtList sorting
 

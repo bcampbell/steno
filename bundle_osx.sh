@@ -13,7 +13,7 @@ mkdir $APP/Contents/Resources
 
 cp Info.plist $APP/Contents/
 cp steno/steno $APP/Contents/MacOS/
-RESOURCES="fook.qml Query.qml HelpPane.qml help.html"
+RESOURCES="fook.qml Query.qml HelpPane.qml help.html helper.js"
 for RES in $RESOURCES
 do
     cp steno/$RES $APP/Contents/Resources/

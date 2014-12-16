@@ -7,7 +7,7 @@ OUT=steno_win32_$STAMP
 mkdir $OUT
 
 cp steno/steno.exe $OUT/
-RESOURCES="main.qml project.qml Query.qml help.html"
+RESOURCES="main.qml project.qml Query.qml help.html helper.js"
 for RES in $RESOURCES
 do
     cp steno/$RES $OUT/
