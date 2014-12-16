@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/qml.v1"
 	"os"
-	//	"strings"
+	"strings"
 )
 
 type Facet struct {
@@ -69,6 +69,34 @@ func (res *Results) setArts(arts ArtList) {
 		res.facets = append(res.facets, &Facet{txt, cnt})
 	}
 	res.FacetLen = len(res.facets)
+}
+
+func (res *Results) Search(needle string) []int {
+	needle = strings.ToLower(needle)
+	out := []int{}
+	for idx, art := range res.arts {
+		if strings.Contains(strings.ToLower(art.Headline), needle) {
+			out = append(out, idx)
+			continue
+		}
+		if strings.Contains(strings.ToLower(art.CanonicalURL), needle) {
+			out = append(out, idx)
+			continue
+		}
+		if strings.Contains(strings.ToLower(art.Published), needle) {
+			out = append(out, idx)
+			continue
+		}
+		if strings.Contains(strings.ToLower(art.Pub), needle) {
+			out = append(out, idx)
+			continue
+		}
+		if strings.Contains(strings.ToLower(art.TagsString()), needle) {
+			out = append(out, idx)
+			continue
+		}
+	}
+	return out
 }
 
 func (res *Results) Art(idx int) *Article {

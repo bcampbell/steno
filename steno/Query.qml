@@ -169,5 +169,14 @@ Item {
             TableViewColumn{ role: "tags" ; title: "tags" ; width: 100; delegate: tagsDelegate  }
             TableViewColumn{ role: "url" ; title: "url" ; width: 400; delegate: urlDelegate  }
         }
+/*
+        TextField {
+            placeholderText: "find"
+            onEditingFinished: {
+                var mtch = ctrl.results.search(text);
+                console.Log(mtch);
+            }
+        }
+*/
     }
 }
