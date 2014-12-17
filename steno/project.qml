@@ -7,6 +7,7 @@ import QtQuick.Dialogs 1.2
 
 Item {
     anchors.fill: parent
+
     SplitView {
         anchors.fill: parent
         orientation: Qt.Horizontal
@@ -16,6 +17,7 @@ Item {
             Layout.fillWidth: true
             orientation: Qt.Vertical
             Query {
+                id: wibble
                 Layout.fillHeight: true
                 Layout.fillWidth: true
             }
@@ -64,4 +66,5 @@ Item {
         }
         standardButtons: StandardButton.Ok | StandardButton.Cancel
     }
+
 }

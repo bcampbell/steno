@@ -9,6 +9,65 @@ import QtQuick.Dialogs 1.0
 // This is the main bit, where the query and results and tools are shown.
 
 Item {
+
+    function currentSel() {
+        var foo = -1;
+        artList.selection.forEach(function(i) { foo=i; });
+        return foo;
+    }
+
+    function findNext(needle) {
+        var i = currentSel();
+        if(i==-1) {
+            i=0;
+        } else {
+            i=i+1;
+        }
+        i = ctrl.results.findForward(i,needle);
+        if (i<0) {
+            // wrap?
+        } else {
+            artList.selection.clear();
+            artList.selection.select(i);
+            artList.positionViewAtRow(i, ListView.Center);
+        }
+    }
+    function findPrevious(needle) {
+        var i = currentSel()-1;
+        if(i<0) {
+            i=0;
+        }
+        i = ctrl.results.findReverse(i,needle);
+        if (i<0) {
+            // wrap?
+        } else {
+            artList.selection.clear();
+            artList.selection.select(i);
+            artList.positionViewAtRow(i, ListView.Center);
+        }
+    }
+
+    Action {
+        id: findAction
+        text: "Find..."
+        shortcut: StandardKey.Find
+        onTriggered: findText.focus=true
+    }
+    Action {
+        id: findNextAction
+        text: "Find next"
+        shortcut: StandardKey.FindNext
+        onTriggered: findNext(findText.text)
+        enabled: findText.text!=""
+    }
+    Action {
+        id: findPreviousAction
+        text: "Find previous"
+        shortcut: StandardKey.FindPrevious
+        onTriggered: findPrevious(findText.text)
+        enabled:  findText.text!=""
+    }
+
     ColumnLayout {
         anchors.fill: parent
     //    Layout.fillHeight: true
@@ -71,80 +130,84 @@ Item {
                 }
             }
         }
-    Component {
-        id: headlineDelegate
-        Item {
-            clip: true
-            Text {
-                anchors.fill: parent
-                color: styleData.textColor
-                elide: Text.ElideRight
-                text: ctrl.results.art(styleData.row).headline
-
-            }
-        }
-    }
-
-    Component {
-        id: pubDelegate
-        Item {
-            clip: true
-            Text {
-                anchors.fill: parent
-                color: styleData.textColor
-                elide: styleData.elideMode
-                text: ctrl.results.art(styleData.row).pub
-            }
-        }
-    }
-
-    Component {
-        id: publishedDelegate
-        Item {
-            clip: true
 
 
-            Text {
-                anchors.fill: parent
-                color: styleData.textColor
-                elide: styleData.elideMode
-                text: ctrl.results.art(styleData.row).published
-            }
-        }
-    }
-
-    Component {
-        id: urlDelegate
-        Item {
-            function asLink(s) {
-                return '<a href="'+s+'">'+s+'</a>';
-            }
-            clip: true
-            Text {
-                anchors.fill: parent
-                color: styleData.textColor
-                elide: Text.ElideRight
-                text: asLink(ctrl.results.art(styleData.row).canonicalURL)
-                onLinkActivated: Qt.openUrlExternally(link)
-                    
-            }
-        }
-    }
-
-    Component {
-        id: tagsDelegate
-        Item {
-            clip: true
-            Text {
-                anchors.fill: parent
-                color: styleData.textColor
-                elide: Text.ElideRight
-                text: ctrl.results.art(styleData.row).tagsString()
-            }
-        }
-    }
-
+        // the results display
         TableView {
+
+        Component {
+            id: headlineDelegate
+            Item {
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: Text.ElideRight
+                    text: ctrl.results.art(styleData.row).headline
+
+                }
+            }
+        }
+
+        Component {
+            id: pubDelegate
+            Item {
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: styleData.elideMode
+                    text: ctrl.results.art(styleData.row).pub
+                }
+            }
+        }
+
+        Component {
+            id: publishedDelegate
+            Item {
+                clip: true
+
+
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: styleData.elideMode
+                    text: ctrl.results.art(styleData.row).published
+                }
+            }
+        }
+
+        Component {
+            id: urlDelegate
+            Item {
+                function asLink(s) {
+                    return '<a href="'+s+'">'+s+'</a>';
+                }
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: Text.ElideRight
+                    text: asLink(ctrl.results.art(styleData.row).canonicalURL)
+                    onLinkActivated: Qt.openUrlExternally(link)
+                        
+                }
+            }
+        }
+
+        Component {
+            id: tagsDelegate
+            Item {
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: Text.ElideRight
+                    text: ctrl.results.art(styleData.row).tagsString()
+                }
+            }
+        }
+
             id: artList
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -169,14 +232,24 @@ Item {
             TableViewColumn{ role: "tags" ; title: "tags" ; width: 100; delegate: tagsDelegate  }
             TableViewColumn{ role: "url" ; title: "url" ; width: 400; delegate: urlDelegate  }
         }
-/*
-        TextField {
-            placeholderText: "find"
-            onEditingFinished: {
-                var mtch = ctrl.results.search(text);
-                console.Log(mtch);
+        Row {
+            id: findBar
+            TextField {
+                id: findText
+                placeholderText: "find"
+                onEditingFinished: {
+                    artList.selection.clear();
+                    findNext(text);
+                }
+            }
+            Button {
+                text:"Next"
+                action: findNextAction
+            }
+            Button {
+                text:"Prev"
+                action: findPreviousAction
             }
         }
-*/
     }
 }

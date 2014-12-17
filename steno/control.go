@@ -71,32 +71,43 @@ func (res *Results) setArts(arts ArtList) {
 	res.FacetLen = len(res.facets)
 }
 
-func (res *Results) Search(needle string) []int {
+func (res *Results) Match(artIdx int, needle string) bool {
 	needle = strings.ToLower(needle)
-	out := []int{}
-	for idx, art := range res.arts {
-		if strings.Contains(strings.ToLower(art.Headline), needle) {
-			out = append(out, idx)
-			continue
-		}
-		if strings.Contains(strings.ToLower(art.CanonicalURL), needle) {
-			out = append(out, idx)
-			continue
-		}
-		if strings.Contains(strings.ToLower(art.Published), needle) {
-			out = append(out, idx)
-			continue
-		}
-		if strings.Contains(strings.ToLower(art.Pub), needle) {
-			out = append(out, idx)
-			continue
-		}
-		if strings.Contains(strings.ToLower(art.TagsString()), needle) {
-			out = append(out, idx)
-			continue
+	art := res.Art(artIdx)
+	if strings.Contains(strings.ToLower(art.Headline), needle) {
+		return true
+	}
+	if strings.Contains(strings.ToLower(art.CanonicalURL), needle) {
+		return true
+	}
+	if strings.Contains(strings.ToLower(art.Published), needle) {
+		return true
+	}
+	if strings.Contains(strings.ToLower(art.Pub), needle) {
+		return true
+	}
+	if strings.Contains(strings.ToLower(art.TagsString()), needle) {
+		return true
+	}
+	return false
+}
+
+func (res *Results) FindForward(artIdx int, needle string) int {
+	for ; artIdx < len(res.arts); artIdx++ {
+		if res.Match(artIdx, needle) {
+			return artIdx
 		}
 	}
-	return out
+	return -1
+}
+
+func (res *Results) FindReverse(artIdx int, needle string) int {
+	for ; artIdx >= 0; artIdx-- {
+		if res.Match(artIdx, needle) {
+			return artIdx
+		}
+	}
+	return -1
 }
 
 func (res *Results) Art(idx int) *Article {
