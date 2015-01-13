@@ -29,6 +29,7 @@ type Article struct {
 	Publication Publication `json:"publication"`
 
 	//Keywords []Keyword
+	Section string `json:"section"`
 
 	Pub  string
 	Tags []string `json:"tags"`

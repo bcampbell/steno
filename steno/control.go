@@ -143,6 +143,8 @@ func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 		case 1:
 			criteria = func(a1, a2 *Article) bool { return a1.Pub > a2.Pub }
 		case 2:
+			criteria = func(a1, a2 *Article) bool { return a1.Section > a2.Section }
+		case 3:
 			criteria = func(a1, a2 *Article) bool { return a1.Published > a2.Published }
 		}
 	} else if sortOrder == 1 {
@@ -152,6 +154,8 @@ func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 		case 1:
 			criteria = func(a1, a2 *Article) bool { return a1.Pub < a2.Pub }
 		case 2:
+			criteria = func(a1, a2 *Article) bool { return a1.Section < a2.Section }
+		case 3:
 			criteria = func(a1, a2 *Article) bool { return a1.Published < a2.Published }
 		}
 	}
@@ -383,7 +387,7 @@ func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 			}
 			err = ctrl.store.Stash(art)
 			if err != nil {
-				uhoh := fmt.Sprintf("Stash failed: %s", msg.Error)
+				uhoh := fmt.Sprintf("Stash failed: %s", err)
 				ctrl.SlurpProgress.ErrorMsg = uhoh
 				qml.Changed(ctrl, &ctrl.SlurpProgress)
 				dbug.Printf("%s\n", uhoh)

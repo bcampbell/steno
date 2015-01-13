@@ -29,7 +29,7 @@ func NewStore(dbFile string) (*Store, error) {
 		return nil, err
 	}
 
-	err = store.initDBSchema()
+	err = store.initDB()
 	if err != nil {
 		return nil, err
 	}
@@ -61,35 +61,57 @@ func (store *Store) TotalArts() int {
 	return store.coll.Count()
 }
 
-func (store *Store) initDBSchema() error {
+func (store *Store) schemaVersion() (int, error) {
+	var n string
+	err := store.db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='article';`).Scan(&n)
+	if err == sql.ErrNoRows {
+		return 0, nil // no schema at all
+	}
+	err = store.db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='version';`).Scan(&n)
+	if err == sql.ErrNoRows {
+		return 1, nil // version 1: no version table :-)
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	var v int
+	err = store.db.QueryRow(`SELECT MAX(ver) FROM version`).Scan(&v)
+	if err != nil {
+		return 0, err
+	}
+
+	return v, nil
+}
+
+func (store *Store) createSchema() error {
 
 	var err error
-	// TODO: store a schema version number in db
-
 	// TODO:
 	// Authors
-	// Publication
+	// full Publication
 	// Keywords
-	_, err = store.db.Exec(`CREATE TABLE IF NOT EXISTS article (
+	_, err = store.db.Exec(`CREATE TABLE article (
          id INTEGER PRIMARY KEY,
          canonical_url TEXT NOT NULL,
          headline TEXT NOT NULL,
          content TEXT NOT NULL,
          published TEXT NOT NULL,
          updated TEXT NOT NULL,
+         section TEXT NOT NULL DEFAULT '',
          pub TEXT NOT NULL )`)
 	if err != nil {
 		return err
 	}
 
-	_, err = store.db.Exec(`CREATE TABLE IF NOT EXISTS article_tag (
+	_, err = store.db.Exec(`CREATE TABLE article_tag (
          id INTEGER PRIMARY KEY,
          article_id INTEGER NOT NULL,   -- should be foreign key
          tag TEXT NOT NULL )`)
 	if err != nil {
 		return err
 	}
-	_, err = store.db.Exec(`CREATE TABLE IF NOT EXISTS article_url (
+	_, err = store.db.Exec(`CREATE TABLE article_url (
          id INTEGER PRIMARY KEY,
          article_id INTEGER NOT NULL,   -- should be foreign key
          url TEXT NOT NULL )`)
@@ -97,73 +119,49 @@ func (store *Store) initDBSchema() error {
 		return err
 	}
 
+	_, err = store.db.Exec(`CREATE TABLE version (ver INTEGER NOT NULL)`)
+	if err != nil {
+		return err
+	}
+	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (2)`)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// write articles out to db
-/*
-func debadger(srcArts ArtList, dbFile string) error {
-	db, err := sql.Open("sqlite3", dbFile)
+func (store *Store) initDB() error {
+	ver, err := store.schemaVersion()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
 
-	tx, err := db.Begin()
-	if err != nil {
-		return err
+	if ver == 0 {
+		// blank slate
+		return store.createSchema()
 	}
-	artStmt, err := tx.Prepare("insert into article(canonical_url, headline, content,published,updated,pub) values(?,?,?,?,?,?)")
-	if err != nil {
-		return err
-	}
-	defer artStmt.Close()
 
-	urlStmt, err := tx.Prepare("insert into article_url(article_id,url) values(?,?)")
-	if err != nil {
-		return err
-	}
-	defer urlStmt.Close()
-
-	tagStmt, err := tx.Prepare("insert into article_tag(article_id,tag) values(?,?)")
-	if err != nil {
-		return err
-	}
-	defer tagStmt.Close()
-
-	for _, art := range srcArts {
-		var result sql.Result
-		result, err = artStmt.Exec(art.CanonicalURL, art.Headline, art.Content, art.Published, art.Updated, art.Pub)
+	// schema exists - apply any migrations required
+	if ver < 2 {
+		dbug.Printf("updating database to version 2\n")
+		_, err = store.db.Exec(`ALTER TABLE article ADD COLUMN section TEXT NOT NULL DEFAULT ''`)
 		if err != nil {
 			return err
 		}
-		artID, err := result.LastInsertId()
+		_, err = store.db.Exec(`CREATE TABLE version (ver INTEGER NOT NULL)`)
 		if err != nil {
 			return err
 		}
-		for _, u := range art.URLs {
-			_, err = urlStmt.Exec(artID, u)
-			if err != nil {
-				return err
-			}
+		_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (2)`)
+		if err != nil {
+			return err
 		}
-		for _, tag := range art.Tags {
-			_, err = tagStmt.Exec(artID, tag)
-			if err != nil {
-				return err
-			}
-		}
-
-	}
-	err = tx.Commit()
-	if err != nil {
-		return err
 	}
 	return nil
 }
-*/
 
-// read in files from DB
+// read in articles from DB
 func (store *Store) readAllArts() (ArtList, error) {
 	db := store.db
 
@@ -176,7 +174,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 
 	for rows.Next() {
 		a := &Article{}
-		err = rows.Scan(&a.ID, &a.CanonicalURL, &a.Headline, &a.Content, &a.Published, &a.Updated, &a.Pub)
+		err = rows.Scan(&a.ID, &a.CanonicalURL, &a.Headline, &a.Content, &a.Published, &a.Updated, &a.Pub, &a.Section)
 		if err != nil {
 			return nil, err
 		}
@@ -509,14 +507,15 @@ func (store *Store) Stash(art *Article) error {
 
 func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 	var result sql.Result
-	result, err := tx.Exec(`INSERT INTO article(canonical_url, headline, content,published,updated,pub)
-        values(?,?,?,?,?,?)`,
+	result, err := tx.Exec(`INSERT INTO article(canonical_url, headline, content,published,updated,pub,section)
+        values(?,?,?,?,?,?,?)`,
 		art.CanonicalURL,
 		art.Headline,
 		art.Content,
 		art.Published,
 		art.Updated,
-		art.Pub)
+		art.Pub,
+		art.Section)
 	if err != nil {
 		return err
 	}

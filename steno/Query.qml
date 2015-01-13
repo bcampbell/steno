@@ -196,6 +196,19 @@ Item {
         }
 
         Component {
+            id: sectionDelegate
+            Item {
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: styleData.elideMode
+                    text: ctrl.results.art(styleData.row).section
+                }
+            }
+        }
+
+        Component {
             id: tagsDelegate
             Item {
                 clip: true
@@ -228,6 +241,7 @@ Item {
             onSortIndicatorOrderChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
             TableViewColumn{ role: "headline"  ; title: "headline" ; width: 400; delegate: headlineDelegate }
             TableViewColumn{ role: "pub"  ; title: "pub" ; width: 100; delegate: pubDelegate }
+            TableViewColumn{ role: "section"  ; title: "section" ; width: 100; delegate: sectionDelegate }
             TableViewColumn{ role: "published"  ; title: "published" ; width: 100; delegate: publishedDelegate }
             TableViewColumn{ role: "tags" ; title: "tags" ; width: 100; delegate: tagsDelegate  }
             TableViewColumn{ role: "url" ; title: "url" ; width: 400; delegate: urlDelegate  }

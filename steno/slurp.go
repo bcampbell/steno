@@ -35,7 +35,7 @@ func Slurp(dayFrom, dayTo string) chan Msg {
 			out <- Msg{Error: "POOOPY"}
 		*/
 
-		//		u := fmt.Sprintf("http://localhost:12345/all?from=%s&to=%s", dayFrom, dayTo)
+		//u := fmt.Sprintf("http://localhost:12345/all?from=%s&to=%s", dayFrom, dayTo)
 		u := fmt.Sprintf("http://foo.scumways.com/all?from=%s&to=%s", dayFrom, dayTo)
 
 		resp, err := http.Get(u)
