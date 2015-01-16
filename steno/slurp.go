@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
 
 type Msg struct {
@@ -34,9 +35,11 @@ func Slurp(dayFrom, dayTo string) chan Msg {
 
 			out <- Msg{Error: "POOOPY"}
 		*/
-
-		//u := fmt.Sprintf("http://localhost:12345/all?from=%s&to=%s", dayFrom, dayTo)
-		u := fmt.Sprintf("http://foo.scumways.com/all?from=%s&to=%s", dayFrom, dayTo)
+		server := os.Getenv("STENO_SLURP_ADDR")
+		if server == "" {
+			server = "foo.scumways.com"
+		}
+		u := fmt.Sprintf("http://%s/all?from=%s&to=%s", server, dayFrom, dayTo)
 
 		resp, err := http.Get(u)
 		if err != nil {
