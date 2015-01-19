@@ -35,6 +35,9 @@ func NewStore(dbFile string) (*Store, error) {
 	}
 
 	arts, err := store.readAllArts()
+	if err != nil {
+		return nil, err
+	}
 	store.coll = badger.NewCollection(&Article{})
 	for _, art := range arts {
 		store.coll.Put(art)
@@ -167,7 +170,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 
 	tab := map[int]*Article{}
 
-	rows, err := db.Query("SELECT id,canonical_url,headline,content,published,updated,pub FROM article")
+	rows, err := db.Query("SELECT id,canonical_url,headline,content,published,updated,pub,section FROM article")
 	if err != nil {
 		return nil, err
 	}
