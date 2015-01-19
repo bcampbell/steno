@@ -267,10 +267,14 @@ func (ctrl *Control) DeleteArticles(artIndices []int) {
 	}
 	//	dbug.Printf("%d articles deleted\n", len(arts))
 
-	// update the display to reflect the deletion
-	newArts := ctrl.Results.arts.Subtract(arts)
-	ctrl.Results.setArts(newArts)
-	ctrl.forceArtsRefresh()
+	// rerun the current query
+	newResults, err := NewResults(ctrl.store, ctrl.Results.Query)
+	if err != nil {
+		dbug.Printf("Rerun query: ERROR: %s\n", err)
+		return
+	}
+	ctrl.Results = newResults
+	qml.Changed(ctrl, &ctrl.Results)
 }
 func (ctrl *Control) AddTag(artIndices []int, tag string) {
 
@@ -285,8 +289,14 @@ func (ctrl *Control) AddTag(artIndices []int, tag string) {
 		dbug.Printf("AddTag(%s): %d affected\n", tag, len(affected))
 	}
 
-	// TODO: signal changed arts instead of whole list
-	ctrl.forceArtsRefresh()
+	// rerun the current query
+	newResults, err := NewResults(ctrl.store, ctrl.Results.Query)
+	if err != nil {
+		dbug.Printf("Rerun query: ERROR: %s\n", err)
+		return
+	}
+	ctrl.Results = newResults
+	qml.Changed(ctrl, &ctrl.Results)
 }
 
 func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
@@ -301,8 +311,14 @@ func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
 		dbug.Printf("RemoveTag(%s): %d affected\n", tag, len(affected))
 	}
 
-	// TODO: signal changed arts instead of whole list
-	ctrl.forceArtsRefresh()
+	// rerun the current query
+	newResults, err := NewResults(ctrl.store, ctrl.Results.Query)
+	if err != nil {
+		dbug.Printf("Rerun query: ERROR: %s\n", err)
+		return
+	}
+	ctrl.Results = newResults
+	qml.Changed(ctrl, &ctrl.Results)
 }
 
 func (ctrl *Control) forceArtsRefresh() {
