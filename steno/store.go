@@ -14,7 +14,8 @@ import (
 //
 var defaultField string = "content"
 
-//
+// Store is the core representation of our data set.
+// Provides base methods for querying, tagging, whatever
 type Store struct {
 	db   *sql.DB
 	coll *badger.Collection

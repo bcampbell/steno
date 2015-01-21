@@ -47,3 +47,10 @@ func (d *dbugLog) Printf(format string, v ...interface{}) {
 		fmt.Fprintf(d.log, format, v...)
 	}
 }
+
+func (d *dbugLog) Println(v ...interface{}) {
+	fmt.Fprintln(os.Stderr, v...)
+	if d.log != nil {
+		fmt.Fprintln(d.log, v...)
+	}
+}

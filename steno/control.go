@@ -1,5 +1,9 @@
 package main
 
+// a bit of a mishmash between core functionality and gui.
+// TODO: Refector this, along with app.go
+// separate core functionality from GUI
+
 import (
 	"fmt"
 	"gopkg.in/qml.v1"
@@ -172,6 +176,7 @@ func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 	}
 }
 
+//
 type Control struct {
 	App *App
 
@@ -236,20 +241,26 @@ func (ctrl *Control) ApplySorting(sortColumn, sortOrder int) {
 
 // TODO: provide a function to validate query...
 
+// version exposed to gui - only acts if query is different
 func (ctrl *Control) SetQuery(q string) {
 	if q == ctrl.Results.Query {
 		return
 	}
+	ctrl.setQuery(q)
+	ctrl.TotalArts = ctrl.store.TotalArts()
+}
 
+// internal version
+func (ctrl *Control) setQuery(q string) {
 	res, err := NewResults(ctrl.store, q)
 	if err != nil {
 		//TODO: show error
-		dbug.Printf("Search error: %s", err)
+		e := fmt.Sprintf("Search error: %s", err)
+		dbug.Println(e)
+		ctrl.App.SetError(e)
 		return
 	}
 
-	fmt.Printf("SetQuery(%s)\n", q)
-	ctrl.TotalArts = ctrl.store.TotalArts()
 	ctrl.Results = res
 	qml.Changed(ctrl, &ctrl.Results)
 }
@@ -268,13 +279,7 @@ func (ctrl *Control) DeleteArticles(artIndices []int) {
 	//	dbug.Printf("%d articles deleted\n", len(arts))
 
 	// rerun the current query
-	newResults, err := NewResults(ctrl.store, ctrl.Results.Query)
-	if err != nil {
-		dbug.Printf("Rerun query: ERROR: %s\n", err)
-		return
-	}
-	ctrl.Results = newResults
-	qml.Changed(ctrl, &ctrl.Results)
+	ctrl.setQuery(ctrl.Results.Query)
 }
 func (ctrl *Control) AddTag(artIndices []int, tag string) {
 
@@ -290,13 +295,7 @@ func (ctrl *Control) AddTag(artIndices []int, tag string) {
 	}
 
 	// rerun the current query
-	newResults, err := NewResults(ctrl.store, ctrl.Results.Query)
-	if err != nil {
-		dbug.Printf("Rerun query: ERROR: %s\n", err)
-		return
-	}
-	ctrl.Results = newResults
-	qml.Changed(ctrl, &ctrl.Results)
+	ctrl.setQuery(ctrl.Results.Query)
 }
 
 func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
@@ -428,4 +427,15 @@ func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 		ctrl.Results = r2
 		qml.Changed(ctrl, &ctrl.Results)
 	}()
+}
+
+func (ctrl *Control) RunScript(scriptIdx int) {
+	s := ctrl.App.Scripts[scriptIdx]
+	err := s.Run(ctrl.store)
+	if err != nil {
+		dbug.Printf("ERROR running script %s: %s\n", s.Name, err)
+		ctrl.App.SetError(err.Error())
+	}
+	// rerun the current query
+	ctrl.setQuery(ctrl.Results.Query)
 }

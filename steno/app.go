@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"fmt"
 	"gopkg.in/qml.v1"
 	"io/ioutil"
 	"path"
@@ -16,6 +17,9 @@ type App struct {
 	ctx           *qml.Context
 	project       *Control
 	HasCurrent    bool
+
+	Scripts    []*script
+	ScriptsLen int
 
 	ErrorMsg string
 }
@@ -34,7 +38,7 @@ func NewApp() (*App, error) {
 	ctx := engine.Context()
 	app := &App{}
 	app.ctx = ctx
-    app.dataPath = dataPath
+	app.dataPath = dataPath
 	buf, err := ioutil.ReadFile(path.Join(app.dataPath, "help.html"))
 	if err != nil {
 		return nil, err
@@ -68,11 +72,17 @@ func NewApp() (*App, error) {
 		fmt.Printf("%v\n", obj)
 	*/
 
+	app.RefreshScripts()
+
 	return app, nil
 }
 
 func (app *App) Current() *Control {
 	return app.project
+}
+
+func (app *App) GetScript(idx int) *script {
+	return app.Scripts[idx]
 }
 
 func (app *App) SetError(msg string) {
@@ -104,6 +114,27 @@ func (app *App) NewProject(storePath string) {
 	app.project = proj
 	app.HasCurrent = true
 	qml.Changed(app, &app.HasCurrent)
+}
+
+func (app *App) RefreshScripts() {
+	scripts, err := loadScripts(path.Join(app.dataPath, "scripts"))
+	if err != nil {
+		dbug.Printf("ERROR: %s", err)
+		app.SetError(err.Error())
+
+		return
+	}
+	/*
+		for _, s := range scripts {
+			fmt.Printf("%s - %s\n", s.Name, s.Desc)
+			for _, l := range s.lines {
+				fmt.Println(l)
+			}
+		}
+	*/
+	app.Scripts = scripts
+	app.ScriptsLen = len(scripts)
+	qml.Changed(app, &app.ScriptsLen)
 }
 
 func (app *App) CloseProject() {

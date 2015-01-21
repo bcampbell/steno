@@ -117,6 +117,15 @@ ApplicationWindow {
         enabled: app.hasCurrent
     }
     Action {
+        id: runScriptAction
+        text: "Run script..."
+        onTriggered: {
+                app.refreshScripts();
+                pickScriptDlg.open();
+        }
+        enabled: app.hasCurrent
+    }
+    Action {
         id: exportOverallsAction
         //iconSource: "images/fileopen.png"
         text: "Export overall summary csv..."
@@ -140,7 +149,10 @@ ApplicationWindow {
         }
         Menu {
             title: "Tools"
+            MenuItem { action: runScriptAction }
+            MenuSeparator { }
             MenuItem { action: exportOverallsAction }
+            MenuSeparator { }
             MenuItem { action: slurpAction }
         }
         Menu {
@@ -199,6 +211,30 @@ ApplicationWindow {
             dayPicker.selectedDate.toISOString().slice(0,10))
     }
 
+    Dialog {
+        id: pickScriptDlg
+        title: "Pick script to run..."
+        contentItem: ColumnLayout {
+            spacing: 8
+
+            TableView {
+                id: scriptList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                model: app.scriptsLen
+                TableViewColumn{
+                    title: "script"
+                    width: 200
+                    delegate: Text {
+                        text: app.getScript(styleData.row).name + ": " + app.getScript(styleData.row).desc
+                    }
+                }
+                onDoubleClicked: pickScriptDlg.click(StandardButton.Ok)
+             }
+        }
+        standardButtons: StandardButton.Ok | StandardButton.Cancel
+        onAccepted: app.current().runScript(scriptList.currentRow)
+    }
 }
 
 
