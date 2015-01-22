@@ -12,6 +12,7 @@ for RES in $RESOURCES
 do
     cp steno/$RES $OUT/
 done
+cp -r steno/scripts $OUT/
 
 
 windeployqt --verbose=1 --compiler-runtime --debug --qmldir=$OUT $OUT/steno.exe
