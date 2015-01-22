@@ -65,6 +65,7 @@ func Slurp(dayFrom, dayTo string) chan Msg {
 				}
 
 				msg.Article.Pub = msg.Article.Publication.Code
+				msg.Article.Byline = msg.Article.BylineString()
 				// truncate date to day
 				if len(msg.Article.Published) > 10 {
 					// ugh :-)

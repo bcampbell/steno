@@ -92,7 +92,6 @@ func (store *Store) createSchema() error {
 
 	var err error
 	// TODO:
-	// Authors
 	// full Publication
 	// Keywords
 	_, err = store.db.Exec(`CREATE TABLE article (
@@ -123,11 +122,19 @@ func (store *Store) createSchema() error {
 		return err
 	}
 
+	_, err = store.db.Exec(`CREATE TABLE article_author (
+         id INTEGER PRIMARY KEY,
+         article_id INTEGER NOT NULL,   -- should be foreign key
+         name TEXT NOT NULL )`)
+	if err != nil {
+		return err
+	}
+
 	_, err = store.db.Exec(`CREATE TABLE version (ver INTEGER NOT NULL)`)
 	if err != nil {
 		return err
 	}
-	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (2)`)
+	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (3)`)
 	if err != nil {
 		return err
 	}
@@ -158,6 +165,21 @@ func (store *Store) initDB() error {
 			return err
 		}
 		_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (2)`)
+		if err != nil {
+			return err
+		}
+	}
+
+	if ver < 3 {
+		dbug.Printf("updating database to version 3\n")
+		_, err = store.db.Exec(`CREATE TABLE article_author (
+            id INTEGER PRIMARY KEY,
+            article_id INTEGER NOT NULL,   -- should be foreign key
+            name TEXT NOT NULL)`)
+		if err != nil {
+			return err
+		}
+		_, err = store.db.Exec(`UPDATE version SET ver=3`)
 		if err != nil {
 			return err
 		}
@@ -210,7 +232,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 		return nil, err
 	}
 
-	//
+	// tags
 	rows, err = db.Query("SELECT article_id,tag FROM article_tag")
 	if err != nil {
 		return nil, err
@@ -231,9 +253,34 @@ func (store *Store) readAllArts() (ArtList, error) {
 		return nil, err
 	}
 
+	// authors
+	rows, err = db.Query("SELECT article_id,name FROM article_author")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID int
+		var name string
+		err = rows.Scan(&artID, &name)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.Authors = append(art.Authors, Author{Name: name})
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// all done
 	out := ArtList{}
-	for _, a := range tab {
-		out = append(out, a)
+	for _, art := range tab {
+		// evil hack (TODO: less evil, please)
+		art.Byline = art.BylineString()
+
+		out = append(out, art)
 	}
 	return out, nil
 }
@@ -556,7 +603,19 @@ func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 			return err
 		}
 	}
-	// TODO: authors, keywords
+	// add authors (TODO: other author fields)
+	authorStmt, err := tx.Prepare("INSERT INTO article_author(article_id,name) VALUES(?,?)")
+	if err != nil {
+		return err
+	}
+	defer authorStmt.Close()
+	for _, author := range art.Authors {
+		_, err = authorStmt.Exec(art.ID, author.Name)
+		if err != nil {
+			return err
+		}
+	}
+	// TODO: keywords
 
 	store.coll.Put(art)
 

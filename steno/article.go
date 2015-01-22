@@ -13,6 +13,15 @@ type Publication struct {
 	Code   string `json:"code"`
 }
 
+type Author struct {
+	Name string `json:"name"`
+	/*
+	   RelLink string `json:"rel_link,omitempty"`
+	   Email   string `json:"email,omitempty"`
+	   Twitter string `json:"twitter,omitempty"`
+	*/
+}
+
 type Article struct {
 	ID           int
 	CanonicalURL string `json:"canonical_url"`
@@ -21,8 +30,8 @@ type Article struct {
 	// TODO: first url should be considered "preferred" if no canonical?
 	URLs []string `json:"urls"`
 
-	Headline string `json:"headline"`
-	//	Authors     []Author
+	Headline    string      `json:"headline"`
+	Authors     []Author    `json:"authors,omitempty"`
 	Content     string      `json:"content"`
 	Published   string      `json:"published"`
 	Updated     string      `json:"updated"`
@@ -31,8 +40,9 @@ type Article struct {
 	//Keywords []Keyword
 	Section string `json:"section"`
 
-	Pub  string
-	Tags []string `json:"tags"`
+	Pub    string
+	Byline string
+	Tags   []string `json:"tags"`
 }
 
 func (art *Article) Day() string {
@@ -80,6 +90,14 @@ func (art *Article) URL() string {
 
 func (art *Article) TagsString() string {
 	return strings.Join(art.Tags, " ")
+}
+
+func (art *Article) BylineString() string {
+	names := make([]string, len(art.Authors))
+	for i, a := range art.Authors {
+		names[i] = a.Name
+	}
+	return strings.Join(names, ", ")
 }
 
 func (art *Article) AddTag(tag string) bool {

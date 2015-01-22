@@ -221,6 +221,19 @@ Item {
             }
         }
 
+        Component {
+            id: bylineDelegate
+            Item {
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: Text.ElideRight
+                    text: ctrl.results.art(styleData.row).bylineString()
+                }
+            }
+        }
+
             id: artList
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -244,6 +257,7 @@ Item {
             TableViewColumn{ role: "section"  ; title: "section" ; width: 100; delegate: sectionDelegate }
             TableViewColumn{ role: "published"  ; title: "published" ; width: 100; delegate: publishedDelegate }
             TableViewColumn{ role: "tags" ; title: "tags" ; width: 100; delegate: tagsDelegate  }
+            TableViewColumn{ role: "byline" ; title: "byline" ; width: 100; delegate: bylineDelegate  }
             TableViewColumn{ role: "url" ; title: "url" ; width: 400; delegate: urlDelegate  }
         }
         Row {
