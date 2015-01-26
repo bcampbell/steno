@@ -1,0 +1,115 @@
+# tag articles by political party
+
+# Labour
+
+labour => TAG lab
+"labour’s" -tags: lab => TAG lab
+
+
+# Conservative
+
+Tory => TAG con
+Tories -tags: con => TAG con
+Conservative -tags: con => TAG con
+Conservatives -tags: con => TAG con
+
+# Liberal Democrats
+
+"Liberal Democrat" => TAG libdem
+"Liberal Democrats" -tags: libdem => TAG libdem
+"Lib Dem" -tags: libdem => TAG libdem
+"Lib Dems" -tags: libdem => TAG libdem
+
+# UKIP
+UKIP => TAG ukip
+"UK Independence Party" -tags: ukip => TAG ukip
+
+# snp
+SNP => TAG snp
+"Scottish National Party" -tags: snp => TAG snp
+"Scottish Nationalist Party" -tags: snp => TAG snp
+"Scottish National" -tags: snp => TAG snp
+"Scottish Nationalist" -tags: snp => TAG snp
+"Scottish Nationalists" -tags: snp => TAG snp
+
+# Plaid Cymru
+
+"Plaid Cymru" -tags: pc => TAG pc
+"Welsh Nationalist" -tags: pc => TAG pc
+"Welsh Nationalists" -tags: pc => TAG pc
+
+# Green Party
+Greens => TAG green
+"Green Party" -tags: green => TAG green
+
+# Democratic Unionist Party
+DUP => TAG dup
+"Democratic Unionist" -tags: dup => TAG dup
+"Democratic Unionists" -tags: dup => TAG dup
+"Democratic Unionist Party" -tags: dup => TAG dup
+
+# Ulster Unionist Party
+UUP => TAG uup
+"Ulster Unionist" -tags: uup => TAG uup
+|Ulster Unionists" -tags: uup => TAG uup
+"Ulster Unionist Party" -tags: uup” => TAG uup
+
+# SDLP
+SDLP => TAG SDLP
+"Social Democratic and Labour Party" -tags: sdlp => TAG sdlp
+"Social Democratic & Labour Party" -tags: sdlp => TAG sdlp
+
+# Sinn Fein
+"Sinn Fein" => TAG sf
+
+# Alliance
+"Alliance Party" => TAG alliance
+Alliance AND "Northern Ireland" -tags: alliance => TAG alliance
+
+
+# Scottish Labour
+"scottish labour" => TAG scotlab
+
+# All parties
+tags: (lab OR con OR libdem OR ukip OR snp OR pc OR green OR dup OR sdlp OR sf OR alliance) => TAG party
+
+# multi-party (NB: just main 4 plus SNP)
+tags: (con lab) => TAG multi
+tags: (con libdem) => TAG multi
+tags: (libdem ukip) => TAG multi
+tags: (snp ukip) => TAG multi
+tags: (ukip lab) => TAG multi
+tags: (con ukip) => TAG multi
+tags: (snp con) => TAG multi
+tags: (snp lab) => TAG multi
+tags: (libdem lab) => TAG multi
+tags: (snp libdem) => TAG multi
+
+
+# Tagging Party Leaders (NB: just big four plus nationalists plus greens - NI parties optional?)
+
+"Ed Miliband" OR Miliband OR "Miliband's" OR "Labour leader" => TAG edm
+"David Cameron" OR Cameron OR "Cameron's" => TAG cam
+"Nick Clegg" OR Clegg OR "Clegg's" => TAG clegg
+"Nigel Farage" OR Farage OR "Farage's" => TAG farage
+"Nicola Sturgeon" OR Sturgeon => TAG sturgeon
+"Leanne Wood" OR (wood AND plaid) => tag wood
+"Natalie Bennett" => TAG bennett
+
+# Culling irrelevant leader surname results (where applicable)
+# NB: TO BE TESTED AGAIN, also: to be done after cull, and
+# results should be scanned first before removal
+# TODO: tag these with "manual" for eyeballing?
+
+cameron -david -"prime minister" -deputy -tags party -headline: david => UNTAG cam ptyldr
+"david miliband" -"ed miliband” => UNTAG edm ptyldr
+clegg -tags: party -deputy -nick -headline: nick => UNTAG clegg ptyldr
+sturgeon -nicola -tags: party => UNTAG sturgeon ptyldr
+
+# TODO: once fixed, permutations of (e.g.) “labour leader”, “labour party leader”, “labour leader’s”, “labour party leader’s” should also be added
+
+
+# Tagging all leaders
+tags: (edm OR cam OR clegg OR farage OR sturgeon OR wood OR bennett) => TAG ptyldr
+
+
