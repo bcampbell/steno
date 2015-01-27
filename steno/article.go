@@ -59,18 +59,20 @@ func (art *Article) Day() string {
 }
 
 func (art *Article) TextContent() template.HTML {
+	txt := art.PlainTextContent()
+	txt = strings.Replace(txt, "\n", "<br/>\n", -1)
+	return template.HTML(txt)
 
+}
+
+func (art *Article) PlainTextContent() string {
 	r := strings.NewReader(art.Content)
 	root, err := html.Parse(r)
 	if err != nil {
 		return ""
 	}
 
-	txt := htmlutil.RenderNode(root)
-
-	txt = strings.Replace(txt, "\n", "<br/>\n", -1)
-	return template.HTML(txt)
-
+	return htmlutil.RenderNode(root)
 }
 
 func (art *Article) Hoo() *string {
