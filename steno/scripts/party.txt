@@ -102,7 +102,7 @@ tags: (snp libdem) => TAG multi
 # TODO: tag these with "manual" for eyeballing?
 
 cameron -david -"prime minister" -deputy -tags party -headline: david => UNTAG cam ptyldr
-"david miliband" -"ed miliband” => UNTAG edm ptyldr
+"david miliband" -"ed miliband" => UNTAG edm ptyldr
 clegg -tags: party -deputy -nick -headline: nick => UNTAG clegg ptyldr
 sturgeon -nicola -tags: party => UNTAG sturgeon ptyldr
 
