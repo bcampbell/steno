@@ -95,7 +95,7 @@ func (app *App) OpenProject(storePath string) {
 
 	proj, err := NewControl(app, storePath, app.projComponent)
 	if err != nil {
-		dbug.Printf("ERROR: %s", err)
+		dbug.Printf("ERROR: %s\n", err)
 		return
 	}
 	app.project = proj
@@ -108,7 +108,7 @@ func (app *App) NewProject(storePath string) {
 
 	proj, err := NewControl(app, storePath, app.projComponent)
 	if err != nil {
-		dbug.Printf("ERROR: %s", err)
+		dbug.Printf("ERROR: %s\n", err)
 		return
 	}
 	app.project = proj
@@ -119,7 +119,7 @@ func (app *App) NewProject(storePath string) {
 func (app *App) RefreshScripts() {
 	scripts, err := loadScripts(path.Join(app.dataPath, "scripts"))
 	if err != nil {
-		dbug.Printf("ERROR: %s", err)
+		dbug.Printf("ERROR: %s\n", err)
 		app.SetError(err.Error())
 
 		return

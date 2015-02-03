@@ -11,13 +11,14 @@ import (
 )
 
 type scriptLine struct {
-	query string
-	op    string
-	tags  []string
+	srcLine int
+	query   string
+	op      string
+	params  []string
 }
 
 func (l *scriptLine) String() string {
-	return l.query + "=>" + l.op + " " + strings.Join(l.tags, " ")
+	return l.query + "=>" + l.op + " " + strings.Join(l.params, " ")
 }
 
 type script struct {
@@ -32,21 +33,21 @@ func (s *script) Run(store *Store) error {
 	for _, line := range s.lines {
 		matching, err := store.Search(line.query)
 		if err != nil {
-			return fmt.Errorf("Bad query (%s): %s", line.query, err)
+			return fmt.Errorf("Bad query on line %d (%s): %s", line.srcLine, line.query, err)
 		}
 
 		dbug.Printf("%s (Matched %d)\n", line.String(), len(matching))
 
 		switch line.op {
 		case "tag":
-			for _, tag := range line.tags {
+			for _, tag := range line.params {
 				_, err := store.AddTag(matching, tag)
 				if err != nil {
 					return fmt.Errorf("tag error (during query '%s'): %s", line.query, err)
 				}
 			}
 		case "untag":
-			for _, tag := range line.tags {
+			for _, tag := range line.params {
 				_, err := store.RemoveTag(matching, tag)
 				if err != nil {
 					return fmt.Errorf("untag error (during query '%s'): %s", line.query, err)
@@ -62,7 +63,7 @@ func (s *script) Run(store *Store) error {
 	return nil
 }
 
-var linePat = regexp.MustCompile(`(?i)^(?:([^#]+?)\s*=>\s*(tag|untag|delete)\s+([^#]*?)\s*)?(?:#\s*(.*)\s*)?$`)
+var linePat = regexp.MustCompile(`(?i)^(?:([^#]+?)\s*=>\s*(tag|untag|delete)(?:\s+([^#]*?))?\s*)?(?:#\s*(.*)\s*)?$`)
 
 func strippedName(fullname string) string {
 	b := path.Base(fullname)
@@ -87,7 +88,7 @@ func loadScript(filename string) (*script, error) {
 		if bits == nil {
 			return nil, fmt.Errorf("Syntax error in script '%s', line %d", filename, lineNum)
 		}
-		query, op, tagList, comment := bits[1], bits[2], bits[3], bits[4]
+		query, op, paramPart, comment := bits[1], bits[2], bits[3], bits[4]
 		if lineNum == 1 && comment != "" {
 			// if there is a comment on the first line, use it as description
 			out.Desc = comment
@@ -95,16 +96,15 @@ func loadScript(filename string) (*script, error) {
 
 		query = strings.TrimSpace(query)
 		if query != "" {
-			tags := []string{}
-			for _, tag := range strings.Split(tagList, ",") {
-				tag = strings.TrimSpace(tag)
-				if tag != "" {
-					tags = append(tags, tag)
-				}
-			}
-
+			params := strings.Fields(paramPart)
 			op := strings.ToLower(op)
-			out.lines = append(out.lines, scriptLine{query, op, tags})
+			l := scriptLine{srcLine: lineNum, query: query, op: op, params: params}
+			//			fmt.Println(l, len(l.params))
+			out.lines = append(out.lines, l)
+			// check for dodgy cut&paste detritus
+			if strings.ContainsAny(query, "“”") {
+				dbug.Printf("WARNING %s (line %d): query has dodgy quotes: %s\n", filename, lineNum, query)
+			}
 		}
 
 	}
