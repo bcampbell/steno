@@ -439,3 +439,11 @@ func (ctrl *Control) RunScript(scriptIdx int) {
 	// rerun the current query
 	ctrl.setQuery(ctrl.Results.Query)
 }
+
+func (ctrl *Control) Train() {
+	Train(ctrl.Results.arts)
+}
+
+func (ctrl *Control) Classify() {
+	Classify(ctrl.Results.arts, ctrl.store)
+}

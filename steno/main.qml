@@ -133,6 +133,18 @@ ApplicationWindow {
         enabled: app.hasCurrent
     }
     Action {
+        id: trainAction
+        text: "Train"
+        onTriggered: app.current().train()
+        enabled: app.hasCurrent
+    }
+    Action {
+        id: classifyAction
+        text: "Classify"
+        onTriggered: app.current().classify()
+        enabled: app.hasCurrent
+    }
+    Action {
         id: helpAction
         //iconSource: "images/fileopen.png"
         text: "Help..."
@@ -150,6 +162,8 @@ ApplicationWindow {
         Menu {
             title: "Tools"
             MenuItem { action: runScriptAction }
+            MenuItem { action: trainAction }
+            MenuItem { action: classifyAction }
             MenuSeparator { }
             MenuItem { action: exportOverallsAction }
             MenuSeparator { }
