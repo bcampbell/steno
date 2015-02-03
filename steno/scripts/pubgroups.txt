@@ -1,8 +1,0 @@
-# add tags for nat/blog/regional/magazine
-
-pub: (ft OR dailymail OR guardian OR thetimes OR sundaytimes OR independent OR bbc OR =telegraph OR express OR mirror OR sun OR itv OR channel4 OR skynews) => TAG nat
-pub: (thecommentator OR politicalscrapbook OR conservativehome OR order-order OR politics.co.uk OR ukpollingreport OR liberalconspiracy OR politicshome OR iaindale) => TAG blog
-pub: (herald OR eveningtimes OR eveningtelegraph OR scotsman OR dailyrecord) => TAG reg
-pub: (newstatesman OR spectator) => TAG mag
-
-
