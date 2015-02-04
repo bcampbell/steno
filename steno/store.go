@@ -254,6 +254,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 	}
 
 	// authors
+	danglingAuthorCnt := 0
 	rows, err = db.Query("SELECT article_id,name FROM article_author")
 	if err != nil {
 		return nil, err
@@ -266,12 +267,23 @@ func (store *Store) readAllArts() (ArtList, error) {
 		if err != nil {
 			return nil, err
 		}
-		art := tab[artID]
-		art.Authors = append(art.Authors, Author{Name: name})
+		art, got := tab[artID]
+		if got {
+			art.Authors = append(art.Authors, Author{Name: name})
+		} else {
+			danglingAuthorCnt++
+
+		}
 	}
 	err = rows.Err()
 	if err != nil {
 		return nil, err
+	}
+
+	if danglingAuthorCnt > 0 {
+		dbug.Printf("WARNING: database has %d dangling authors from deleted articles.\n", danglingAuthorCnt)
+		dbug.Printf("not a big deal, but db can be repaired manually via sql:\n")
+		dbug.Printf("  DELETE FROM article_author WHERE article_id NOT IN (SELECT id FROM article);\n")
 	}
 
 	// all done
@@ -454,11 +466,19 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 		return 0, err
 	}
 	defer delTagsStmt.Close()
+
 	delURLsStmt, err := tx.Prepare("DELETE FROM article_url WHERE article_id=?")
 	if err != nil {
 		return 0, err
 	}
 	defer delURLsStmt.Close()
+
+	delAuthorsStmt, err := tx.Prepare("DELETE FROM article_author WHERE article_id=?")
+	if err != nil {
+		return 0, err
+	}
+	defer delAuthorsStmt.Close()
+
 	delArtStmt, err := tx.Prepare("DELETE FROM article WHERE id=?")
 	if err != nil {
 		return 0, err
@@ -476,6 +496,12 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 		if err != nil {
 			return 0, err
 		}
+
+		_, err = delAuthorsStmt.Exec(art.ID)
+		if err != nil {
+			return 0, err
+		}
+
 		r, err := delArtStmt.Exec(art.ID)
 		if err != nil {
 			return 0, err
