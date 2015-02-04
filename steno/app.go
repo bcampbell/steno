@@ -39,7 +39,10 @@ func NewApp() (*App, error) {
 	app := &App{}
 	app.ctx = ctx
 	app.dataPath = dataPath
-	buf, err := ioutil.ReadFile(path.Join(app.dataPath, "help.html"))
+
+	// all the qml/js/html stuff is in the ui dir
+	uiPath := path.Join(app.dataPath, "ui")
+	buf, err := ioutil.ReadFile(path.Join(uiPath, "help.html"))
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +54,11 @@ func NewApp() (*App, error) {
 	// expose us to the qml side
 	ctx.SetVar("app", app)
 
-	component, err := engine.LoadFile(path.Join(app.dataPath, "main.qml"))
+	component, err := engine.LoadFile(path.Join(uiPath, "main.qml"))
 	if err != nil {
 		return nil, err
 	}
-
-	proj, err := engine.LoadFile(path.Join(app.dataPath, "project.qml"))
+	proj, err := engine.LoadFile(path.Join(uiPath, "project.qml"))
 	app.projComponent = proj
 	if err != nil {
 		return nil, err
