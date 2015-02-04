@@ -93,7 +93,7 @@ func (app *App) SetError(msg string) {
 }
 
 func (app *App) OpenProject(storePath string) {
-	dbug.Printf("open %s\n", storePath)
+	//dbug.Printf("open %s\n", storePath)
 
 	proj, err := NewControl(app, storePath, app.projComponent)
 	if err != nil {
@@ -106,7 +106,7 @@ func (app *App) OpenProject(storePath string) {
 }
 
 func (app *App) NewProject(storePath string) {
-	dbug.Printf("new %s\n", storePath)
+	//dbug.Printf("new %s\n", storePath)
 
 	proj, err := NewControl(app, storePath, app.projComponent)
 	if err != nil {
@@ -140,7 +140,7 @@ func (app *App) RefreshScripts() {
 }
 
 func (app *App) CloseProject() {
-	dbug.Printf("close\n")
+	//dbug.Printf("close\n")
 	if app.project != nil {
 		app.project.Close()
 		app.project = nil

@@ -133,7 +133,7 @@ func (res *Results) Facet(idx int) *Facet {
 // returns new Results
 func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 	// order: 1: ascending, 0: descending
-	dbug.Printf("new sorting: %d %d\n", sortColumn, sortOrder)
+	//dbug.Printf("new sorting: %d %d\n", sortColumn, sortOrder)
 
 	sorted := make(ArtList, len(res.arts))
 	copy(sorted, res.arts)
@@ -228,7 +228,7 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 }
 
 func (ctrl *Control) Close() {
-	dbug.Printf("Close db\n")
+	//dbug.Printf("Close db\n")
 	ctrl.obj.Destroy()
 	ctrl.store.Close()
 	//ctrl.Window.Hide()
