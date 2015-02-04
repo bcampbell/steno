@@ -66,7 +66,8 @@ func (s *script) Run(store *Store) error {
 var linePat = regexp.MustCompile(`(?i)^(?:([^#]+?)\s*=>\s*(tag|untag|delete)(?:\s+([^#]*?))?\s*)?(?:#\s*(.*)\s*)?$`)
 
 func strippedName(fullname string) string {
-	b := path.Base(fullname)
+	b := filepath.Base(fullname)
+
 	return b[0 : len(b)-len(path.Ext(b))]
 }
 
