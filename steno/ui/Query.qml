@@ -250,6 +250,7 @@ Item {
             }
 
             onClicked: artInfo.showArt(ctrl.results.art(row))
+            // TODO: indicatorColumn and order passed into code side verbatim. Code changes needed if modifying column ordering
             onSortIndicatorColumnChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
             onSortIndicatorOrderChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
             TableViewColumn{ role: "headline"  ; title: "headline" ; width: 400; delegate: headlineDelegate }

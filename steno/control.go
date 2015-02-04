@@ -131,6 +131,8 @@ func (res *Results) Facet(idx int) *Facet {
 }
 
 // returns new Results
+// TODO: this is a bit brittle - the sortColumn comes directly from the QML side of things...
+// Do something better!
 func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 	// order: 1: ascending, 0: descending
 	//dbug.Printf("new sorting: %d %d\n", sortColumn, sortOrder)
@@ -150,6 +152,12 @@ func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 			criteria = func(a1, a2 *Article) bool { return a1.Section > a2.Section }
 		case 3:
 			criteria = func(a1, a2 *Article) bool { return a1.Published > a2.Published }
+		case 4:
+			criteria = func(a1, a2 *Article) bool { return a1.TagsString() > a2.TagsString() }
+		case 5:
+			criteria = func(a1, a2 *Article) bool { return a1.Byline > a2.Byline }
+		case 6:
+			criteria = func(a1, a2 *Article) bool { return a1.URL() > a2.URL() }
 		}
 	} else if sortOrder == 1 {
 		switch sortColumn {
@@ -161,6 +169,12 @@ func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 			criteria = func(a1, a2 *Article) bool { return a1.Section < a2.Section }
 		case 3:
 			criteria = func(a1, a2 *Article) bool { return a1.Published < a2.Published }
+		case 4:
+			criteria = func(a1, a2 *Article) bool { return a1.TagsString() < a2.TagsString() }
+		case 5:
+			criteria = func(a1, a2 *Article) bool { return a1.Byline < a2.Byline }
+		case 6:
+			criteria = func(a1, a2 *Article) bool { return a1.URL() < a2.URL() }
 		}
 	}
 	if criteria != nil {
@@ -209,6 +223,10 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: this is brittle, magic numbers from QML side
+	ctrl.SortColumn = 3 // Published
+	ctrl.SortOrder = 0
 
 	// expose us to the qml side
 	app.ctx.SetVar("ctrl", ctrl)
