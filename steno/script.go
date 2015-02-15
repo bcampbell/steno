@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"semprini/steno/steno/store"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ type script struct {
 }
 
 // Apply script to a store
-func (s *script) Run(store *Store) error {
+func (s *script) Run(store *store.Store) error {
 	dbug.Printf("running script '%s'\n", s.Name)
 	for _, line := range s.lines {
 		matching, err := store.Search(line.query)

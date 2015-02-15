@@ -1,4 +1,4 @@
-package main
+package store
 
 import (
 	"github.com/bcampbell/htmlutil"
@@ -21,6 +21,9 @@ type Author struct {
 	   Twitter string `json:"twitter,omitempty"`
 	*/
 }
+
+// dehydrated article (enough for list in gui):
+//  headline, pub, section, published, tags, byline, url
 
 type Article struct {
 	ID           int

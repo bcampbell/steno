@@ -1,4 +1,4 @@
-package main
+package store
 
 import (
 	"database/sql"
@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+type Logger interface {
+	Printf(format string, v ...interface{})
+}
+
 //
 var defaultField string = "content"
 
@@ -19,10 +23,11 @@ var defaultField string = "content"
 type Store struct {
 	db   *sql.DB
 	coll *badger.Collection
+	dbug Logger
 }
 
-func NewStore(dbFile string) (*Store, error) {
-	store := &Store{}
+func New(dbFile string, dbug Logger) (*Store, error) {
+	store := &Store{dbug: dbug}
 
 	var err error
 	store.db, err = sql.Open("sqlite3", dbFile)
@@ -54,7 +59,7 @@ func DummyStore() *Store {
 
 func (store *Store) Close() {
 	if store.db != nil {
-		dbug.Printf("Close sqlite db\n")
+		store.dbug.Printf("Close sqlite db\n")
 		store.db.Close()
 		store.db = nil
 	}
@@ -155,7 +160,7 @@ func (store *Store) initDB() error {
 
 	// schema exists - apply any migrations required
 	if ver < 2 {
-		dbug.Printf("updating database to version 2\n")
+		store.dbug.Printf("updating database to version 2\n")
 		_, err = store.db.Exec(`ALTER TABLE article ADD COLUMN section TEXT NOT NULL DEFAULT ''`)
 		if err != nil {
 			return err
@@ -171,7 +176,7 @@ func (store *Store) initDB() error {
 	}
 
 	if ver < 3 {
-		dbug.Printf("updating database to version 3\n")
+		store.dbug.Printf("updating database to version 3\n")
 		_, err = store.db.Exec(`CREATE TABLE article_author (
             id INTEGER PRIMARY KEY,
             article_id INTEGER NOT NULL,   -- should be foreign key
@@ -281,9 +286,9 @@ func (store *Store) readAllArts() (ArtList, error) {
 	}
 
 	if danglingAuthorCnt > 0 {
-		dbug.Printf("WARNING: database has %d dangling authors from deleted articles.\n", danglingAuthorCnt)
-		dbug.Printf("not a big deal, but db can be repaired manually via sql:\n")
-		dbug.Printf("  DELETE FROM article_author WHERE article_id NOT IN (SELECT id FROM article);\n")
+		store.dbug.Printf("WARNING: database has %d dangling authors from deleted articles.\n", danglingAuthorCnt)
+		store.dbug.Printf("not a big deal, but db can be repaired manually via sql:\n")
+		store.dbug.Printf("  DELETE FROM article_author WHERE article_id NOT IN (SELECT id FROM article);\n")
 	}
 
 	// all done
@@ -444,7 +449,7 @@ func (store *Store) Delete(arts ArtList) error {
 
 	affected, err := store.doDelete(tx, arts)
 	if err != nil {
-		dbug.Printf("error, rolling back\n")
+		store.dbug.Printf("error, rolling back\n")
 		tx.Rollback()
 		return err
 	}
@@ -453,7 +458,7 @@ func (store *Store) Delete(arts ArtList) error {
 	if err != nil {
 		return err
 	}
-	dbug.Printf("Deleted %d articles\n", affected)
+	store.dbug.Printf("Deleted %d articles\n", affected)
 	return nil
 }
 

@@ -4,9 +4,10 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"semprini/steno/steno/store"
 )
 
-func exportOverallsCSV(arts ArtList, out io.Writer) error {
+func exportOverallsCSV(arts store.ArtList, out io.Writer) error {
 
 	pubs := arts.Pubs()
 	pubs = append(pubs, "TOTAL")

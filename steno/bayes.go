@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jbrukh/bayesian"
 	"regexp"
+	"semprini/steno/steno/store"
 	"strings"
 )
 
@@ -20,7 +21,7 @@ func tokenise(txt string) []string {
 	return out
 }
 
-func extractTags(arts ArtList) []bayesian.Class {
+func extractTags(arts store.ArtList) []bayesian.Class {
 	found := map[string]struct{}{}
 
 	for _, art := range arts {
@@ -35,7 +36,7 @@ func extractTags(arts ArtList) []bayesian.Class {
 	return tags
 }
 
-func Train(arts ArtList) (*bayesian.Classifier, error) {
+func Train(arts store.ArtList) (*bayesian.Classifier, error) {
 	fmt.Printf("Train on %d arts\n", len(arts))
 	allTags := extractTags(arts)
 	fmt.Println(allTags)
@@ -65,7 +66,7 @@ func Train(arts ArtList) (*bayesian.Classifier, error) {
 	return nil, nil
 }
 
-func Classify(arts ArtList, store *Store) {
+func Classify(arts store.ArtList, db *store.Store) {
 	c, err := bayesian.NewClassifierFromFile("test.classifier")
 
 	if err != nil {
@@ -75,7 +76,7 @@ func Classify(arts ArtList, store *Store) {
 
 	fmt.Println(c.Classes)
 
-	tagList := map[string]ArtList{}
+	tagList := map[string]store.ArtList{}
 
 	for artCnt, art := range arts {
 		txt := art.PlainTextContent()
@@ -92,7 +93,7 @@ func Classify(arts ArtList, store *Store) {
 
 	for tag, matching := range tagList {
 		fmt.Printf("Apply %s to %d articles\n", tag, len(matching))
-		_, err := store.AddTag(matching, tag)
+		_, err := db.AddTag(matching, tag)
 		if err != nil {
 			fmt.Printf("ERROR: %s\n", err)
 		}

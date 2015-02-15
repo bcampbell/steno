@@ -6,11 +6,12 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"semprini/steno/steno/store"
 )
 
 type Msg struct {
-	Article *Article `json:"article,omitempty"`
-	Error   string   `json:"error,omitempty"`
+	Article *store.Article `json:"article,omitempty"`
+	Error   string         `json:"error,omitempty"`
 }
 
 func Slurp(dayFrom, dayTo string) chan Msg {

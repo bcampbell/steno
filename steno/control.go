@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"gopkg.in/qml.v1"
 	"os"
+	"semprini/steno/steno/store"
 	"strings"
 )
 
@@ -34,21 +35,21 @@ func (p *SlurpProgress) String() string {
 
 type Results struct {
 	Query string
-	arts  ArtList
+	arts  store.ArtList
 	Len   int
 
 	FacetLen int
 	facets   []*Facet
 }
 
-func NewResults(store *Store, query string) (*Results, error) {
+func NewResults(db *store.Store, query string) (*Results, error) {
 
-	var arts ArtList
+	var arts store.ArtList
 	var err error
 	if query == "" {
-		arts, err = store.AllArts()
+		arts, err = db.AllArts()
 	} else {
-		arts, err = store.Search(query)
+		arts, err = db.Search(query)
 	}
 	if err != nil {
 		return nil, err
@@ -59,7 +60,7 @@ func NewResults(store *Store, query string) (*Results, error) {
 	return &res, nil
 }
 
-func (res *Results) setArts(arts ArtList) {
+func (res *Results) setArts(arts store.ArtList) {
 	res.arts = arts
 	res.Len = len(res.arts)
 
@@ -114,7 +115,7 @@ func (res *Results) FindReverse(artIdx int, needle string) int {
 	return -1
 }
 
-func (res *Results) Art(idx int) *Article {
+func (res *Results) Art(idx int) *store.Article {
 	if idx >= 0 && idx < len(res.arts) {
 		return res.arts[idx]
 	}
@@ -123,7 +124,7 @@ func (res *Results) Art(idx int) *Article {
 	// old delegates before zapping/recycling them
 	// TODO: investigate!
 	//	dbug.Printf("bad idx: %d\n", idx)
-	return &Article{Headline: fmt.Sprintf("<BAD> %d", idx)}
+	return &store.Article{Headline: fmt.Sprintf("<BAD> %d", idx)}
 }
 
 func (res *Results) Facet(idx int) *Facet {
@@ -137,48 +138,48 @@ func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 	// order: 1: ascending, 0: descending
 	//dbug.Printf("new sorting: %d %d\n", sortColumn, sortOrder)
 
-	sorted := make(ArtList, len(res.arts))
+	sorted := make(store.ArtList, len(res.arts))
 	copy(sorted, res.arts)
 
-	var criteria func(a1, a2 *Article) bool
+	var criteria func(a1, a2 *store.Article) bool
 
 	if sortOrder == 0 {
 		switch sortColumn {
 		case 0:
-			criteria = func(a1, a2 *Article) bool { return a1.Headline > a2.Headline }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Headline > a2.Headline }
 		case 1:
-			criteria = func(a1, a2 *Article) bool { return a1.Pub > a2.Pub }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Pub > a2.Pub }
 		case 2:
-			criteria = func(a1, a2 *Article) bool { return a1.Section > a2.Section }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Section > a2.Section }
 		case 3:
-			criteria = func(a1, a2 *Article) bool { return a1.Published > a2.Published }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Published > a2.Published }
 		case 4:
-			criteria = func(a1, a2 *Article) bool { return a1.TagsString() > a2.TagsString() }
+			criteria = func(a1, a2 *store.Article) bool { return a1.TagsString() > a2.TagsString() }
 		case 5:
-			criteria = func(a1, a2 *Article) bool { return a1.Byline > a2.Byline }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Byline > a2.Byline }
 		case 6:
-			criteria = func(a1, a2 *Article) bool { return a1.URL() > a2.URL() }
+			criteria = func(a1, a2 *store.Article) bool { return a1.URL() > a2.URL() }
 		}
 	} else if sortOrder == 1 {
 		switch sortColumn {
 		case 0:
-			criteria = func(a1, a2 *Article) bool { return a1.Headline < a2.Headline }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Headline < a2.Headline }
 		case 1:
-			criteria = func(a1, a2 *Article) bool { return a1.Pub < a2.Pub }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Pub < a2.Pub }
 		case 2:
-			criteria = func(a1, a2 *Article) bool { return a1.Section < a2.Section }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Section < a2.Section }
 		case 3:
-			criteria = func(a1, a2 *Article) bool { return a1.Published < a2.Published }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Published < a2.Published }
 		case 4:
-			criteria = func(a1, a2 *Article) bool { return a1.TagsString() < a2.TagsString() }
+			criteria = func(a1, a2 *store.Article) bool { return a1.TagsString() < a2.TagsString() }
 		case 5:
-			criteria = func(a1, a2 *Article) bool { return a1.Byline < a2.Byline }
+			criteria = func(a1, a2 *store.Article) bool { return a1.Byline < a2.Byline }
 		case 6:
-			criteria = func(a1, a2 *Article) bool { return a1.URL() < a2.URL() }
+			criteria = func(a1, a2 *store.Article) bool { return a1.URL() < a2.URL() }
 		}
 	}
 	if criteria != nil {
-		By(criteria).Sort(sorted)
+		store.By(criteria).Sort(sorted)
 	}
 
 	return &Results{
@@ -200,7 +201,7 @@ type Control struct {
 	TotalArts  int
 	SortColumn int
 	SortOrder  int
-	store      *Store
+	store      *store.Store
 
 	SlurpProgress SlurpProgress
 	StatusText    string
@@ -213,7 +214,7 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 	ctrl := &Control{}
 	ctrl.App = app
 
-	newStore, err := NewStore(storePath)
+	newStore, err := store.New(storePath, dbug)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +286,7 @@ func (ctrl *Control) setQuery(q string) {
 
 func (ctrl *Control) DeleteArticles(artIndices []int) {
 
-	arts := ArtList{}
+	arts := store.ArtList{}
 	for _, artIdx := range artIndices {
 		arts = append(arts, ctrl.Results.arts[artIdx])
 	}
@@ -301,7 +302,7 @@ func (ctrl *Control) DeleteArticles(artIndices []int) {
 }
 func (ctrl *Control) AddTag(artIndices []int, tag string) {
 
-	arts := ArtList{}
+	arts := store.ArtList{}
 	for _, artIdx := range artIndices {
 		arts = append(arts, ctrl.Results.arts[artIdx])
 	}
@@ -317,7 +318,7 @@ func (ctrl *Control) AddTag(artIndices []int, tag string) {
 }
 
 func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
-	arts := ArtList{}
+	arts := store.ArtList{}
 	for _, artIdx := range artIndices {
 		arts = append(arts, ctrl.Results.arts[artIdx])
 	}
