@@ -1,0 +1,8 @@
+
+# Election tagging - general
+
+pub: independent headline: "election 2015" => TAG election
+pub: telegraph urls: /general-election-2015 => TAG election
+content: "general election" -tags: party -tags: ptyldr content: greece => TAG cruft
+content: "general election" -tags: party -tags: ptyldr content: greek => TAG cruft
+content: "general election" tags: party tags: ptyldr => TAG election

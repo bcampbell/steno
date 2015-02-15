@@ -43,7 +43,7 @@ Greens => TAG green
 "Green Party" -tags: green => TAG green
 
 # Democratic Unionist Party
-DUP => TAG dup
+DUP -content: dupe => TAG dup
 "Democratic Unionist" -tags: dup => TAG dup
 "Democratic Unionists" -tags: dup => TAG dup
 "Democratic Unionist Party" -tags: dup => TAG dup
@@ -52,7 +52,7 @@ DUP => TAG dup
 UUP => TAG uup
 "Ulster Unionist" -tags: uup => TAG uup
 |Ulster Unionists" -tags: uup => TAG uup
-"Ulster Unionist Party" -tags: uup” => TAG uup
+"Ulster Unionist Party" -tags: uup => TAG uup
 
 # SDLP
 SDLP => TAG SDLP
@@ -93,8 +93,9 @@ tags: (snp libdem) => TAG multi
 "Nick Clegg" OR Clegg OR "Clegg's" => TAG clegg
 "Nigel Farage" OR Farage OR "Farage's" => TAG farage
 "Nicola Sturgeon" OR Sturgeon => TAG sturgeon
-"Leanne Wood" OR (wood AND plaid) => tag wood
+"Leanne Wood" => tag wood
 "Natalie Bennett" => TAG bennett
+headline: "Natalie Bennett" => TAG bennett
 
 # Culling irrelevant leader surname results (where applicable)
 # NB: TO BE TESTED AGAIN, also: to be done after cull, and
@@ -102,8 +103,15 @@ tags: (snp libdem) => TAG multi
 # TODO: tag these with "manual" for eyeballing?
 
 cameron -david -"prime minister" -deputy -tags party -headline: david => UNTAG cam ptyldr
+"cameron phelps" -"david cameron" => UNTAG cam ptyldr
+"cameron diaz" -"david cameron" => UNTAG cam ptyldr
+"geoff cameron" -"david cameron" => UNTAG cam ptyldr
+"cameron jerome" -"david cameron" => UNTAG cam ptyldr
+"cameron mcgeehan" -"david cameron" => UNTAG cam ptyldr
 "david miliband" -"ed miliband" => UNTAG edm ptyldr
 clegg -tags: party -deputy -nick -headline: nick => UNTAG clegg ptyldr
+"william clegg" -content: "nick clegg" => UNTAG clegg ptyldr
+"simon clegg" -content: "nick clegg" => UNTAG clegg ptyldr
 sturgeon -nicola -tags: party => UNTAG sturgeon ptyldr
 
 # TODO: once fixed, permutations of (e.g.) “labour leader”, “labour party leader”, “labour leader’s”, “labour party leader’s” should also be added
