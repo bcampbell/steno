@@ -11,7 +11,6 @@ import (
 	"flag"
 	"fmt"
 	//"github.com/bcampbell/arts/arts"
-	"github.com/bcampbell/badger"
 	"gopkg.in/qml.v1"
 	"os"
 	"os/exec"
@@ -54,22 +53,6 @@ func run() error {
 
 	app.Window.Wait()
 	return nil
-}
-
-func loadDB(fileName string) (*badger.Collection, error) {
-
-	dbug.Printf("Loading DB from %s\n", fileName)
-	infile, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer infile.Close()
-	db, err := badger.Read(infile, &Article{})
-	if err != nil {
-		return nil, err
-	}
-	dbug.Printf("Loaded %d articles\n", db.Count())
-	return db, nil
 }
 
 func openURL(url string) {
