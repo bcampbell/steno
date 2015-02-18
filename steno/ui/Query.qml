@@ -92,14 +92,14 @@ Item {
             Button {
                 id: buttonAddTag
                 enabled: artList.selection.count > 0 && tagEntry.text!=""
-                text: "add tag"
-                onClicked: ctrl.addTag(artList.selectedArts(), tagEntry.text)
+                text: "add tag(s)"
+                onClicked: ctrl.addTags(artList.selectedArts(), tagEntry.text)
             }
             Button {
                 id: buttonRemoveTag
                 enabled: artList.selection.count > 0 && tagEntry.text!=""
-                text: "remove tag"
-                onClicked: ctrl.removeTag(artList.selectedArts(), tagEntry.text)
+                text: "remove tag(s)"
+                onClicked: ctrl.removeTags(artList.selectedArts(), tagEntry.text)
             }
             Button {
                 id: buttonDeleteArts

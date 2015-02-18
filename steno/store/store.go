@@ -355,8 +355,7 @@ func fileNameFromQuery(q string) string {
 	return f
 }
 
-func (store *Store) AddTag(arts ArtList, tag string) (ArtList, error) {
-	tag = strings.ToLower(tag)
+func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 
 	if store.db == nil {
 		return ArtList{}, nil
@@ -380,13 +379,16 @@ func (store *Store) AddTag(arts ArtList, tag string) (ArtList, error) {
 	defer insStmt.Close()
 
 	for _, art := range arts {
-		_, err = delStmt.Exec(art.ID, tag)
-		if err != nil {
-			return nil, err
-		}
-		_, err = insStmt.Exec(art.ID, tag)
-		if err != nil {
-			return nil, err
+		for _, tag := range tags {
+			tag = strings.ToLower(tag)
+			_, err = delStmt.Exec(art.ID, tag)
+			if err != nil {
+				return nil, err
+			}
+			_, err = insStmt.Exec(art.ID, tag)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	err = tx.Commit()
@@ -397,7 +399,14 @@ func (store *Store) AddTag(arts ArtList, tag string) (ArtList, error) {
 	// apply to index
 	affected := ArtList{}
 	for _, art := range arts {
-		if art.AddTag(tag) {
+		modified := false
+		for _, tag := range tags {
+			tag = strings.ToLower(tag)
+			if art.AddTag(tag) {
+				modified = true
+			}
+		}
+		if modified {
 			affected = append(affected, art)
 		}
 	}
@@ -405,8 +414,7 @@ func (store *Store) AddTag(arts ArtList, tag string) (ArtList, error) {
 	return affected, nil
 }
 
-func (store *Store) RemoveTag(arts ArtList, tag string) (ArtList, error) {
-	tag = strings.ToLower(tag)
+func (store *Store) RemoveTags(arts ArtList, tags []string) (ArtList, error) {
 
 	if store.db == nil {
 		return ArtList{}, nil
@@ -425,9 +433,12 @@ func (store *Store) RemoveTag(arts ArtList, tag string) (ArtList, error) {
 	defer delStmt.Close()
 
 	for _, art := range arts {
-		_, err = delStmt.Exec(art.ID, tag)
-		if err != nil {
-			return nil, err
+		for _, tag := range tags {
+			tag = strings.ToLower(tag)
+			_, err = delStmt.Exec(art.ID, tag)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	err = tx.Commit()
@@ -438,7 +449,14 @@ func (store *Store) RemoveTag(arts ArtList, tag string) (ArtList, error) {
 	// apply to index
 	affected := ArtList{}
 	for _, art := range arts {
-		if art.RemoveTag(tag) {
+		modified := false
+		for _, tag := range tags {
+			tag = strings.ToLower(tag)
+			if art.RemoveTag(tag) {
+				modified = true
+			}
+		}
+		if modified {
 			affected = append(affected, art)
 		}
 	}

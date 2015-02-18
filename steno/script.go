@@ -41,18 +41,16 @@ func (s *script) Run(store *store.Store) error {
 
 		switch line.op {
 		case "tag":
-			for _, tag := range line.params {
-				_, err := store.AddTag(matching, tag)
-				if err != nil {
-					return fmt.Errorf("tag error (during query '%s'): %s", line.query, err)
-				}
+			tags := line.params
+			_, err := store.AddTags(matching, tags)
+			if err != nil {
+				return fmt.Errorf("tag error (during query '%s'): %s", line.query, err)
 			}
 		case "untag":
-			for _, tag := range line.params {
-				_, err := store.RemoveTag(matching, tag)
-				if err != nil {
-					return fmt.Errorf("untag error (during query '%s'): %s", line.query, err)
-				}
+			tags := line.params
+			_, err := store.RemoveTags(matching, tags)
+			if err != nil {
+				return fmt.Errorf("untag error (during query '%s'): %s", line.query, err)
 			}
 		case "delete":
 			err := store.Delete(matching)

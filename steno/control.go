@@ -300,33 +300,36 @@ func (ctrl *Control) DeleteArticles(artIndices []int) {
 	// rerun the current query
 	ctrl.setQuery(ctrl.Results.Query)
 }
-func (ctrl *Control) AddTag(artIndices []int, tag string) {
+func (ctrl *Control) AddTags(artIndices []int, tags string) {
+
+	tagList := strings.Fields(tags)
 
 	arts := store.ArtList{}
 	for _, artIdx := range artIndices {
 		arts = append(arts, ctrl.Results.arts[artIdx])
 	}
-	affected, err := ctrl.store.AddTag(arts, tag)
+	affected, err := ctrl.store.AddTags(arts, tagList)
 	if err != nil {
-		dbug.Printf("AddTag(%s): ERROR: %s\n", tag, err)
+		dbug.Printf("AddTags(%q): ERROR: %s\n", tagList, err)
 	} else {
-		dbug.Printf("AddTag(%s): %d affected\n", tag, len(affected))
+		dbug.Printf("AddTags(%q): %d affected\n", tagList, len(affected))
 	}
 
 	// rerun the current query
 	ctrl.setQuery(ctrl.Results.Query)
 }
 
-func (ctrl *Control) RemoveTag(artIndices []int, tag string) {
+func (ctrl *Control) RemoveTags(artIndices []int, tags string) {
+	tagList := strings.Fields(tags)
 	arts := store.ArtList{}
 	for _, artIdx := range artIndices {
 		arts = append(arts, ctrl.Results.arts[artIdx])
 	}
-	affected, err := ctrl.store.RemoveTag(arts, tag)
+	affected, err := ctrl.store.RemoveTags(arts, tagList)
 	if err != nil {
-		dbug.Printf("RemoveTag(%s): ERROR: %s\n", tag, err)
+		dbug.Printf("RemoveTags(%q): ERROR: %s\n", tagList, err)
 	} else {
-		dbug.Printf("RemoveTag(%s): %d affected\n", tag, len(affected))
+		dbug.Printf("RemoveTags(%q): %d affected\n", tagList, len(affected))
 	}
 
 	// rerun the current query

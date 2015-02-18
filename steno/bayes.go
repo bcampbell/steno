@@ -93,7 +93,7 @@ func Classify(arts store.ArtList, db *store.Store) {
 
 	for tag, matching := range tagList {
 		fmt.Printf("Apply %s to %d articles\n", tag, len(matching))
-		_, err := db.AddTag(matching, tag)
+		_, err := db.AddTags(matching, []string{tag})
 		if err != nil {
 			fmt.Printf("ERROR: %s\n", err)
 		}
