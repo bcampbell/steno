@@ -45,6 +45,12 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 		return nil, err
 	}
 	store.coll = badger.NewCollection(&Article{})
+	store.coll.SetWholeWordField("content")
+	store.coll.SetWholeWordField("headline")
+	store.coll.SetWholeWordField("tags")
+	store.coll.SetWholeWordField("pub")
+	store.coll.SetWholeWordField("section")
+
 	for _, art := range arts {
 		store.coll.Put(art)
 	}
