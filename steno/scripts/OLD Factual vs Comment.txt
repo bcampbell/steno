@@ -10,7 +10,7 @@
 pub:dailymail urls: liz-jones => TAG comment
 pub:dailymail urls: quentin-letts => TAG comment
 pub:dailymail urls: /debate/ => TAG comment
-pub:dailymail urls: /news/ headline: “ writes “ content: “for the daily mail” => TAG comment
+pub:dailymail urls: /news/ headline: "writes" content: "for the daily mail" => TAG comment
 pub:dailymail urls: /richard-littlejohn => TAG comment
 pub:dailymail urls: /sebastian-shakespeare => TAG comment
 pub:dailymail urls: /james-forsyth => TAG comment

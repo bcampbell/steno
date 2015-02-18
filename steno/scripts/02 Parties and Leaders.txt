@@ -66,31 +66,100 @@ SDLP => TAG SDLP
 "Alliance Party" => TAG alliance
 Alliance AND "Northern Ireland" -tags: alliance => TAG alliance
 
-
 # Scottish Labour
 "scottish labour" => TAG scotlab
 
+content: "david cameron" => TAG con
+content: "william hague" => TAG con
+content: "george osborne" => TAG con
+content: "theresa may" => TAG con
+content: "philip hammond" => TAG con
+content: "michael fallon" => TAG con
+content: "chris grayling" => TAG con
+content: "iain duncan smith" => TAG con
+content: "jeremy hunt" => TAG con
+content: "eric pickles" => TAG con
+content: "nicky morgan" => TAG con
+content: "justine greening" => TAG con
+content: "patrick mcloughlin" => TAG con
+content: "alistair carmichael" => TAG con
+content: "theresa villiers" => TAG con
+content: "stephen crabb" => TAG con
+content: "sajid javid" => TAG con
+content: "liz truss" => TAG con
+content: "michael gove" => TAG con
+content: "francis maude" => TAG con
+content: "oliver letwin" => TAG con
+content: "jeremy wright" => TAG con
+content: "grant shapps" => TAG con
+content: "esther mcvey" => TAG con
+content: "boris johnson" => TAG con
+content: "ruth davidson" => TAG con
+content: "ed miliband" => TAG lab
+content: "harriet harman" => TAG lab
+content: "douglas alexander" => TAG lab
+content: "ed balls" => TAG lab
+content: "yvette cooper" => TAG lab
+content: "sadiq khan" => TAG lab
+content: "rosie winterton" => TAG lab
+content: "andy burnham" => TAG lab
+content: "chuka umunna" => TAG lab
+content: "rachel reeves" => TAG lab
+content: "tristram hunt" => TAG lab
+content: "vernon coaker" => TAG lab
+content: "hilary benn" => TAG lab
+content: "jon cruddas" => TAG lab
+content: "caroline flint" => TAG lab
+content: "angela eagle" => TAG lab
+content: "mary creagh" => TAG lab
+content: "ivan lewis" => TAG lab
+content: "margaret curran" => TAG lab
+content: "maria eagle" => TAG lab
+content: "owen smith" => TAG lab
+content: "michael dugher" => TAG lab
+content: "jon trickett" => TAG lab
+content: "gloria de piero" => TAG lab
+content: "chris leslie" => TAG lab
+content: "liz kendall" => TAG lab
+content: "emma reynolds" => TAG lab
+content: "jan royall" => TAG lab
+content: "liam byrne" => TAG lab
+content: "jim murphy" => TAG lab
+content: "nick clegg" => TAG libdem
+content: "vince cable" => TAG libdem
+content: "danny alexander" => TAG libdem
+content: "simon hughes" => TAG libdem
+content: "david laws" => TAG libdem
+content: "nicola sturgeon" => TAG snp
+content: "alex salmond" => TAG snp
+content: "john swinney" => TAG snp
+headline: "ed miliband" => TAG lab
+headline: "miliband" => TAG lab
+headline: "david cameron" => TAG con
+headline: "cameron" content: "prime minister" => TAG con
+headline: "nick clegg" => TAG libdem
+headline: "nick clegg" content: "liberal democrat" => TAG libdem
+headline: "nicola sturgeon" => TAG snp
+headline: sturgeon content: "nicola sturgeon" => TAG snp
+headline: "alex salmond" => TAG snp
+headline: salmond content: "alex salmond" => TAG snp
+headline: "joanne wood" => TAG pc
+
+
 # All parties
 tags: (lab OR con OR libdem OR ukip OR snp OR pc OR green OR dup OR sdlp OR sf OR alliance) => TAG party
-
-# multi-party (NB: just main 4 plus SNP)
-tags: (con lab) => TAG multi
-tags: (con libdem) => TAG multi
-tags: (libdem ukip) => TAG multi
-tags: (snp ukip) => TAG multi
-tags: (ukip lab) => TAG multi
-tags: (con ukip) => TAG multi
-tags: (snp con) => TAG multi
-tags: (snp lab) => TAG multi
-tags: (libdem lab) => TAG multi
-tags: (snp libdem) => TAG multi
 
 
 # Tagging Party Leaders (NB: just big four plus nationalists plus greens - NI parties optional?)
 
 "Ed Miliband" OR Miliband OR "Miliband's" OR "Labour leader" => TAG edm
+headline: "ed miliband" => TAG edm
+headline: miliband -content: "david miliband" => TAG edm
 "David Cameron" OR Cameron OR "Cameron's" => TAG cam
+headline: "david cameron" => TAG cam
+headline: cameron content: "prime minister" => TAG cam
 "Nick Clegg" OR Clegg OR "Clegg's" => TAG clegg
+headline: "nick clegg" => TAG 
 "Nigel Farage" OR Farage OR "Farage's" => TAG farage
 "Nicola Sturgeon" OR Sturgeon => TAG sturgeon
 "Leanne Wood" => tag wood

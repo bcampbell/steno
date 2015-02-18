@@ -598,6 +598,30 @@ pub: independent headline: "live: " => TAG cruft
 pub: independent headline: "daily catch" => TAG cruft
 "wayne rooney" => TAG cruft
 byline: "martin rowson" => TAG cruft
+pub: sundaytimes urls: /savings/ => TAG cruft
+pub: sundaytimes urls: /arts/ => TAG cruft
+pub: sundaytimes headline: "inside the city" => TAG cruft
+pub: sundaytimes headline: "liddle's got issues" => TAG cruft
+pub: sundaytimes headline: "hollywood biteback" => TAG cruft
+pub: sundaytimes headline: "american account" => TAG cruft
+pub: sundaytimes urls: /business-interviews/ => TAG cruft
+pub: thetimes headline: "your 5-minute guide" => TAG cruft
+pub: thetimes urls: /career/ => TAG cruft
+pub: thetimes urls: /industries/ => TAG cruft
+pub: thetimes urls: /bombaymix/ => TAG cruft
+pub: thetimes urls: /citypeople/ => TAG cruft
+pub: thetimes headline: "tempus: " => TAG cruft
+pub: thetimes byline: "alistair osborne" => TAG cruft
+pub: thetimes urls: /needtoknow/ => TAG cruft
+tags: green content: golf => TAG cruft
+tags: green content: "rory mcilroy" => TAG cruft
+headline: "telegraph health advice" => TAG cruft
+healthcare content: obama => TAG cruft
+healthcare headline: obama => TAG cruft
+healthcare content: republican => TAG cruft
+healthcare headline: republican => TAG cruft
+immigration content: obama => TAG cruft
+immigration headline: obama => TAG cruft
 
 
 

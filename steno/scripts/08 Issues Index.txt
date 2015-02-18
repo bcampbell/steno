@@ -1,0 +1,496 @@
+
+# Issues Index
+# --------------------------------------
+
+# ISSUE TAG LIST
+# --------------
+
+# Immigration/Immigrants: 	imm
+# NHS/Health: 				nhs
+# Economy/Finance: 			econ
+# Defence/Foreign Affairs:	fgndef
+# Crime/Law & Order:		crimlaw
+# Education/Schools:		educ
+# Welfare: 					welf
+# EU/Europe:				euro
+# Environment:				env
+# Transport:				tran
+# Local Government:			locgov
+# Devolution/Const. Reform:	devo
+# Fuel and Energy:			energy
+# Housing:					hous
+# Other:					other
+
+# Contains any issue:		issue
+
+# Contains multiple issues:	isspl
+
+
+# IMMIGRATION/IMMIGRANTS
+# ----------------------
+
+pub: =telegraph urls: /immigration/ => TAG imm
+immigration => TAG imm
+immigrants => TAG imm
+immigrant => TAG imm
+migration => TAG imm
+"asylum seekers" => TAG imm
+"asylum seeker" => TAG imm
+asylum => TAG imm
+"passport checks" => TAG imm
+headline: immigration => TAG imm
+headline: immigrants => TAG imm
+headline: immigrant => TAG imm
+headline: migration => TAG imm
+headline: "asylum seekers" => TAG imm
+headline: "asylum seeker" => TAG imm
+headline: asylum => TAG imm
+headline: "passport checks" => TAG imm
+"theresa may" immigration => TAG imm
+"theresa may" immigrants => TAG imm
+"theresa may" immigrant => TAG imm
+"theresa may" "asylum seekers" => TAG imm
+"theresa may" "asylum seeker" => TAG imm
+"theresa may" asylum => TAG imm
+"yvette cooper" immigration => TAG imm
+"yvette cooper" immigrants => TAG imm
+"yvette cooper" immigrant => TAG imm
+"yvette cooper" "asylum seekers" => TAG imm
+"yvette cooper" "asylum seeker" => TAG imm
+"yvette cooper" asylum => TAG imm
+"nigel farage" immigration => TAG imm
+"nigel farage" immigrants => TAG imm
+"nigel farage" immigrant => TAG imm
+"nigel farage" "asylum seekers" => TAG imm
+"nigel farage" "asylum seeker" => TAG imm
+"nigel farage" asylum => TAG imm
+"home office" immigration => TAG imm
+"home office" immigrants => TAG imm
+"home office" immigrant => TAG imm
+"home office" "asylum seekers" => TAG imm
+"home office" "asylum seeker" => TAG imm
+"home office" asylum => TAG imm
+"james brokenshire" => TAG imm
+"david hanson" => TAG imm
+migrationwatch => TAG imm
+"migration watch" => TAG imm
+
+
+# NHS/HEALTH
+# ----------
+
+pub: =telegraph urls: /nhs/ => TAG nhs
+pub: thetimes urls: /health/ => TAG nhs
+headline: nhs => TAG nhs
+nhs => TAG nhs
+"national health service" => TAG nhs
+headline: "national health" => TAG nhs
+cqc => TAG nhs
+headline: cqc => TAG nhs
+"care quality commission" => TAG nhs
+healthcare => TAG nhs
+"national institute for health and care excellence" => TAG nhs
+"accident and emergency" => TAG nhs
+headline: "a&e" => TAG nhs
+"andy burnham" health => TAG nhs
+"jeremy hunt" => TAG nhs/
+"department of health" => TAG nhs
+"health minister" => TAG nhs
+"shadow health minister" => TAG nhs
+
+
+# ECONOMY/FINANCE
+# ---------------
+
+chancellor => TAG econ
+headline: chancellor => TAG econ
+"shadow chancellor" => TAG econ
+headline: "shadow chancellor" => TAG econ
+exchequer => TAG econ
+headline: exchequer => TAG econ
+treasury => TAG econ
+headline: treasury => TAG econ
+"george osborne" => TAG econ
+headline: "george osborne" => TAG econ
+"ed balls" => TAG econ
+headline: "ed balls" => TAG econ
+inequality => TAG econ
+headline: inequality => TAG econ
+"food banks" => TAG econ
+"zero hours" => TAG econ
+unemployment => TAG econ
+poverty => TAG econ
+deficit => TAG econ
+nationalise => TAG econ
+nationalised => TAG econ
+nationalisation => TAG econ
+privatise => TAG econ
+privatised => TAG econ
+privatisation => TAG econ
+content: hmrc content: tax => TAG econ
+economy => TAG econ
+economic => TAG econ
+"income tax" => TAG econ
+"tax credits" => TAG econ
+"tax evasion" => TAG econ
+"tax avoidance" => TAG econ
+"tax avoiding" => TAG econ
+"tax and spend" => TAG econ
+keynesian => TAG econ
+neoliberal => TAG econ
+monetary => TAG econ
+inflation => TAG econ
+deflation => TAG econ
+inflationary => TAG econ
+deflationary => TAG econ
+CPI => TAG econ
+RPI => TAG econ
+GDP => TAG econ
+capitalism => TAG econ
+capitalist => TAG econ
+socialist => TAG econ
+socialism => TAG econ
+austerity => TAG econ
+"evading tax" => TAG econ
+"avoiding tax" => TAG econ
+"paying tax" => TAG econ
+taxpayers => TAG econ
+"tax payers" => TAG econ
+"household income" => TAG econ
+"tax loophole" => TAG econ
+"tax cut" => TAG econ
+"tax cuts" => TAG econ
+"cutting tax" => TAG econ
+"tax threshold" => TAG econ
+"corporation tax" => TAG econ
+"public services" => TAG econ
+"public sector" => TAG econ
+"public spending" => TAG econ
+"public debt" => TAG econ
+"government debt" => TAG econ
+"vince cable" => TAG econ
+"chuka umunna" => TAG econ
+"danny alexander" => TAG econ
+"chris leslie" => TAG econ
+"minimum wage" => TAG econ
+"living wage" => TAG econ
+"corporation tax" => TAG econ
+"national insurance" => TAG econ
+"credit crunch" => TAG econ
+"quantitative easing" => TAG econ
+"interest rates" => TAG econ
+"bank of england" => TAG econ
+"mark carney" => TAG econ
+"financial conduct authority" => TAG econ
+FCA => TAG econ
+"prudential regulation authority" => TAG econ
+"national debt" => TAG econ
+"private sector" => TAG econ
+"priti patel" => TAG econ
+"andrea leadsom" => TAG econ
+"david gauke" => TAG econ
+"social mobility" => TAG educ
+
+
+# DEFENCE/FOREIGN AFFAIRS/INTERNATIONAL TERRORISM
+# -----------------------------------------------
+
+nato => TAG fgndef
+"armed services" => TAG fgndef
+"armed forces" => TAG fgndef
+"ministry of defence" => TAG fgndef
+"royal navy" => TAG fgndef
+"british navy" => TAG fgndef
+"british army" => TAG fgndef
+army => TAG fgndef
+"royal air force" => TAG fgndef
+"air force" => TAG fgndef
+"nuclear deterrent" => TAG fgndef
+"nuclear deterrence" => TAG fgndef
+"nuclear weapons" => TAG fgndef
+"nuclear submarines" => TAG fgndef
+"nuclear submarines" => TAG fgndef
+faslane => TAG fgndef
+"defence spending" => TAG fgndef
+"defence budget" => TAG fgndef
+"defence budgets" => TAG fgndef
+"philip hammond" => TAG fgndef
+"douglas alexander" => TAG fgndef
+"michael fallon" => TAG fgndef
+"vernon coaker" => TAG fgndef
+"justine greening" => TAG fgndef
+"mary creagh" => TAG fgndef
+"anna soubry" => TAG fgndef
+"secretary of state for defence" => TAG fgndef
+"defence minister" => TAG fgndef
+"mark francois" => TAG fgndef
+"julian brazier" => TAG fgndef
+"shadow secretary of state for defence" => TAG fgndef
+"shadow defence minister" => TAG fgndef
+"foreign secretary" => TAG fgndef
+"shadow foreign secretary" => TAG fgndef
+"secretary of state for foreign and commonwealth affairs" => TAG fgndef
+"foreign office" => TAG fgndef
+fco => TAG fgndef
+"foreign and commonwealth office" => TAG fgndef
+commonwealth => TAG fgndef
+"united nations" => TAG fgndef
+"united nations security council" => TAG fgndef
+"foreign policy" => TAG fgndef
+"diplomatic relations" => TAG fgndef
+"foreign aid" => TAG fgndef
+"overseas aid" => TAG fgndef
+"department for international development" => TAG fgndef
+dfid => TAG fgndef
+"defence policy" => TAG fgndef
+"international aid" => TAG fgndef
+
+
+# CRIME/LAW & ORDER/VIOLENCE/VANDALISM/ASB
+# ----------------------------------------
+
+"lynne featherstone" => TAG crimlaw
+"mike penning" => TAG crimlaw
+"karen bradley" => TAG crimlaw
+"sadiq khan" => TAG crimlaw
+"chris grayling" => TAG crimlaw
+"secretary of state for justice" => TAG crimlaw
+"shadow secretary of state for justice" => TAG crimlaw
+"justice secretary" => TAG crimlaw
+"shadow justice secretary" => TAG crimlaw
+"justice minister" => TAG crimlaw
+"shadow justice minister" => TAG crimlaw
+"lord chancellor" => TAG crimlaw
+"legal aid" => TAG crimlaw
+"anti-social behaviour" => TAG crimlaw
+"crime statistics" => TAG crimlaw
+"crown prosecution service" => TAG crimlaw
+cps => TAG crimlaw
+dpp => TAG crimlaw
+"director of public prosecutions" => TAG crimlaw
+"criminal justice" => TAG crimlaw
+"crime statistics" => TAG crimlaw
+"crime stats" => TAG crimlaw
+"violent crime" => TAG crimlaw
+"alison saunders" => TAG crimlaw
+policing => TAG crimlaw
+"criminal justice system" => TAG crimlaw
+"sentencing policy" => TAG crimlaw
+"sentencing guidelines" => TAG crimlaw
+"criminal cases review commission" => TAG crimlaw
+"drugs policy" => TAG crimlaw
+"legalising drugs" => TAG crimlaw
+"legalise drugs" => TAG crimlaw
+legalisation => TAG crimlaw
+fgm => TAG crimlaw
+"drugs strategy" => TAG crimlaw
+"organised crime" => TAG crimlaw
+"crime strategy" => TAG crimlaw
+"domestic violence" => TAG crimlaw
+"sexual violence" => TAG crimlaw
+"simon hughes" => TAG crimlaw
+"andrew selous" => TAG crimlaw
+"shailesh vara" => TAG crimlaw
+"prisons minister" => TAG crimlaw
+"minister for prisons, probation and rehabilitation" => TAG crimlaw
+"civil liberties"=> TAG crimlaw
+"civil law" => TAG crimlaw
+"law commission" => TAG crimlaw
+"youth justice" => TAG crimlaw
+"probation service" => TAG crimlaw
+"dna database" => TAG crimlaw
+"metropolitan police" => TAG crimlaw
+"met police" => TAG crimlaw
+IPCC => TAG crimlaw
+"independent police complaints commission" => TAG crimlaw
+"police advisory board" => TAG crimlaw
+"office of surveillance commissioners" => TAG crimlaw
+"police fereration" => TAG crimlaw
+"police commissioner" => TAG crimlaw
+ACPO => TAG crimlaw
+"association of chief police officers" => TAG crimlaw
+"bernard hogan-howe" => TAG crimlaw
+
+
+# EDUCATION/SCHOOLS
+# -----------------
+
+"nicky morgan" => TAG educ
+"david laws" => TAG educ
+"nick gibb" => TAG educ
+"tristram hunt" => TAG educ
+"nick boles" => TAG educ
+"education secretary" => TAG educ
+"shadow education secretary" => TAG educ
+"secretary of state for education" => TAG educ
+"shadow secretary of state for education" => TAG educ
+"department for education" => TAG educ
+"schools minister" => TAG educ
+"shadow schools minister" => TAG educ
+"education maintenance allowance" => TAG educ
+"tuition fees" => TAG educ
+"class sizes" => TAG educ
+"classroom sizes" => TAG educ
+"pupils per classroom" => TAG educ
+"schools" => TAG educ
+"primary schools" => TAG educ
+"secondary schools" => TAG educ
+academy => TAG educ
+academies => TAG educ
+"grammar schools" => TAG educ
+ofsted => TAG educ
+teachers => TAG educ
+"student loans" => TAG educ
+"school league tables" => TAG educ
+universities => TAG educ
+"university funding" => TAG educ
+"further education" => TAG educ
+"higher education" => TAG educ
+hefce => TAG educ
+"local education authorities" => TAG educ
+"pupil premium" => TAG educ
+"teaching agency" => TAG educ
+"university admissions" => TAG educ
+literacy => TAG educ
+"school inspections" => TAG educ
+"school inspectors" => TAG educ
+apprenticeships => TAG educ
+traineeships => TAG educ
+"skills funding agency" => TAG educ
+ofqual => TAG educ
+"national curriculum" => TAG educ
+"key stages" content: school => TAG educ
+"education funding agency" => TAG educ
+"private schools" => TAG educ
+"private schooling" => TAG educ
+
+
+# NB Below goes last - always add issue tags above
+
+# General issue tagging
+# ---------------------
+
+tags: imm => TAG issue
+tags: nhs => TAG issue
+tags: econ => TAG issue
+tags: fgndef => TAG issue
+tags: crimlaw => TAG issue
+tags: educ => TAG issue
+tags: welf => TAG issue
+tags: euro => TAG issue
+tags: env => TAG issue
+tags: tran => TAG issue
+tags: locgov => TAG issue
+tags: devo => TAG issue
+tags: energy => TAG issue
+tags: hous => TAG issue
+tags: other => TAG issue 
+
+# Multiple/plural issue tagging
+# -------------------
+
+tags: locgov tags: euro => TAG isspl
+tags: nhs tags: welf => TAG isspl
+tags: fgndef tags: econ => TAG isspl
+tags: educ tags: crimlaw => TAG isspl
+tags: env tags: other => TAG isspl
+tags: tran tags: energy => TAG isspl
+tags: imm tags: devo => TAG isspl
+tags: hous tags: nhs => TAG isspl
+tags: econ tags: locgov => TAG isspl
+tags: welf tags: educ => TAG isspl
+tags: other tags: fgndef => TAG isspl
+tags: crimlaw tags: tran => TAG isspl
+tags: devo tags: env => TAG isspl
+tags: energy tags: imm => TAG isspl
+tags: euro tags: econ => TAG isspl
+tags: educ tags: hous => TAG isspl
+tags: locgov tags: other => TAG isspl
+tags: tran tags: welf => TAG isspl
+tags: fgndef tags: devo => TAG isspl
+tags: imm tags: crimlaw => TAG isspl
+tags: env tags: energy => TAG isspl
+tags: nhs tags: educ => TAG isspl
+tags: other tags: euro => TAG isspl
+tags: hous tags: tran => TAG isspl
+tags: devo tags: locgov => TAG isspl
+tags: welf tags: imm => TAG isspl
+tags: energy tags: fgndef => TAG isspl
+tags: crimlaw tags: env => TAG isspl
+tags: econ tags: other => TAG isspl
+tags: tran tags: nhs => TAG isspl
+tags: euro tags: devo => TAG isspl
+tags: imm tags: hous => TAG isspl
+tags: locgov tags: energy => TAG isspl
+tags: env tags: welf => TAG isspl
+tags: fgndef tags: crimlaw => TAG isspl
+tags: educ tags: tran => TAG isspl
+tags: devo tags: econ => TAG isspl
+tags: nhs tags: imm => TAG isspl
+tags: energy tags: euro => TAG isspl
+tags: hous tags: env => TAG isspl
+tags: crimlaw tags: locgov => TAG isspl
+tags: welf tags: fgndef => TAG isspl
+tags: other tags: devo => TAG isspl
+tags: imm tags: educ => TAG isspl
+tags: econ tags: energy => TAG isspl
+tags: env tags: nhs => TAG isspl
+tags: euro tags: crimlaw => TAG isspl
+tags: fgndef tags: hous => TAG isspl
+tags: locgov tags: welf => TAG isspl
+tags: imm tags: tran => TAG isspl
+tags: other tags: energy => TAG isspl
+tags: env tags: educ => TAG isspl
+tags: econ tags: crimlaw => TAG isspl
+tags: fgndef tags: nhs => TAG isspl
+tags: euro tags: welf => TAG isspl
+tags: locgov tags: hous => TAG isspl
+tags: energy tags: devo => TAG isspl
+tags: tran tags: env => TAG isspl
+tags: crimlaw tags: other => TAG isspl
+tags: educ tags: fgndef => TAG isspl
+tags: welf tags: econ => TAG isspl
+tags: nhs tags: locgov => TAG isspl
+tags: hous tags: euro => TAG isspl
+tags: env tags: imm => TAG isspl
+tags: devo tags: crimlaw => TAG isspl
+tags: fgndef tags: tran => TAG isspl
+tags: other tags: welf => TAG isspl
+tags: locgov tags: educ => TAG isspl
+tags: econ tags: hous => TAG isspl
+tags: euro tags: nhs => TAG isspl
+tags: crimlaw tags: energy => TAG isspl
+tags: imm tags: fgndef => TAG isspl
+tags: welf tags: devo => TAG isspl
+tags: tran tags: locgov => TAG isspl
+tags: hous tags: other => TAG isspl
+tags: educ tags: euro => TAG isspl
+tags: nhs tags: econ => TAG isspl
+tags: fgndef tags: env => TAG isspl
+tags: energy tags: welf => TAG isspl
+tags: locgov tags: imm => TAG isspl
+tags: devo tags: hous => TAG isspl
+tags: euro tags: tran => TAG isspl
+tags: other tags: nhs => TAG isspl
+tags: econ tags: educ => TAG isspl
+tags: welf tags: crimlaw => TAG isspl
+tags: env tags: locgov => TAG isspl
+tags: hous tags: energy => TAG isspl
+tags: imm tags: euro => TAG isspl
+tags: nhs tags: devo => TAG isspl
+tags: tran tags: econ => TAG isspl
+tags: educ tags: other => TAG isspl
+tags: locgov tags: fgndef => TAG isspl
+tags: crimlaw tags: hous => TAG isspl
+tags: euro tags: env => TAG isspl
+tags: energy tags: nhs => TAG isspl
+tags: econ tags: imm => TAG isspl
+tags: devo tags: educ => TAG isspl
+tags: other tags: tran => TAG isspl
+tags: hous tags: welf => TAG isspl
+tags: fgndef tags: euro => TAG isspl
+tags: nhs tags: crimlaw => TAG isspl
+tags: env tags: econ => TAG isspl
+tags: educ tags: energy => TAG isspl
+tags: imm tags: other => TAG isspl
+tags: tran tags: devo => TAG isspl
