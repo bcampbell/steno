@@ -24,16 +24,16 @@ Item {
             Item {
                 id: artInfo
                 Layout.minimumHeight: 100
-                function showArt(art) {
-                   content.text = art.content 
+                function showArt(art,highlightTerms) {
+                   content.text = art.formatContent(highlightTerms)
                 }
                 ScrollView {
                     anchors.fill: parent
-                    Text {
+                        anchors.margins: 16
+                    contentItem: Text {
                         id: content 
         //                width: artInfo.width
-                        //anchors.fill: parent
-                        //anchors.margins: 16
+                        width: 600
                         text: ""
 
 

@@ -4,6 +4,7 @@ import (
 	"github.com/bcampbell/htmlutil"
 	"golang.org/x/net/html"
 	"html/template"
+	"regexp"
 	"strings"
 )
 
@@ -78,9 +79,23 @@ func (art *Article) PlainTextContent() string {
 	return htmlutil.RenderNode(root)
 }
 
+func (art *Article) FormatContent(highlightTerms string) string {
+	breakPat := regexp.MustCompile(`[\n]{2,}`)
+	foo := strings.Fields(highlightTerms)
+	txt := art.PlainTextContent()
+
+	for _, term := range foo {
+		txt = strings.Replace(txt, term, "<b>"+term+"</b>", -1)
+	}
+	txt = breakPat.ReplaceAllLiteralString(txt, "<br/><br/>")
+	return txt
+}
+
+/*
 func (art *Article) Hoo() *string {
 	return &art.Headline
 }
+*/
 
 func (art *Article) URL() string {
 	if art.CanonicalURL != "" {

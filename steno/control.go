@@ -76,6 +76,14 @@ func (res *Results) setArts(arts store.ArtList) {
 	res.FacetLen = len(res.facets)
 }
 
+// return terms from current query, for highlighting
+// eg if query is `chaos headline:"climate change"`, this fn
+// should return "chaos","climate change". or something.
+// TODO: should really fall out of query parsing...
+func (res *Results) HighlightTerms() string {
+	return ""
+}
+
 func (res *Results) Match(artIdx int, needle string) bool {
 	needle = strings.ToLower(needle)
 	art := res.Art(artIdx)
@@ -300,6 +308,7 @@ func (ctrl *Control) DeleteArticles(artIndices []int) {
 	// rerun the current query
 	ctrl.setQuery(ctrl.Results.Query)
 }
+
 func (ctrl *Control) AddTags(artIndices []int, tags string) {
 
 	tagList := strings.Fields(tags)

@@ -249,7 +249,7 @@ Item {
                 return sel
             }
 
-            onClicked: artInfo.showArt(ctrl.results.art(row))
+            onClicked: artInfo.showArt(ctrl.results.art(row), ctrl.results.highlightTerms())
             // TODO: indicatorColumn and order passed into code side verbatim. Code changes needed if modifying column ordering
             onSortIndicatorColumnChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
             onSortIndicatorOrderChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
