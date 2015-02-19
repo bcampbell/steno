@@ -1,6 +1,7 @@
 package store
 
 import (
+	//	"fmt"
 	"github.com/bcampbell/htmlutil"
 	"golang.org/x/net/html"
 	"html/template"
@@ -79,15 +80,20 @@ func (art *Article) PlainTextContent() string {
 	return htmlutil.RenderNode(root)
 }
 
+// TODO: this should be out in the gui layer
 func (art *Article) FormatContent(highlightTerms string) string {
 	breakPat := regexp.MustCompile(`[\n]{2,}`)
 	foo := strings.Fields(highlightTerms)
 	txt := art.PlainTextContent()
 
 	for _, term := range foo {
-		txt = strings.Replace(txt, term, "<b>"+term+"</b>", -1)
+		termPat := regexp.MustCompile("(?i)" + regexp.QuoteMeta(term))
+		txt = termPat.ReplaceAllStringFunc(txt, func(t string) string {
+			return `<b>` + t + "</b>"
+		})
 	}
 	txt = breakPat.ReplaceAllLiteralString(txt, "<br/><br/>")
+
 	return txt
 }
 

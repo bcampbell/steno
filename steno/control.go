@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"gopkg.in/qml.v1"
 	"os"
+	"regexp"
 	"semprini/steno/steno/store"
 	"strings"
 )
@@ -81,7 +82,13 @@ func (res *Results) setArts(arts store.ArtList) {
 // should return "chaos","climate change". or something.
 // TODO: should really fall out of query parsing...
 func (res *Results) HighlightTerms() string {
-	return ""
+	// ultrashonky hack for now.
+	q := res.Query
+	stripFields := regexp.MustCompile("[a-zA-Z]+:")
+	stripPunct := regexp.MustCompile("[^a-zA-Z0-9 ]+")
+	q = stripFields.ReplaceAllLiteralString(q, "")
+	q = stripPunct.ReplaceAllLiteralString(q, "")
+	return q
 }
 
 func (res *Results) Match(artIdx int, needle string) bool {
