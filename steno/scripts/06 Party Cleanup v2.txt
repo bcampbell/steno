@@ -1,0 +1,69 @@
+
+# Cleanup tagging for parties 
+# --------------------------------------------------
+
+content: labour -content: (miliband OR harman OR balls OR election OR policy OR politics OR party OR voters OR votes OR vote OR voted OR voting OR government OR poll OR minister OR peer OR electorate OR campaign OR mp OR mps) => TAG cleanup
+content: labours -content: (miliband OR harman OR balls OR election OR policy OR politics OR party OR voters OR votes OR vote OR voted OR voting OR government OR poll OR minister OR peer OR electorate OR campaign OR mp OR mps) => TAG cleanup
+
+content: conservative -content: (cameron OR osborne OR "duncan smith" OR "theresa may" OR election OR policy OR politics OR party OR voters OR votes OR vote OR voted OR voting OR government OR poll OR minister OR peer OR electorate OR campaign OR mp OR mps) => TAG cleanup
+content: conservatives -content: (cameron OR osborne OR "duncan smith" OR "theresa may" OR election OR policy OR politics OR party OR voters OR votes OR vote OR voted OR voting OR government OR poll OR minister OR peer OR electorate OR campaign OR mp OR mps) => TAG cleanup
+
+content: greens (bennett OR lucas OR election OR policy OR politics OR party OR voters OR votes OR vote OR voted OR voting OR government OR poll OR minister OR peer OR electorate OR campaign OR mp OR mps) => TAG cleanup
+
+tags: cleanup content: "david cameron" => UNTAG cleanup
+tags: cleanup content: "william hague" => UNTAG cleanup
+tags: cleanup content: "george osborne" => UNTAG cleanup
+tags: cleanup content: "theresa may" => UNTAG cleanup
+tags: cleanup content: "philip hammond" => UNTAG cleanup
+tags: cleanup content: "michael fallon" => UNTAG cleanup
+tags: cleanup content: "chris grayling" => UNTAG cleanup
+tags: cleanup content: "iain duncan smith" => UNTAG cleanup
+tags: cleanup content: "jeremy hunt" => UNTAG cleanup
+tags: cleanup content: "eric pickles" => UNTAG cleanup
+tags: cleanup content: "nicky morgan" => UNTAG cleanup
+tags: cleanup content: "justine greening" => UNTAG cleanup
+tags: cleanup content: "patrick mcloughlin" => UNTAG cleanup
+tags: cleanup content: "alistair carmichael" => UNTAG cleanup
+tags: cleanup content: "theresa villiers" => UNTAG cleanup
+tags: cleanup content: "stephen crabb" => UNTAG cleanup
+tags: cleanup content: "sajid javid" => UNTAG cleanup
+tags: cleanup content: "liz truss" => UNTAG cleanup
+tags: cleanup content: "michael gove" => UNTAG cleanup
+tags: cleanup content: "francis maude" => UNTAG cleanup
+tags: cleanup content: "oliver letwin" => UNTAG cleanup
+tags: cleanup content: "jeremy wright" => UNTAG cleanup
+tags: cleanup content: "grant shapps" => UNTAG cleanup
+tags: cleanup content: "esther mcvey" => UNTAG cleanup
+tags: cleanup content: "boris johnson"=> UNTAG cleanup
+tags: cleanup content: "ed miliband" => UNTAG cleanup
+tags: cleanup content: "harriet harman" => UNTAG cleanup
+tags: cleanup content: "douglas alexander" => UNTAG cleanup
+tags: cleanup content: "ed balls" => UNTAG cleanup
+tags: cleanup content: "yvette cooper" => UNTAG cleanup
+tags: cleanup content: "sadiq khan" => UNTAG cleanup
+tags: cleanup content: "rosie winterton" => UNTAG cleanup
+tags: cleanup content: "andy burnham" => UNTAG cleanup
+tags: cleanup content: "chuka umunna" => UNTAG cleanup
+tags: cleanup content: "rachel reeves" => UNTAG cleanup
+tags: cleanup content: "tristram hunt" => UNTAG cleanup
+tags: cleanup content: "vernon coaker" => UNTAG cleanup
+tags: cleanup content: "hilary benn" => UNTAG cleanup
+tags: cleanup content: "jon cruddas" => UNTAG cleanup
+tags: cleanup content: "caroline flint" => UNTAG cleanup
+tags: cleanup content: "angela eagle" => UNTAG cleanup
+tags: cleanup content: "mary creagh" => UNTAG cleanup
+tags: cleanup content: "ivan lewis" => UNTAG cleanup
+tags: cleanup content: "margaret curran" => UNTAG cleanup
+tags: cleanup content: "maria eagle" => UNTAG cleanup
+tags: cleanup content: "owen smith" => UNTAG cleanup
+tags: cleanup content: "michael dugher" => UNTAG cleanup
+tags: cleanup content: "jon trickett" => UNTAG cleanup
+tags: cleanup content: "gloria de piero" => UNTAG cleanup
+tags: cleanup content: "chris leslie" => UNTAG cleanup
+tags: cleanup content: "liz kendall" => UNTAG cleanup
+tags: cleanup content: "emma reynolds" => UNTAG cleanup
+tags: cleanup content: "jan royall" => UNTAG cleanup
+tags: cleanup headline: "david cameron" => UNTAG cleanup
+tags: cleanup headline: cameron => UNTAG cleanup
+tags: cleanup headline: "ed miliband" => UNTAG cleanup
+tags: cleanup headline: miliband => UNTAG cleanup

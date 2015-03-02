@@ -35,7 +35,10 @@ content: labour content: pregnancy => TAG lclean
 "slave labour" => TAG lclean
 "slave-labour" => TAG lclean
 "cheap labour" => TAG lclean
-"labour dispute" => TAG cleanup
+"labour dispute" => TAG lclean
+"labour market" => TAG lclean
+"labour force" => TAG lclean
+"labour laws" => TAG lclean
 
 # ----------------------------------
 

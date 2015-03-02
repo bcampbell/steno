@@ -9,6 +9,7 @@ labour => TAG lab
 # Conservative
 
 Tory => TAG con
+Tory's => TAG con
 Tories -tags: con => TAG con
 Conservative -tags: con => TAG con
 Conservatives -tags: con => TAG con
@@ -23,6 +24,7 @@ Conservatives -tags: con => TAG con
 # UKIP
 UKIP => TAG ukip
 "UK Independence Party" -tags: ukip => TAG ukip
+ukips => TAG ukip
 
 # snp
 SNP => TAG snp
@@ -31,39 +33,47 @@ SNP => TAG snp
 "Scottish National" -tags: snp => TAG snp
 "Scottish Nationalist" -tags: snp => TAG snp
 "Scottish Nationalists" -tags: snp => TAG snp
+snps => TAG snp
 
 # Plaid Cymru
 
 "Plaid Cymru" -tags: pc => TAG pc
+"plaid cymru's" => TAG pc
 "Welsh Nationalist" -tags: pc => TAG pc
 "Welsh Nationalists" -tags: pc => TAG pc
 
 # Green Party
 Greens => TAG green
 "Green Party" -tags: green => TAG green
+"green party's" => TAG green
 
 # Democratic Unionist Party
-DUP -content: dupe => TAG dup
+DUP => TAG dup
+dups => TAG dup
 "Democratic Unionist" -tags: dup => TAG dup
 "Democratic Unionists" -tags: dup => TAG dup
 "Democratic Unionist Party" -tags: dup => TAG dup
 
 # Ulster Unionist Party
 UUP => TAG uup
+uups => TAG uup
 "Ulster Unionist" -tags: uup => TAG uup
-|Ulster Unionists" -tags: uup => TAG uup
+""Ulster Unionists" -tags: uup => TAG uup
 "Ulster Unionist Party" -tags: uup => TAG uup
 
 # SDLP
 SDLP => TAG SDLP
+sdlps => TAG sdlp
 "Social Democratic and Labour Party" -tags: sdlp => TAG sdlp
 "Social Democratic & Labour Party" -tags: sdlp => TAG sdlp
 
 # Sinn Fein
 "Sinn Fein" => TAG sf
+"sinn fein's" => TAG sf
 
 # Alliance
-"Alliance Party" => TAG alliance
+"alliance arty" => TAG alliance
+"alliance party's" => TAG alliance
 Alliance AND "Northern Ireland" -tags: alliance => TAG alliance
 
 # Scottish Labour
@@ -152,10 +162,10 @@ tags: (lab OR con OR libdem OR ukip OR snp OR pc OR green OR dup OR sdlp OR sf O
 
 # Tagging Party Leaders (NB: just big four plus nationalists plus greens - NI parties optional?)
 
-"Ed Miliband" OR Miliband OR "Miliband's" OR "Labour leader" => TAG edm
+"Ed Miliband" OR Miliband OR "Miliband's" OR "Labour leader" OR "labour leader's" => TAG edm
 headline: "ed miliband" => TAG edm
 headline: miliband -content: "david miliband" => TAG edm
-"David Cameron" OR Cameron OR "Cameron's" => TAG cam
+"David Cameron" OR Cameron OR "Cameron's" OR "tory leader" OR "tory leader's"=> TAG cam
 headline: "david cameron" => TAG cam
 headline: cameron content: "prime minister" => TAG cam
 "Nick Clegg" OR Clegg OR "Clegg's" => TAG clegg
@@ -171,20 +181,18 @@ headline: "Natalie Bennett" => TAG bennett
 # results should be scanned first before removal
 # TODO: tag these with "manual" for eyeballing?
 
-cameron -david -"prime minister" -deputy -tags party -headline: david => UNTAG cam ptyldr
-"cameron phelps" -"david cameron" => UNTAG cam ptyldr
-"cameron diaz" -"david cameron" => UNTAG cam ptyldr
-"geoff cameron" -"david cameron" => UNTAG cam ptyldr
-"cameron jerome" -"david cameron" => UNTAG cam ptyldr
-"cameron mcgeehan" -"david cameron" => UNTAG cam ptyldr
-"david miliband" -"ed miliband" => UNTAG edm ptyldr
-clegg -tags: party -deputy -nick -headline: nick => UNTAG clegg ptyldr
-"william clegg" -content: "nick clegg" => UNTAG clegg ptyldr
-"simon clegg" -content: "nick clegg" => UNTAG clegg ptyldr
-sturgeon -nicola -tags: party => UNTAG sturgeon ptyldr
-
-# TODO: once fixed, permutations of (e.g.) “labour leader”, “labour party leader”, “labour leader’s”, “labour party leader’s” should also be added
-
+cameron -david -"prime minister" -deputy -tags party -headline: david => UNTAG cam
+"cameron phelps" -"david cameron" => UNTAG cam 
+"cameron diaz" -"david cameron" => TAG cruft
+"geoff cameron" -"david cameron" => TAG cruft
+"cameron jerome" -"david cameron" => TAG cruft
+"cameron mcgeehan" -"david cameron" => UNTAG cam 
+"cameron buttle" -"david cameron" => UNTAG cam 
+"david miliband" -"ed miliband" => UNTAG edm 
+clegg -tags: party -deputy -nick -headline: nick => UNTAG clegg 
+"william clegg" -content: "nick clegg" => UNTAG clegg 
+"simon clegg" -content: "nick clegg" => UNTAG clegg 
+sturgeon -nicola -tags: party => UNTAG sturgeon 
 
 # Tagging all leaders
 tags: (edm OR cam OR clegg OR farage OR sturgeon OR wood OR bennett) => TAG ptyldr

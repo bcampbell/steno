@@ -29,6 +29,7 @@
 # IMMIGRATION/IMMIGRANTS
 # ----------------------
 
+"immigration policy" => TAG imm
 pub: =telegraph urls: /immigration/ => TAG imm
 immigration => TAG imm
 immigrants => TAG imm
@@ -79,6 +80,8 @@ migrationwatch => TAG imm
 # NHS/HEALTH
 # ----------
 
+"nhs policy" => TAG nhs
+"health policy" => TAG nhs
 pub: =telegraph urls: /nhs/ => TAG nhs
 pub: thetimes urls: /health/ => TAG nhs
 headline: nhs => TAG nhs
@@ -88,7 +91,9 @@ headline: "national health" => TAG nhs
 cqc => TAG nhs
 headline: cqc => TAG nhs
 "care quality commission" => TAG nhs
-healthcare => TAG nhs
+content: healthcare content: nhs => TAG nhs
+content: "private healthcare" => TAG nhs
+content: bupa => TAG nhs
 "national institute for health and care excellence" => TAG nhs
 "accident and emergency" => TAG nhs
 headline: "a&e" => TAG nhs
@@ -102,6 +107,7 @@ headline: "a&e" => TAG nhs
 # ECONOMY/FINANCE
 # ---------------
 
+"economic policy" => TAG econ
 chancellor => TAG econ
 headline: chancellor => TAG econ
 "shadow chancellor" => TAG econ
@@ -123,7 +129,7 @@ poverty => TAG econ
 deficit => TAG econ
 nationalise => TAG econ
 nationalised => TAG econ
-nationalisation => TAG econ
+nationalisation => TAG econneo
 privatise => TAG econ
 privatised => TAG econ
 privatisation => TAG econ
@@ -149,7 +155,6 @@ GDP => TAG econ
 capitalism => TAG econ
 capitalist => TAG econ
 socialist => TAG econ
-socialism => TAG econ
 austerity => TAG econ
 "evading tax" => TAG econ
 "avoiding tax" => TAG econ
@@ -244,6 +249,7 @@ commonwealth => TAG fgndef
 dfid => TAG fgndef
 "defence policy" => TAG fgndef
 "international aid" => TAG fgndef
+"lord dannatt" => TAG fgndef
 
 
 # CRIME/LAW & ORDER/VIOLENCE/VANDALISM/ASB
@@ -287,6 +293,7 @@ fgm => TAG crimlaw
 "organised crime" => TAG crimlaw
 "crime strategy" => TAG crimlaw
 "domestic violence" => TAG crimlaw
+"domestic abuse" => TAG crimlaw
 "sexual violence" => TAG crimlaw
 "simon hughes" => TAG crimlaw
 "andrew selous" => TAG crimlaw
@@ -301,7 +308,7 @@ fgm => TAG crimlaw
 "dna database" => TAG crimlaw
 "metropolitan police" => TAG crimlaw
 "met police" => TAG crimlaw
-IPCC => TAG crimlaw
+IPCC -content: "climate change" => TAG crimlaw
 "independent police complaints commission" => TAG crimlaw
 "police advisory board" => TAG crimlaw
 "office of surveillance commissioners" => TAG crimlaw
@@ -310,11 +317,15 @@ IPCC => TAG crimlaw
 ACPO => TAG crimlaw
 "association of chief police officers" => TAG crimlaw
 "bernard hogan-howe" => TAG crimlaw
-
+jails overcrowd => TAG crimlaw
+"jeremy wright qc" => TAG crimlaw
+"robert buckland" => TAG crimlaw
 
 # EDUCATION/SCHOOLS
 # -----------------
 
+"schools policy" => TAG educ
+"education policy" => TAG educ
 "nicky morgan" => TAG educ
 "david laws" => TAG educ
 "nick gibb" => TAG educ
@@ -335,7 +346,7 @@ ACPO => TAG crimlaw
 "schools" => TAG educ
 "primary schools" => TAG educ
 "secondary schools" => TAG educ
-academy => TAG educ
+academy -content: "academy awards" -content: "oscars" -content: "brixton academy" => TAG educ
 academies => TAG educ
 "grammar schools" => TAG educ
 ofsted => TAG educ
@@ -363,6 +374,325 @@ ofqual => TAG educ
 "education funding agency" => TAG educ
 "private schools" => TAG educ
 "private schooling" => TAG educ
+"early years education" => TAG educ
+
+
+# WELFARE/PENSIONS/BENEFITS
+# -------------------------
+
+"department for work and pensions" => TAG welf
+"jobseeker's allowance" => TAG welf
+jobseekers => TAG welf
+"benefit claimants" => TAG welf
+"benefit cheats" => TAG welf
+"claiming benefits" => TAG welf
+dwp => TAG welf
+"iain duncan smith" => TAG welf
+"secretary of state for work and pensions" => TAG welf
+"work and pensions" => TAG welf
+"esther mcvey" => TAG welf
+"minister of state for employment" => TAG welf
+"employment minister" => TAG welf
+"steve webb" => TAG welf
+"minister of state for pensions" => TAG welf
+"pensions minister" => TAG welf
+"shadow pensions minister" => TAG welf
+"shadow employment minister" => TAG welf
+"lord freud" => TAG welf
+"norman lamb" => TAG welf
+"gregg mcclymont" => TAG welf
+"rachel reeves" => TAG welf
+"shadow secretary of state for work and pensions" => TAG welf
+"bedroom tax" => TAG welf
+"carer's credit" => TAG welf
+"childcare vouchers" => TAG welf
+"childcare and tax credits" => TAG welf
+"state pension" => TAG welf
+"state pensions" => TAG welf
+"sure start" content: benefits => TAG welf
+"tax credits" => TAG welf
+"income support" => TAG welf
+"winter fuel payment" => TAG welf
+"winter fuel allowance" => TAG welf
+"child benefit" => TAG welf
+"disability living allowance" => TAG welf
+"benefit fraud" => TAG welf
+"carer's allowance" => TAG welf
+"free school meals" => TAG welf
+"free meals" => TAG welf
+"incapacity benefit" => TAG welf
+"reduced earnings allowance" => TAG welf
+"income support" => TAG welf
+"employment and support allowance" => TAG welf
+"care for the elderly" => TAG welf
+"personal independence payment" => TAG welf
+"housing benefit" => TAG welf
+"pension credit" => TAG welf
+"child tax credit" => TAG welf
+"working tax credit" => TAG welf
+"elderly care" => TAG welf
+"care for the elderly" => TAG welf
+childcare => TAG welf
+
+
+# EU/EUROPE
+# ---------
+
+"european union" => TAG euro
+"european commission" => TAG euro
+"european parliament" => TAG euro
+"human rights" content: europe => TAG euro
+"EU directive" => TAG euro
+"EU regulation" => TAG euro
+"EU law" => TAG euro
+"EU regulation" => TAG euro
+"european law" => TAG euro
+"european legislation" => TAG euro
+"david lidington" => TAG euro
+"pat mcfadden" => TAG euro
+"theresa may" content: europe => TAG euro
+"european referendum" => TAG euro
+"euro crisis" => TAG euro
+"referendum on europe" => TAG euro
+brexit => TAG euro
+grexit => TAG euro
+eurozone => TAG euro
+"membership of the EU" => TAG euro
+"membership of the european union" => TAG euro
+content: brussels content: europe => TAG euro
+content: strasbourg content: europe => TAG euro
+ECB -content: cricket => TAG euro
+"european central bank" => TAG euro
+eurocrats => TAG euro
+"brussels bureaucrats" => TAG euro
+"bureaucrats in brussels" => TAG euro
+ECJ => TAG euro
+"european court of justice" => TAG euro
+
+
+# ENVIRONMENT
+# -----------
+
+defra => TAG env
+"department for environment food and rural affairs" => TAG env
+"department for environment food & rural affairs" => TAG env
+"elizabeth truss" => TAG env
+"liz truss" => TAG env
+"secretary of state for environment, food and rural affairs" => TAG env
+"environment secretary" => TAG env
+"environment minister" => TAG env
+"dan rogerson" => TAG env
+"george eustice" => TAG env
+"maria eagle" => TAG env
+"caroline flint" => TAG env
+"amber rudd" => TAG env
+"ed davey" content: "environment" => TAG env
+"environmental" -content: "protection agency" => TAG env
+"climate change" => TAG env
+"climate sceptic" => TAG env
+"global warming" => TAG env
+content: pollution content: environment => TAG env
+IPCC and "climate" => TAG env
+"sustainable development" => TAG env
+"fossil fuels" => TAG env
+"fossil fuel" => TAG env
+"carbon emissions" => TAG env
+"CO2 emissions" => TAG env
+biodiversity => TAG env
+content: fracking content: environment => TAG env
+biodegradable => TAG env
+"environmental impact" => TAG env
+"impact on the environment" => TAG env
+"extreme weather" => TAG env
+"air quality" => TAG env
+"air pollution" => TAG env
+"water pollution" => TAG env
+"renewable resources" => TAG env
+"renewable energy" => TAG env
+"renewables" => TAG env
+fisheries => TAG env
+pesticides => TAG env
+content: ecosystem content: environment => TAG env
+"GM crops" => TAG env
+"genetically-modified crops" => TAG env
+"marine environment" => TAG env
+content: recycling content: environment => TAG env
+"bad for the environment" => TAG env
+"good for the environment" => TAG env
+ecological => TAG env
+ecology => TAG env
+"carbon footprint" => TAG env
+"copenhagen summit" => TAG env
+"kyoto protocols" => TAG env
+"kyoto agreement" => TAG env
+"carbon capture" => TAG env
+"climate scientists" => TAG env
+"climate scientist" => TAG env
+
+
+# TRANSPORT/PUBLIC TRANSPORT/PUBLIC
+# ---------------------------------
+
+"transport policy" => TAG tran
+"infrastructure policy" => TAG tran
+"spending on infrastructure" => TAG tran
+"infrastructure spending" => TAG tran
+"department for transport" => TAG tran
+"patrick mcloughlin" => TAG tran
+"secretary of state for transport" => TAG tran
+"transport secretary" => TAG tran
+"robert goodwill" => TAG tran
+"john hayes" => TAG tran
+"michael dugher" => TAG tran
+"shadow transport secretary" => TAG tran
+"shadow secretary of state for transport" => TAG tran
+"minister of state for transport" => TAG tran
+"shadow transport minister" => TAG tran
+"transport minister" => TAG tran
+"claire perry" => TAG tran
+"high speed rail" => TAG tran
+HS2 => TAG tran
+"network rail" => TAG tran
+"highways agency" => TAG tran
+"transport infrastructure" => TAG tran
+"rail infrastructure" => TAG tran
+"public transport" => TAG tran
+"passenger rail" => TAG tran
+"rail network" => TAG tran
+"rail franchise" => TAG tran
+"transport network" => TAG tran
+DVLA => TAG tran
+"third runway" => TAG tran
+motorways => TAG tran
+"high-speed 2" => TAG tran
+"high speed 2" => TAG tran
+"heathrow expansion" => TAG tran
+content: traffic content: roads => TAG tran
+crossrail => TAG tran
+"infrastructure investment" => TAG tran
+"UK infrastructure" => TAG tran
+tfl => TAG tran
+"tube improvements" => TAG tran
+"tube improvement" => TAG tran
+"more buses" => TAG tran
+"cycle lanes" => TAG tran
+"civil aviation" => TAG tran
+"national rail" => TAG tran
+
+
+
+# LOCAL GOVERNMENT/COUNCIL TAX
+# ----------------------------
+
+"department for communities and local government" => TAG locgov
+"local government policy" => TAG locgov
+"local government" => TAG locgov
+"eric pickles" content: local government => TAG locgov
+"secretary of state for communities and local government" => TAG locgov
+"kris hopkins" => TAG locgov
+"hilary benn" => TAG locgov
+"penny mordaunt" => TAG locgov
+"minister of state for communities and local government" => TAG locgov
+"local government" => TAG locgov
+"local planning" => TAG locgov
+"council tax" content: local => TAG locgov
+"local government spending" => TAG locgov
+"enterprise zones" => TAG locgov
+"local growth" => TAG locgov
+"coastal communities fund" => TAG locgov
+"local taxes" => TAG locgov
+"local services" => TAG locgov
+
+
+# DEVOLUTION/CONSTITUTIONAL REFORM
+# --------------------------------
+
+"scottish referendum" => TAG devo
+"scottish independence" => TAG devo
+devolution => TAG devo
+devolved => TAG devo
+evel => TAG devo
+"english votes for english laws" => TAG devo
+"sam gyimah" content: constitution => TAG devo
+"constitutional reform" => TAG devo
+"devo max" => TAG devo
+"devo met" => TAG devo
+"scottish mps" content: "english policies" => TAG devo
+"scottish mps" content: "policies affecting england" => TAG devo
+"devolved powers" => TAG devo
+"secretary of state for scotland" => TAG devo
+"shadow secretary of state for scotland" => TAG devo
+"shadow scottish secretary" => TAG devo
+"scottish secretary" => TAG devo
+"secretary of state for wales" => TAG devo
+"shadow secretary of state for wales" => TAG devo
+"welsh secretary" => TAG devo
+"shadow welsh secretary" => TAG devo
+"secretary of state for northern ireland" => TAG devo
+"shadow secretary of state for northern ireland" => TAG devo
+"northern ireland secretary" => TAG devo
+"shadow northern ireland secretary" => TAG devo
+"andrew murrison" => TAG devo
+
+
+# FUEL AND ENERGY
+# ---------------
+
+"fuel prices" => TAG energy
+"price of fuel" => TAG energy
+"price of petrol" => TAG energy
+"cost of petrol" => TAG energy
+"cost of fuel" => TAG energy
+ofgem => TAG energy
+"shale gas" => TAG energy
+fracking content: energy => TAG energy
+"nuclear energy" => TAG energy
+"nuclear power" => TAG energy
+"wind power" => TAG energy
+"wind farms" => TAG energy
+windfarms => TAG energy
+"tidal power" => TAG energy
+"tidal energy" => TAG energy
+"solar power" => TAG energy
+"solar energy" => TAG energy
+"fuel allowance" => TAG energy
+"fuel duty" => TAG energy
+"energy companies" => TAG energy
+"big six" content: energy => TAG energy
+"big 6" content: energy => TAG energy
+"energy suppliers" => TAG energy
+"renewable energy" => TAG energy
+"ed davey" content: energy => TAG energy
+"matthew hancock" content: energy => TAG energy
+"baroness varma" content: energy => TAG energy
+"caroline flint" content: energy => TAG energy
+"secretary of state for energy and climate change" => TAG energy
+"minister of state for energy" => TAG energy
+"department of energy and climate change" => TAG energy
+"shadow secretary of state for energy and climate change" => TAG energy
+"energy secretary" => TAG energy
+"energy minister" => TAG energy
+"shadow energy minister" => TAG energy
+
+
+# HOUSING
+# -------
+
+"housing policy" => TAG hous
+"social housing" => TAG hous
+"affordable housing" => TAG hous
+content: housebuilding => TAG hous
+"housing shortages" => TAG hous
+"council housing" => TAG hous
+"housing association" => TAG hous
+"buy to rent" => TAG hous
+"buy to let" => TAG hous
+"brandon lewis" => TAG hous
+"emma reynolds" => TAG hous
+"housing minister" => TAG hous
+"shadow housing minister" => TAG hous
+"new-build" => TAG hous
+
 
 
 # NB Below goes last - always add issue tags above

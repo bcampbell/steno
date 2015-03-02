@@ -4,6 +4,7 @@
 
 # Leader (express)
 pub: express urls: express-comment-on => TAG leader
+pub: express section: "express comment" byline: "daily express" => TAG leader
 
 # Comment (express)
 pub: express urls: /expresscomment/ -tags: leader => TAG comment
@@ -137,4 +138,3 @@ pub: guardian urls: /commentisfree/ -headline: "guardian view on" -headline: "ob
 
 #Comment (Daily Star)
 pub: dailystar urls: /columnists/ => TAG comment
-

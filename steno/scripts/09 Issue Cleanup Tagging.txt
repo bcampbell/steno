@@ -1,0 +1,30 @@
+
+# Issue cleanup tagging
+# ---------------------
+
+tags: imm content: migration => TAG issclean #for wildlife migration
+tags: imm content: libya => TAG issclean
+tags: imm content: isis => TAG issclean
+tags: imm content: australia => TAG issclean
+tags: imm content: litvinenko => TAG issclean
+tags: imm content: assange => TAG issclean
+
+tags: econ content: "russian economy" => TAG issclean
+tags: econ content: "japanese economy" => TAG issclean
+tags: econ content: "us economy" => TAG issclean
+tags: econ content: "chinese economy" => TAG issclean
+tags: econ content: "french economy" => TAG issclean
+tags: econ content: "german economy" => TAG issclean
+tags: econ content: "greek economy" => TAG issclean
+tags: econ pub: =telegraph urls: /newsbysector/ => TAG issclean
+tags: econ pub: =telegraph urls: /economics/ => TAG issclean
+
+tags: crimlaw content: "domestic violence" => TAG issclean
+tags: crimlaw content: "domestic abuse" => TAG issclean
+tags: crimlaw content: "crown prosecution service" => TAG issclean
+
+tags: educ content: schools => TAG issclean
+
+tags: tran content: "british transport police" => TAG issclean
+
+tags: euro tags: fgndef => TAG issclean
