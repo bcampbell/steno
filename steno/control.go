@@ -485,3 +485,8 @@ func (ctrl *Control) Train() {
 func (ctrl *Control) Classify() {
 	Classify(ctrl.Results.arts, ctrl.store)
 }
+
+// open link in a web browser
+func (ctrl *Control) OpenLink(link string) {
+	openURL(link)
+}

@@ -57,7 +57,7 @@ func run() error {
 
 func openURL(url string) {
 
-	dbug.Printf("Launching web browser...\n")
+	dbug.Printf("open %s\n", url)
 
 	var params []string
 	switch runtime.GOOS {
@@ -69,6 +69,10 @@ func openURL(url string) {
 		params = []string{"xdg-open"}
 	}
 	params = append(params, url)
-	cmd := exec.Command(params[0], params...)
-	cmd.Start()
+	cmd := exec.Command(params[0], params[1:]...)
+	err := cmd.Start()
+	if err != nil {
+
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+	}
 }
