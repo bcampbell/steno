@@ -408,24 +408,16 @@ func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 		batchSize := 200
 
 		for {
-			// read in a batch of messages
-			batch := make([]Msg, 0, batchSize)
+			// read in a batch of articles
+			arts := []*store.Article{}
 			for i := 0; i < batchSize; i++ {
 				msg, ok := <-incoming
+
 				if !ok {
 					break
 				}
-				batch = append(batch, msg)
-			}
-			// empty batch? all done?
-			if len(batch) == 0 {
-				break
-			}
 
-			// separate articles and errors
-			arts := []*store.Article{}
-			for _, msg := range batch {
-
+				// handle errors
 				if msg.Error != "" {
 					uhoh := fmt.Sprintf("Slurp error from server: %s", msg.Error)
 					ctrl.SlurpProgress.ErrorMsg = uhoh
@@ -439,6 +431,11 @@ func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 				}
 
 				arts = append(arts, msg.Article)
+			}
+
+			// empty batch? all done?
+			if len(arts) == 0 {
+				break
 			}
 
 			// check which articles are new
@@ -478,8 +475,8 @@ func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 				}
 			}
 			//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
-			ctrl.SlurpProgress.NewCnt += len(arts)
-			ctrl.SlurpProgress.TotalCnt += len(batch)
+			ctrl.SlurpProgress.NewCnt += len(newArts)
+			ctrl.SlurpProgress.TotalCnt += len(arts)
 			qml.Changed(ctrl, &ctrl.SlurpProgress)
 		}
 
