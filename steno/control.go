@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"semprini/steno/steno/store"
 	"strings"
+	"time"
 )
 
 type Facet struct {
@@ -20,7 +21,6 @@ type Facet struct {
 
 type SlurpProgress struct {
 	TotalCnt int
-	GotCnt   int
 	NewCnt   int
 	InFlight bool
 	ErrorMsg string
@@ -30,7 +30,7 @@ func (p *SlurpProgress) String() string {
 	if p.ErrorMsg != "" {
 		return p.ErrorMsg
 	} else {
-		return fmt.Sprintf("Received %d articles (%d new)", p.GotCnt+p.NewCnt, p.NewCnt)
+		return fmt.Sprintf("Received %d articles (%d new)", p.TotalCnt, p.NewCnt)
 	}
 }
 
@@ -386,6 +386,9 @@ func (ctrl *Control) ExportOveralls(outFile string) {
 
 func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 
+	var elapsedFind time.Duration
+	var elapsedStash time.Duration
+
 	go func() {
 
 		ctrl.SlurpProgress = SlurpProgress{}
@@ -401,54 +404,82 @@ func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 		incoming := Slurp(dayFrom, dayTo)
 
 		dbug.Printf("Slurping...\n")
-		for msg := range incoming {
-			if ctrl.SlurpProgress.TotalCnt%10 == 0 {
-				dbug.Printf("%s\n", ctrl.SlurpProgress.String())
+
+		batchSize := 200
+
+		for {
+			// read in a batch of messages
+			batch := make([]Msg, 0, batchSize)
+			for i := 0; i < batchSize; i++ {
+				msg, ok := <-incoming
+				if !ok {
+					break
+				}
+				batch = append(batch, msg)
 			}
-			/*
-				ctrl.StatusText = fmt.Sprintf("Slurping - receieved %d articles (%d new)",
-					ctrl.SlurpProgress.GotCnt+ctrl.SlurpProgress.NewCnt,
-					ctrl.SlurpProgress.NewCnt)
-				qml.Changed(&ctrl, &ctrl.StatusText)
-			*/
-			if msg.Error != "" {
-				uhoh := fmt.Sprintf("Slurp error from server: %s", msg.Error)
-				ctrl.SlurpProgress.ErrorMsg = uhoh
-				qml.Changed(ctrl, &ctrl.SlurpProgress)
-				dbug.Printf("%s\n", uhoh)
-				return
-			}
-			if msg.Article == nil {
-				dbug.Printf("Slurp WARN: missing article\n")
-				continue
+			// empty batch? all done?
+			if len(batch) == 0 {
+				break
 			}
 
-			art := msg.Article
-			got, err := ctrl.store.FindArt(art.URLs)
-			if err != nil {
-				uhoh := fmt.Sprintf("FindArt() failed: %s", err)
-				ctrl.SlurpProgress.ErrorMsg = uhoh
-				qml.Changed(ctrl, &ctrl.SlurpProgress)
-				dbug.Printf("%s\n", uhoh)
-				return
+			// separate articles and errors
+			arts := []*store.Article{}
+			for _, msg := range batch {
+
+				if msg.Error != "" {
+					uhoh := fmt.Sprintf("Slurp error from server: %s", msg.Error)
+					ctrl.SlurpProgress.ErrorMsg = uhoh
+					qml.Changed(ctrl, &ctrl.SlurpProgress)
+					dbug.Printf("%s\n", uhoh)
+					return
+				}
+				if msg.Article == nil {
+					dbug.Printf("Slurp WARN: missing article\n")
+					continue
+				}
+
+				arts = append(arts, msg.Article)
 			}
-			if got > 0 {
-				ctrl.SlurpProgress.GotCnt++
-				ctrl.SlurpProgress.TotalCnt++
-				qml.Changed(ctrl, &ctrl.SlurpProgress)
-				continue
+
+			// check which articles are new
+			newArts := []*store.Article{}
+			for _, art := range arts {
+				startTime := time.Now()
+				got, err := ctrl.store.FindArt(art.URLs)
+				elapsedFind += time.Since(startTime)
+				if err != nil {
+					uhoh := fmt.Sprintf("FindArt() failed: %s", err)
+					ctrl.SlurpProgress.ErrorMsg = uhoh
+					qml.Changed(ctrl, &ctrl.SlurpProgress)
+					dbug.Printf("%s\n", uhoh)
+					return
+				}
+				if got > 0 {
+					// already got it.
+					continue
+				}
+				newArts = append(newArts, art)
 			}
-			err = ctrl.store.Stash(art)
-			if err != nil {
-				uhoh := fmt.Sprintf("Stash failed: %s", err)
-				ctrl.SlurpProgress.ErrorMsg = uhoh
-				qml.Changed(ctrl, &ctrl.SlurpProgress)
-				dbug.Printf("%s\n", uhoh)
-				return
+
+			// stash the new articles
+			if len(newArts) > 0 {
+				startTime := time.Now()
+
+				dbug.Printf("%s find:%s stash:%s\n", ctrl.SlurpProgress.String(), elapsedFind.String(), elapsedStash.String())
+
+				err := ctrl.store.Stash(newArts)
+				elapsedStash += time.Since(startTime)
+				if err != nil {
+					uhoh := fmt.Sprintf("Stash failed: %s", err)
+					ctrl.SlurpProgress.ErrorMsg = uhoh
+					qml.Changed(ctrl, &ctrl.SlurpProgress)
+					dbug.Printf("%s\n", uhoh)
+					return
+				}
 			}
 			//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
-			ctrl.SlurpProgress.NewCnt++
-			ctrl.SlurpProgress.TotalCnt++
+			ctrl.SlurpProgress.NewCnt += len(arts)
+			ctrl.SlurpProgress.TotalCnt += len(batch)
 			qml.Changed(ctrl, &ctrl.SlurpProgress)
 		}
 

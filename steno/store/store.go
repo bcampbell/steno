@@ -590,16 +590,22 @@ func (store *Store) FindArt(urls []string) (int, error) {
 	}
 }
 
-func (store *Store) Stash(art *Article) error {
+func (store *Store) Stash(arts []*Article) error {
 	tx, err := store.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	if art.ID != 0 {
-		panic("article id already set")
+	for _, art := range arts {
+		if art.ID != 0 {
+			panic("article id already set")
+		}
+
+		err = store.doStash(tx, art)
+		if err != nil {
+			break
+		}
 	}
-	err = store.doStash(tx, art)
 	if err == nil {
 		err = tx.Commit()
 	} else {
