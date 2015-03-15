@@ -13,11 +13,8 @@ mkdir $APP/Contents/Resources
 
 cp Info.plist $APP/Contents/
 cp steno/steno $APP/Contents/MacOS/
-RESOURCES="main.qml project.qml Query.qml help.html helper.js"
-for RES in $RESOURCES
-do
-    cp steno/$RES $APP/Contents/Resources/
-done
+cp -r steno/ui $APP/Contents/Resources/
+cp -r steno/scripts $APP/Contents/Resources/
 
 
 /usr/local/Cellar/qt5/5.3.2/bin/macdeployqt steno.app -verbose=1 -qmldir=steno.app/Contents/Resources -dmg
