@@ -14,6 +14,7 @@ cp steno/steno.exe $OUT/
 #done
 cp -r steno/scripts $OUT/
 cp -r steno/ui $OUT/
+cp steno/slurp_sources.csv $OUT/
 
 
 windeployqt --verbose=1 --compiler-runtime --debug --qmldir=$OUT $OUT/steno.exe
