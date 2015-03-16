@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,38 +10,42 @@ import (
 	"semprini/steno/steno/store"
 )
 
+type SlurpSource struct {
+	Name string
+	Loc  string
+}
+
 type Msg struct {
 	Article *store.Article `json:"article,omitempty"`
 	Error   string         `json:"error,omitempty"`
 }
 
-func Slurp(dayFrom, dayTo string) chan Msg {
+func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
+	srcs := []SlurpSource{}
+
+	inFile, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer inFile.Close()
+	in := csv.NewReader(inFile)
+	rows, err := in.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		srcs = append(srcs, SlurpSource{Name: row[0], Loc: row[1]})
+	}
+
+	return srcs, nil
+}
+
+func Slurp(server SlurpSource, dayFrom, dayTo string) chan Msg {
 	out := make(chan Msg)
 
 	go func() {
 		defer close(out)
-		/*
-			for i := 0; i < 10; i++ {
-				n := fmt.Sprintf("%d", i)
-				art := &Article{
-					CanonicalURL: "http://wibble.com/art" + n,
-					URLs:         []string{"http://wibble.com/art" + n},
-					Headline:     "Article " + n,
-					Content:      "blah blah blah",
-					Published:    "2014-01-01",
-					Updated:      "",
-					Pub:          "foo",
-				}
-				out <- Msg{Article: art}
-			}
-
-			out <- Msg{Error: "POOOPY"}
-		*/
-		server := os.Getenv("STENO_SLURP_ADDR")
-		if server == "" {
-			server = "foo.scumways.com"
-		}
-		u := fmt.Sprintf("http://%s/all?from=%s&to=%s", server, dayFrom, dayTo)
+		u := fmt.Sprintf("%s/api/slurp?from=%s&to=%s", server.Loc, dayFrom, dayTo)
 
 		resp, err := http.Get(u)
 		if err != nil {

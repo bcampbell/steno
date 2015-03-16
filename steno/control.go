@@ -384,10 +384,26 @@ func (ctrl *Control) ExportOveralls(outFile string) {
 	dbug.Printf("Wrote to %s\n", outFile)
 }
 
-func (ctrl *Control) Slurp(dayFrom, dayTo string) {
+func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 
 	var elapsedFind time.Duration
 	var elapsedStash time.Duration
+
+	// look up the server by name
+	var server *SlurpSource
+	for _, src := range ctrl.App.SlurpSources {
+		if src.Name == slurpSourceName {
+			server = &src
+			break
+		}
+	}
+	if server == nil {
+		uhoh := fmt.Sprintf("ERROR: unknown server '%s'", slurpSourceName)
+		ctrl.SlurpProgress.ErrorMsg = uhoh
+		qml.Changed(ctrl, &ctrl.SlurpProgress)
+		dbug.Printf("%s\n", uhoh)
+		return
+	}
 
 	go func() {
 
@@ -401,7 +417,7 @@ func (ctrl *Control) Slurp(dayFrom, dayTo string) {
 
 		ctrl.SlurpProgress.InFlight = true
 		qml.Changed(ctrl, &ctrl.SlurpProgress)
-		incoming := Slurp(dayFrom, dayTo)
+		incoming := Slurp(*server, dayFrom, dayTo)
 
 		dbug.Printf("Slurping...\n")
 

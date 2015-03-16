@@ -21,6 +21,10 @@ type App struct {
 	Scripts    []*script
 	ScriptsLen int
 
+	SlurpSources    []SlurpSource
+	SlurpSourcesLen int
+
+	Wibble   []string
 	ErrorMsg string
 }
 
@@ -75,6 +79,8 @@ func NewApp() (*App, error) {
 	*/
 
 	app.RefreshScripts()
+
+	app.initSlurpSources()
 
 	return app, nil
 }
@@ -137,6 +143,22 @@ func (app *App) RefreshScripts() {
 	app.Scripts = scripts
 	app.ScriptsLen = len(scripts)
 	qml.Changed(app, &app.ScriptsLen)
+}
+
+func (app *App) initSlurpSources() {
+	srcs, err := LoadSlurpSources(path.Join(app.dataPath, "slurp_sources.csv"))
+	if err != nil {
+		dbug.Printf("ERROR: %s\n", err)
+		app.SetError(err.Error())
+		return
+	}
+	app.SlurpSources = srcs
+	app.SlurpSourcesLen = len(srcs)
+	qml.Changed(app, &app.SlurpSourcesLen)
+}
+
+func (app *App) GetSlurpSourceName(idx int) string {
+	return app.SlurpSources[idx].Name
 }
 
 func (app *App) CloseProject() {

@@ -211,8 +211,19 @@ ApplicationWindow {
     Dialog {
         id: slurpDlg
         title: "Slurp articles from server"
-        contentItem: Column {
+        contentItem: ColumnLayout {
             spacing: 4
+            Label { text:"Source" }
+            ComboBox {
+                id: slurpSource
+                model: {
+                    var names = [];
+                    for( var i=0; i<app.slurpSourcesLen; ++i ) {
+                        names.push(app.getSlurpSourceName(i));
+                    }
+                    return names;
+                }
+            }
             Label { text:"Pick day" }
             Calendar {
                 id: dayPicker
@@ -221,8 +232,10 @@ ApplicationWindow {
         }
         standardButtons: StandardButton.Ok | StandardButton.Cancel
         onAccepted: app.current().slurp(
+            slurpSource.currentText,
             dayPicker.selectedDate.toISOString().slice(0,10),
             dayPicker.selectedDate.toISOString().slice(0,10))
+
     }
 
     Dialog {
