@@ -104,16 +104,17 @@ func (store *Store) createSchema() error {
 	var err error
 	// TODO:
 	// full Publication
-	// Keywords
 	_, err = store.db.Exec(`CREATE TABLE article (
-         id INTEGER PRIMARY KEY,
-         canonical_url TEXT NOT NULL,
-         headline TEXT NOT NULL,
-         content TEXT NOT NULL,
-         published TEXT NOT NULL,
-         updated TEXT NOT NULL,
-         section TEXT NOT NULL DEFAULT '',
-         pub TEXT NOT NULL )`)
+        id INTEGER PRIMARY KEY,
+        canonical_url TEXT NOT NULL,
+        headline TEXT NOT NULL,
+        content TEXT NOT NULL,
+        published TEXT NOT NULL,
+        updated TEXT NOT NULL,
+        section TEXT NOT NULL DEFAULT '',
+        retweet_count INTEGER,
+        favourite_count INTEGER,
+        pub TEXT NOT NULL )`)
 	if err != nil {
 		return err
 	}
@@ -126,6 +127,22 @@ func (store *Store) createSchema() error {
 		return err
 	}
 	_, err = store.db.Exec(`CREATE TABLE article_url (
+         id INTEGER PRIMARY KEY,
+         article_id INTEGER NOT NULL,   -- should be foreign key
+         url TEXT NOT NULL )`)
+	if err != nil {
+		return err
+	}
+	_, err = store.db.Exec(`CREATE TABLE article_keyword (
+         id INTEGER PRIMARY KEY,
+         article_id INTEGER NOT NULL,   -- should be foreign key
+         name TEXT NOT NULL,
+         url TEXT NOT NULL )`)
+	if err != nil {
+		return err
+	}
+
+	_, err = store.db.Exec(`CREATE TABLE article_link (
          id INTEGER PRIMARY KEY,
          article_id INTEGER NOT NULL,   -- should be foreign key
          url TEXT NOT NULL )`)
@@ -145,7 +162,7 @@ func (store *Store) createSchema() error {
 	if err != nil {
 		return err
 	}
-	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (3)`)
+	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (4)`)
 	if err != nil {
 		return err
 	}
@@ -195,6 +212,41 @@ func (store *Store) initDB() error {
 			return err
 		}
 	}
+
+	if ver < 4 {
+		store.dbug.Printf("updating database to version 4\n")
+
+		_, err = store.db.Exec(`ALTER TABLE article ADD COLUMN retweet_count INTEGER NOT NULL`)
+		if err != nil {
+			return err
+		}
+
+		_, err = store.db.Exec(`ALTER TABLE article ADD COLUMN favourite_count INTEGER NOT NULL`)
+		if err != nil {
+			return err
+		}
+
+		_, err = store.db.Exec(`CREATE TABLE article_keyword (
+         id INTEGER PRIMARY KEY,
+         article_id INTEGER NOT NULL,   -- should be foreign key
+         name TEXT NOT NULL,
+         url TEXT NOT NULL )`)
+		if err != nil {
+			return err
+		}
+		_, err = store.db.Exec(`CREATE TABLE article_link (
+         id INTEGER PRIMARY KEY,
+         article_id INTEGER NOT NULL,   -- should be foreign key
+         url TEXT NOT NULL )`)
+		if err != nil {
+			return err
+		}
+
+		_, err = store.db.Exec(`UPDATE version SET ver=4`)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -204,14 +256,14 @@ func (store *Store) readAllArts() (ArtList, error) {
 
 	tab := map[int]*Article{}
 
-	rows, err := db.Query("SELECT id,canonical_url,headline,content,published,updated,pub,section FROM article")
+	rows, err := db.Query("SELECT id,canonical_url,headline,content,published,updated,pub,section,retweet_count,favourite_count FROM article")
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
 		a := &Article{}
-		err = rows.Scan(&a.ID, &a.CanonicalURL, &a.Headline, &a.Content, &a.Published, &a.Updated, &a.Pub, &a.Section)
+		err = rows.Scan(&a.ID, &a.CanonicalURL, &a.Headline, &a.Content, &a.Published, &a.Updated, &a.Pub, &a.Section, &a.RetweetCount, &a.FavoriteCount)
 		if err != nil {
 			return nil, err
 		}
@@ -222,7 +274,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 		return nil, err
 	}
 
-	//
+	// URLs
 	rows, err = db.Query("SELECT article_id,url FROM article_url")
 	if err != nil {
 		return nil, err
@@ -237,6 +289,50 @@ func (store *Store) readAllArts() (ArtList, error) {
 		}
 		art := tab[artID]
 		art.URLs = append(art.URLs, u)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// Keywords
+	rows, err = db.Query("SELECT article_id,name,url FROM article_keyword")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID int
+		// TODO: restore use of full Keyword struct
+		var name string
+		var u string
+		err = rows.Scan(&artID, &name, &u)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.Keywords = append(art.Keywords, name)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// Links
+	rows, err = db.Query("SELECT article_id,url FROM article_link")
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID int
+		var link string
+		err = rows.Scan(&artID, &link)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.Links = append(art.Links, link)
 	}
 	err = rows.Err()
 	if err != nil {
@@ -619,15 +715,17 @@ func (store *Store) Stash(arts []*Article) error {
 
 func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 	var result sql.Result
-	result, err := tx.Exec(`INSERT INTO article(canonical_url, headline, content,published,updated,pub,section)
-        values(?,?,?,?,?,?,?)`,
+	result, err := tx.Exec(`INSERT INTO article(canonical_url, headline, content,published,updated,pub,section,retweet_count,favourite_count)
+        values(?,?,?,?,?,?,?,?,?)`,
 		art.CanonicalURL,
 		art.Headline,
 		art.Content,
 		art.Published,
 		art.Updated,
 		art.Pub,
-		art.Section)
+		art.Section,
+		art.RetweetCount,
+		art.FavoriteCount)
 	if err != nil {
 		return err
 	}
@@ -676,8 +774,37 @@ func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 			return err
 		}
 	}
-	// TODO: keywords
 
+	// add keywords
+	kwStmt, err := tx.Prepare("INSERT INTO article_keyword(article_id,name,url) VALUES(?,?,?)")
+	if err != nil {
+		return err
+	}
+	defer kwStmt.Close()
+
+	for _, kw := range art.Keywords {
+		// TODO: restore use of full keyword struct
+		_, err = kwStmt.Exec(art.ID, kw, "")
+		if err != nil {
+			return err
+		}
+	}
+
+	// add resolved links
+	linkStmt, err := tx.Prepare("INSERT INTO article_link(article_id,url) VALUES(?,?)")
+	if err != nil {
+		return err
+	}
+	defer linkStmt.Close()
+
+	for _, link := range art.Links {
+		_, err = linkStmt.Exec(art.ID, link)
+		if err != nil {
+			return err
+		}
+	}
+
+	// done.
 	store.coll.Put(art)
 
 	return nil

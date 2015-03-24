@@ -9,45 +9,61 @@ import (
 	"strings"
 )
 
-type Publication struct {
-	Name   string `json:"content"`
-	Domain string `json:"domain"`
-	Code   string `json:"code"`
-}
-
-type Author struct {
-	Name string `json:"name"`
-	/*
-	   RelLink string `json:"rel_link,omitempty"`
-	   Email   string `json:"email,omitempty"`
-	   Twitter string `json:"twitter,omitempty"`
-	*/
-}
-
 // dehydrated article (enough for list in gui):
 //  headline, pub, section, published, tags, byline, url
 
+type Publication struct {
+	// Code is a short, unique name (eg "mirror")
+	Code string
+	// Name is the 'pretty' name (eg "The Daily Mirror")
+	Name   string
+	Domain string
+}
+
+type Author struct {
+	Name    string
+	RelLink string
+	Email   string
+	Twitter string
+}
+
+/*
+type Keyword struct {
+	Name string
+	URL  string
+}
+*/
+
+//
 type Article struct {
-	ID           int
-	CanonicalURL string `json:"canonical_url"`
+	ID           int // id in local sqlite db
+	CanonicalURL string
+	URLs         []string
+	Headline     string
+	Authors      []Author
+	// Content contains HTML, sanitised using a subset of tags
+	Content string
 
-	// all known URLs for article (including canonical)
-	// TODO: first url should be considered "preferred" if no canonical?
-	URLs []string `json:"urls"`
+	Published   string
+	Updated     string
+	Publication Publication
+	// Hack for now: store keywords as strings to work around badger shortcomings
+	// TODO: Restore full structure
+	//	Keywords    []Keyword
+	Keywords []string
+	Section  string
 
-	Headline    string      `json:"headline"`
-	Authors     []Author    `json:"authors,omitempty"`
-	Content     string      `json:"content"`
-	Published   string      `json:"published"`
-	Updated     string      `json:"updated"`
-	Publication Publication `json:"publication"`
+	Tags []string
 
-	//Keywords []Keyword
-	Section string `json:"section"`
+	// a couple of tweet-specific bits
+	RetweetCount  int
+	FavoriteCount int
+	// resolved links
+	Links []string
 
+	// fudge fields
 	Pub    string
 	Byline string
-	Tags   []string `json:"tags"`
 }
 
 func (art *Article) Day() string {

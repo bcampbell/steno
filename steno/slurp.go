@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"semprini/scrapeomat/slurp"
 	"semprini/steno/steno/store"
 )
 
@@ -15,9 +16,22 @@ type SlurpSource struct {
 	Loc  string
 }
 
+// article format we expect down the wire from the slurp API
+type wireFmtArt struct {
+	slurp.Article
+	// extra fields from twitcooker
+	Extra struct {
+		RetweetCount  int `json:"retweet_count,omitempty"`
+		FavoriteCount int `json:"favorite_count,omitempty"`
+		// resolved links
+		Links []string `json:"links,omitempty"`
+	} `json:"extra,omitempty"`
+}
+
+// article or error, cooked and ready for steno
 type Msg struct {
-	Article *store.Article `json:"article,omitempty"`
-	Error   string         `json:"error,omitempty"`
+	Article *store.Article
+	Error   string
 }
 
 func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
@@ -56,7 +70,11 @@ func Slurp(server SlurpSource, dayFrom, dayTo string) chan Msg {
 
 		dec := json.NewDecoder(resp.Body)
 		for {
-			var msg Msg
+			// read in a message from the wire
+			var msg struct {
+				Article *wireFmtArt `json:"article,omitempty"`
+				Error   string      `json:"error,omitempty"`
+			}
 			if err := dec.Decode(&msg); err == io.EOF {
 				break
 			} else if err != nil {
@@ -64,24 +82,76 @@ func Slurp(server SlurpSource, dayFrom, dayTo string) chan Msg {
 				return
 			}
 
-			// massage the data slightly...
-			if msg.Article != nil {
-				if msg.Article.CanonicalURL == "" && len(msg.Article.URLs) > 0 {
-					msg.Article.CanonicalURL = msg.Article.URLs[0]
-				}
+			cooked := Msg{}
 
-				msg.Article.Pub = msg.Article.Publication.Code
-				msg.Article.Byline = msg.Article.BylineString()
-				// truncate date to day
-				if len(msg.Article.Published) > 10 {
-					// ugh :-)
-					msg.Article.Published = msg.Article.Published[0:10]
-				}
+			if msg.Error != "" {
+				cooked.Error = msg.Error
 			}
 
-			out <- msg
+			if msg.Article != nil {
+				cooked.Article = convertArt(msg.Article)
+			}
+
+			out <- cooked
 		}
 	}()
 
+	return out
+}
+
+// convert the wire-format article into our local form
+func convertArt(in *wireFmtArt) *store.Article {
+	out := &store.Article{
+		CanonicalURL: in.CanonicalURL,
+		URLs:         make([]string, len(in.URLs)),
+		Headline:     in.Headline,
+		Authors:      make([]store.Author, len(in.Authors)),
+		Content:      in.Content,
+		Published:    in.Published,
+		Updated:      in.Updated,
+		Publication: store.Publication{
+			Code:   in.Publication.Code,
+			Name:   in.Publication.Name,
+			Domain: in.Publication.Domain,
+		},
+		Keywords: make([]string, len(in.Keywords)),
+		Section:  in.Section,
+
+		RetweetCount:  in.Extra.RetweetCount,
+		FavoriteCount: in.Extra.FavoriteCount,
+		Links:         make([]string, len(in.Extra.Links)),
+	}
+
+	for i, u := range in.URLs {
+		out.URLs[i] = u
+	}
+	for i, a := range in.Authors {
+		out.Authors[i] = store.Author{
+			Name:    a.Name,
+			RelLink: a.RelLink,
+			Email:   a.Email,
+			Twitter: a.Twitter,
+		}
+	}
+	for i, k := range in.Keywords {
+		out.Keywords[i] = k.Name
+	}
+	for i, l := range in.Extra.Links {
+		out.Links[i] = l
+	}
+
+	if out.CanonicalURL == "" && len(out.URLs) > 0 {
+		out.CanonicalURL = out.URLs[0]
+	}
+
+	out.Pub = out.Publication.Code
+	out.Byline = out.BylineString()
+	// truncate date to day
+	/*
+		if len(out.Published) > 10 {
+			// ugh :-)
+			out.Published = msg.Article.Published[0:10]
+		}
+	*/
 	return out
 }
