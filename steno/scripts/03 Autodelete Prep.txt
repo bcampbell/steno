@@ -518,7 +518,8 @@ pub: ft section: energy => TAG cruft
 pub: =telegraph urls: /markets/ => TAG cruft
 pub: =telegraph urls: /financevideo/ => TAG cruft
 pub: =telegraph headline: "telegraph city" => TAG cruft
-
+headline: "the city roundup" => TAG cruft
+headline: "letters and" => TAG cruft
 
 pub: dailystar section: "weird news" => TAG cruft
 pub: dailystar section: "towie" => TAG cruft
@@ -734,3 +735,4 @@ pub: huffpouk section: "uk lifestyle" => TAG cruft
 pub: huffpouk section: "uk sport" => TAG cruft
 pub: huffpouk section: "uk tech" => TAG cruft
 pub: huffpouk section: universities -tags: party -tags: ptyldr => TAG cruft
+content: "daily mail australia" => TAG cruft

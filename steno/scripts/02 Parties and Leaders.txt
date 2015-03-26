@@ -72,7 +72,7 @@ sdlps => TAG sdlp
 "sinn fein's" => TAG sf
 
 # Alliance
-"alliance arty" => TAG alliance
+"alliance party" => TAG alliance
 "alliance party's" => TAG alliance
 Alliance AND "Northern Ireland" -tags: alliance => TAG alliance
 

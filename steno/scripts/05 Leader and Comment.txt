@@ -3,7 +3,7 @@
 # Express ----------------------
 
 # Leader (express)
-pub: express urls: express-comment-on => TAG leader
+pub: express urls: express-comment => TAG leader
 pub: express section: "express comment" byline: "daily express" => TAG leader
 
 # Comment (express)
