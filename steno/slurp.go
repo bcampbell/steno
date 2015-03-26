@@ -117,9 +117,9 @@ func convertArt(in *wireFmtArt) *store.Article {
 		Keywords: make([]string, len(in.Keywords)),
 		Section:  in.Section,
 
-		RetweetCount:  in.Extra.RetweetCount,
-		FavoriteCount: in.Extra.FavoriteCount,
-		Links:         make([]string, len(in.Extra.Links)),
+		Retweets:   in.Extra.RetweetCount,
+		Favourites: in.Extra.FavoriteCount,
+		Links:      make([]string, len(in.Extra.Links)),
 	}
 
 	for i, u := range in.URLs {

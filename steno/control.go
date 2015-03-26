@@ -147,10 +147,8 @@ func (res *Results) Facet(idx int) *Facet {
 }
 
 // returns new Results
-// TODO: this is a bit brittle - the sortColumn comes directly from the QML side of things...
-// Do something better!
-func (res *Results) Sort(sortColumn, sortOrder int) *Results {
-	// order: 1: ascending, 0: descending
+// order: 1: ascending, 0: descending
+func (res *Results) Sort(sortColumn string, sortOrder int) *Results {
 	//dbug.Printf("new sorting: %d %d\n", sortColumn, sortOrder)
 
 	sorted := make(store.ArtList, len(res.arts))
@@ -160,37 +158,53 @@ func (res *Results) Sort(sortColumn, sortOrder int) *Results {
 
 	if sortOrder == 0 {
 		switch sortColumn {
-		case 0:
+		case "headline":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Headline > a2.Headline }
-		case 1:
+		case "pub":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Pub > a2.Pub }
-		case 2:
+		case "section":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Section > a2.Section }
-		case 3:
+		case "published":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Published > a2.Published }
-		case 4:
+		case "tags":
 			criteria = func(a1, a2 *store.Article) bool { return a1.TagsString() > a2.TagsString() }
-		case 5:
+		case "byline":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Byline > a2.Byline }
-		case 6:
+		case "url":
 			criteria = func(a1, a2 *store.Article) bool { return a1.URL() > a2.URL() }
+		case "retweets":
+			criteria = func(a1, a2 *store.Article) bool { return a1.Retweets > a2.Retweets }
+		case "favourites":
+			criteria = func(a1, a2 *store.Article) bool { return a1.Favourites > a2.Favourites }
+		case "keywords":
+			criteria = func(a1, a2 *store.Article) bool { return a1.KeywordsString() > a2.KeywordsString() }
+		case "links":
+			criteria = func(a1, a2 *store.Article) bool { return a1.LinksString() > a2.LinksString() }
 		}
 	} else if sortOrder == 1 {
 		switch sortColumn {
-		case 0:
+		case "headline":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Headline < a2.Headline }
-		case 1:
+		case "pub":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Pub < a2.Pub }
-		case 2:
+		case "section":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Section < a2.Section }
-		case 3:
+		case "published":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Published < a2.Published }
-		case 4:
+		case "tags":
 			criteria = func(a1, a2 *store.Article) bool { return a1.TagsString() < a2.TagsString() }
-		case 5:
+		case "byline":
 			criteria = func(a1, a2 *store.Article) bool { return a1.Byline < a2.Byline }
-		case 6:
+		case "url":
 			criteria = func(a1, a2 *store.Article) bool { return a1.URL() < a2.URL() }
+		case "retweets":
+			criteria = func(a1, a2 *store.Article) bool { return a1.Retweets < a2.Retweets }
+		case "favourites":
+			criteria = func(a1, a2 *store.Article) bool { return a1.Favourites < a2.Favourites }
+		case "keywords":
+			criteria = func(a1, a2 *store.Article) bool { return a1.KeywordsString() < a2.KeywordsString() }
+		case "links":
+			criteria = func(a1, a2 *store.Article) bool { return a1.LinksString() < a2.LinksString() }
 		}
 	}
 	if criteria != nil {
@@ -268,7 +282,7 @@ func (ctrl *Control) Close() {
 	//ctrl.Window.Hide()
 }
 
-func (ctrl *Control) ApplySorting(sortColumn, sortOrder int) {
+func (ctrl *Control) ApplySorting(sortColumn string, sortOrder int) {
 	ctrl.Results = ctrl.Results.Sort(sortColumn, sortOrder)
 	qml.Changed(ctrl, &ctrl.Results)
 }

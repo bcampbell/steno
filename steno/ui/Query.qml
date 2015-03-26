@@ -235,6 +235,57 @@ Item {
             }
         }
 
+        Component {
+            id: retweetsDelegate
+            Item {
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: Text.ElideRight
+                    text: ctrl.results.art(styleData.row).retweets
+                }
+            }
+        }
+        Component {
+            id: favouritesDelegate
+            Item {
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: Text.ElideRight
+                    text: ctrl.results.art(styleData.row).favourites
+                }
+            }
+        }
+        Component {
+            id: linksDelegate
+            Item {
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: Text.ElideRight
+                    text: ctrl.results.art(styleData.row).linksString()
+                }
+            }
+        }
+        Component {
+            id: keywordsDelegate
+            Item {
+                clip: true
+                Text {
+                    anchors.fill: parent
+                    color: styleData.textColor
+                    elide: Text.ElideRight
+                    text: ctrl.results.art(styleData.row).keywordsString()
+                }
+            }
+        }
+
+
+
             id: artList
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -250,10 +301,20 @@ Item {
                 return sel
             }
 
+            function updateSorting() {
+                var col = getColumn(sortIndicatorColumn);
+                if (!col) {
+                    return;
+                }
+                ctrl.applySorting(col.role, sortIndicatorOrder);
+            }
+
+
+
             onClicked: artInfo.showArt(ctrl.results.art(row), ctrl.results.highlightTerms())
             // TODO: indicatorColumn and order passed into code side verbatim. Code changes needed if modifying column ordering
-            onSortIndicatorColumnChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
-            onSortIndicatorOrderChanged: ctrl.applySorting(sortIndicatorColumn, sortIndicatorOrder)
+            onSortIndicatorColumnChanged: updateSorting()
+            onSortIndicatorOrderChanged: updateSorting()
             TableViewColumn{ role: "headline"  ; title: "headline" ; width: 400; delegate: headlineDelegate }
             TableViewColumn{ role: "pub"  ; title: "pub" ; width: 100; delegate: pubDelegate }
             TableViewColumn{ role: "section"  ; title: "section" ; width: 100; delegate: sectionDelegate }
@@ -261,6 +322,10 @@ Item {
             TableViewColumn{ role: "tags" ; title: "tags" ; width: 100; delegate: tagsDelegate  }
             TableViewColumn{ role: "byline" ; title: "byline" ; width: 100; delegate: bylineDelegate  }
             TableViewColumn{ role: "url" ; title: "url" ; width: 400; delegate: urlDelegate  }
+            TableViewColumn{ role: "retweets" ; title: "retweets" ; width: 20; delegate: retweetsDelegate  }
+            TableViewColumn{ role: "favourites" ; title: "favourites" ; width: 20; delegate: favouritesDelegate  }
+            TableViewColumn{ role: "keywords" ; title: "keywords" ; width: 100; delegate: keywordsDelegate  }
+            TableViewColumn{ role: "links" ; title: "links" ; width: 400; delegate: linksDelegate  }
         }
         Row {
             id: findBar

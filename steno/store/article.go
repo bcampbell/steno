@@ -56,8 +56,8 @@ type Article struct {
 	Tags []string
 
 	// a couple of tweet-specific bits
-	RetweetCount  int
-	FavoriteCount int
+	Retweets   int
+	Favourites int
 	// resolved links
 	Links []string
 
@@ -132,6 +132,13 @@ func (art *Article) URL() string {
 
 func (art *Article) TagsString() string {
 	return strings.Join(art.Tags, " ")
+}
+
+func (art *Article) LinksString() string {
+	return strings.Join(art.Links, " ")
+}
+func (art *Article) KeywordsString() string {
+	return strings.Join(art.Keywords, " ")
 }
 
 func (art *Article) BylineString() string {

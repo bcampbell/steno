@@ -50,6 +50,7 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 	store.coll.SetWholeWordField("tags")
 	store.coll.SetWholeWordField("pub")
 	store.coll.SetWholeWordField("section")
+	store.coll.SetWholeWordField("keywords")
 
 	for _, art := range arts {
 		store.coll.Put(art)
@@ -263,7 +264,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 
 	for rows.Next() {
 		a := &Article{}
-		err = rows.Scan(&a.ID, &a.CanonicalURL, &a.Headline, &a.Content, &a.Published, &a.Updated, &a.Pub, &a.Section, &a.RetweetCount, &a.FavoriteCount)
+		err = rows.Scan(&a.ID, &a.CanonicalURL, &a.Headline, &a.Content, &a.Published, &a.Updated, &a.Pub, &a.Section, &a.Retweets, &a.Favourites)
 		if err != nil {
 			return nil, err
 		}
@@ -724,8 +725,8 @@ func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 		art.Updated,
 		art.Pub,
 		art.Section,
-		art.RetweetCount,
-		art.FavoriteCount)
+		art.Retweets,
+		art.Favourites)
 	if err != nil {
 		return err
 	}
