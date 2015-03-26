@@ -151,6 +151,27 @@ ApplicationWindow {
         shortcut: StandardKey.HelpContents
         onTriggered: helpWindow.visible = !helpWindow.visible
     }
+
+    ExclusiveGroup {
+        id: viewModeGroup
+        Action {
+            id: articleModeAction
+            text: "Articles"
+            checkable: true
+            checked: true
+            onToggled: { if(app.hasCurrent && checked) { app.current().setViewMode("article") }; }
+            enabled: app.hasCurrent
+        }
+
+        Action {
+            id: tweetModeAction
+            text: "Tweets"
+            checkable: true
+            enabled: app.hasCurrent
+            onToggled: { if( app.hasCurrent && checked) { app.current().setViewMode("tweet") }; }
+        }
+    }
+
     menuBar: MenuBar {
         Menu {
             title: "File"
@@ -168,6 +189,11 @@ ApplicationWindow {
             MenuItem { action: exportOverallsAction }
             MenuSeparator { }
             MenuItem { action: slurpAction }
+        }
+        Menu {
+            title: "ViewMode"
+            MenuItem { action: tweetModeAction }
+            MenuItem { action: articleModeAction }
         }
         Menu {
             title: "Help"

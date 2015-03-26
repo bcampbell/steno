@@ -232,6 +232,8 @@ type Control struct {
 	SortOrder  int
 	store      *store.Store
 
+	ViewMode string // "tweet" or "article"
+
 	SlurpProgress SlurpProgress
 	StatusText    string
 	HelpText      string
@@ -254,7 +256,7 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 		return nil, err
 	}
 
-	// TODO: this is brittle, magic numbers from QML side
+	ctrl.ViewMode = "tweet"
 	ctrl.SortColumn = 3 // Published
 	ctrl.SortOrder = 0
 
@@ -280,6 +282,11 @@ func (ctrl *Control) Close() {
 	ctrl.obj.Destroy()
 	ctrl.store.Close()
 	//ctrl.Window.Hide()
+}
+
+func (ctrl *Control) SetViewMode(mode string) {
+	ctrl.ViewMode = mode
+	qml.Changed(ctrl, &ctrl.ViewMode)
 }
 
 func (ctrl *Control) ApplySorting(sortColumn string, sortOrder int) {

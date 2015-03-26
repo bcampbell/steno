@@ -312,20 +312,19 @@ Item {
 
 
             onClicked: artInfo.showArt(ctrl.results.art(row), ctrl.results.highlightTerms())
-            // TODO: indicatorColumn and order passed into code side verbatim. Code changes needed if modifying column ordering
             onSortIndicatorColumnChanged: updateSorting()
             onSortIndicatorOrderChanged: updateSorting()
             TableViewColumn{ role: "headline"  ; title: "headline" ; width: 400; delegate: headlineDelegate }
-            TableViewColumn{ role: "pub"  ; title: "pub" ; width: 100; delegate: pubDelegate }
-            TableViewColumn{ role: "section"  ; title: "section" ; width: 100; delegate: sectionDelegate }
+            TableViewColumn{ role: "pub"  ; title: "pub" ; width: 100; delegate: pubDelegate; visible: ctrl.viewMode=="article";  }
+            TableViewColumn{ role: "section"  ; title: "section" ; width: 100; delegate: sectionDelegate; visible: ctrl.viewMode=="article";  }
             TableViewColumn{ role: "published"  ; title: "published" ; width: 100; delegate: publishedDelegate }
             TableViewColumn{ role: "tags" ; title: "tags" ; width: 100; delegate: tagsDelegate  }
             TableViewColumn{ role: "byline" ; title: "byline" ; width: 100; delegate: bylineDelegate  }
             TableViewColumn{ role: "url" ; title: "url" ; width: 400; delegate: urlDelegate  }
-            TableViewColumn{ role: "retweets" ; title: "retweets" ; width: 20; delegate: retweetsDelegate  }
-            TableViewColumn{ role: "favourites" ; title: "favourites" ; width: 20; delegate: favouritesDelegate  }
+            TableViewColumn{ role: "retweets" ; title: "retweets" ; width: 20; delegate: retweetsDelegate; visible: ctrl.viewMode=="tweet";   }
+            TableViewColumn{ role: "favourites" ; title: "favourites" ; width: 20; delegate: favouritesDelegate; visible: ctrl.viewMode=="tweet"; }
             TableViewColumn{ role: "keywords" ; title: "keywords" ; width: 100; delegate: keywordsDelegate  }
-            TableViewColumn{ role: "links" ; title: "links" ; width: 400; delegate: linksDelegate  }
+            TableViewColumn{ role: "links" ; title: "links" ; width: 400; delegate: linksDelegate; visible: ctrl.viewMode=="tweet"; }
         }
         Row {
             id: findBar
