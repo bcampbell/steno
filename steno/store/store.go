@@ -217,12 +217,12 @@ func (store *Store) initDB() error {
 	if ver < 4 {
 		store.dbug.Printf("updating database to version 4\n")
 
-		_, err = store.db.Exec(`ALTER TABLE article ADD COLUMN retweet_count INTEGER NOT NULL`)
+		_, err = store.db.Exec(`ALTER TABLE article ADD COLUMN retweet_count INTEGER NOT NULL DEFAULT 0`)
 		if err != nil {
 			return err
 		}
 
-		_, err = store.db.Exec(`ALTER TABLE article ADD COLUMN favourite_count INTEGER NOT NULL`)
+		_, err = store.db.Exec(`ALTER TABLE article ADD COLUMN favourite_count INTEGER NOT NULL DEFAULT 0`)
 		if err != nil {
 			return err
 		}
