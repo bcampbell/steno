@@ -40,6 +40,11 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 		return nil, err
 	}
 
+	err = store.cleanDanglingData()
+	if err != nil {
+		return nil, err
+	}
+
 	arts, err := store.readAllArts()
 	if err != nil {
 		return nil, err
@@ -251,12 +256,61 @@ func (store *Store) initDB() error {
 	return nil
 }
 
+// tidy up some potentially-dangling data (due to faulty delete mechanism!)
+func (store *Store) cleanDanglingData() error {
+	db := store.db
+
+	// clean up article_author table
+	result, err := db.Exec("DELETE FROM article_author WHERE article_id NOT IN (SELECT id FROM article)")
+	if err != nil {
+		return err
+	}
+
+	var n int64
+	n, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n > 0 {
+		store.dbug.Printf("WARNING: cleaned up %d dangling author entries\n", n)
+	}
+
+	// clean up article_link table
+	result, err = db.Exec("DELETE FROM article_link WHERE article_id NOT IN (SELECT id FROM article)")
+	if err != nil {
+		return err
+	}
+	n, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n > 0 {
+		store.dbug.Printf("WARNING: cleaned up %d dangling article_link entries\n", n)
+	}
+
+	// clean up article_keyword table
+	result, err = db.Exec("DELETE FROM article_keyword WHERE article_id NOT IN (SELECT id FROM article)")
+	if err != nil {
+		return err
+	}
+	n, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n > 0 {
+		store.dbug.Printf("WARNING: cleaned up %d dangling article_keyword entries\n", n)
+	}
+
+	return nil
+}
+
 // read in articles from DB
 func (store *Store) readAllArts() (ArtList, error) {
 	db := store.db
 
 	tab := map[int]*Article{}
 
+	// now grab all the articles!
 	rows, err := db.Query("SELECT id,canonical_url,headline,content,published,updated,pub,section,retweet_count,favourite_count FROM article")
 	if err != nil {
 		return nil, err
@@ -605,6 +659,18 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 	}
 	defer delAuthorsStmt.Close()
 
+	delKeywordsStmt, err := tx.Prepare("DELETE FROM article_keyword WHERE article_id=?")
+	if err != nil {
+		return 0, err
+	}
+	defer delKeywordsStmt.Close()
+
+	delLinksStmt, err := tx.Prepare("DELETE FROM article_link WHERE article_id=?")
+	if err != nil {
+		return 0, err
+	}
+	defer delLinksStmt.Close()
+
 	delArtStmt, err := tx.Prepare("DELETE FROM article WHERE id=?")
 	if err != nil {
 		return 0, err
@@ -619,6 +685,16 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 		}
 
 		_, err = delURLsStmt.Exec(art.ID)
+		if err != nil {
+			return 0, err
+		}
+
+		_, err = delLinksStmt.Exec(art.ID)
+		if err != nil {
+			return 0, err
+		}
+
+		_, err = delKeywordsStmt.Exec(art.ID)
 		if err != nil {
 			return 0, err
 		}
