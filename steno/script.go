@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"semprini/steno/steno/store"
@@ -68,7 +67,7 @@ var linePat = regexp.MustCompile(`(?i)^(?:([^#]+?)\s*=>\s*(tag|untag|delete)(?:\
 func strippedName(fullname string) string {
 	b := filepath.Base(fullname)
 
-	return b[0 : len(b)-len(path.Ext(b))]
+	return b[0 : len(b)-len(filepath.Ext(b))]
 }
 
 func loadScript(filename string) (*script, error) {
@@ -80,7 +79,7 @@ func loadScript(filename string) (*script, error) {
 	defer infile.Close()
 
 	out := &script{
-		Category: path.Base(path.Dir(filename)),
+		Category: filepath.Base(filepath.Dir(filename)),
 		Name:     strippedName(filename),
 	}
 	lineNum := 0
@@ -126,7 +125,7 @@ func loadScripts(dir string) ([]*script, error) {
 		if info.IsDir() {
 			return nil
 		}
-		ext := path.Ext(fileName)
+		ext := filepath.Ext(fileName)
 		if ext != ".txt" && ext != ".csv" {
 			dbug.Printf("WARNING ignoring %s\n", fileName)
 			return nil
