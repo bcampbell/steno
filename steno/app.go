@@ -18,7 +18,10 @@ type App struct {
 	project       *Control
 	HasCurrent    bool
 
-	Scripts    []*script
+	scriptCategories    []string
+	ScriptCategoriesLen int
+
+	scripts    []*script
 	ScriptsLen int
 
 	SlurpSources    []SlurpSource
@@ -90,7 +93,7 @@ func (app *App) Current() *Control {
 }
 
 func (app *App) GetScript(idx int) *script {
-	return app.Scripts[idx]
+	return app.scripts[idx]
 }
 
 func (app *App) SetError(msg string) {
@@ -140,9 +143,25 @@ func (app *App) RefreshScripts() {
 			}
 		}
 	*/
-	app.Scripts = scripts
-	app.ScriptsLen = len(scripts)
+
+	app.scripts = scripts
+	app.scriptCategories = []string{}
+
+	cats := map[string]struct{}{}
+
+	for _, s := range scripts {
+		cats[s.Category] = struct{}{}
+	}
+
+	for cat, _ := range cats {
+		app.scriptCategories = append(app.scriptCategories, cat)
+	}
+
+	app.ScriptsLen = len(app.scripts)
 	qml.Changed(app, &app.ScriptsLen)
+
+	app.ScriptCategoriesLen = len(app.scriptCategories)
+	qml.Changed(app, &app.ScriptCategoriesLen)
 }
 
 func (app *App) initSlurpSources() {
@@ -155,6 +174,10 @@ func (app *App) initSlurpSources() {
 	app.SlurpSources = srcs
 	app.SlurpSourcesLen = len(srcs)
 	qml.Changed(app, &app.SlurpSourcesLen)
+}
+
+func (app *App) GetScriptCategory(idx int) string {
+	return app.scriptCategories[idx]
 }
 
 func (app *App) GetSlurpSourceName(idx int) string {

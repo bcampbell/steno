@@ -23,9 +23,10 @@ func (l *scriptLine) String() string {
 }
 
 type script struct {
-	Name  string
-	Desc  string
-	lines []scriptLine
+	Category string // taken from subdirectory
+	Name     string
+	Desc     string
+	lines    []scriptLine
 }
 
 // Apply script to a store
@@ -78,7 +79,10 @@ func loadScript(filename string) (*script, error) {
 	}
 	defer infile.Close()
 
-	out := &script{Name: strippedName(filename)}
+	out := &script{
+		Category: path.Base(path.Dir(filename)),
+		Name:     strippedName(filename),
+	}
 	lineNum := 0
 	scanner := bufio.NewScanner(infile)
 	for scanner.Scan() {
@@ -116,7 +120,21 @@ func loadScript(filename string) (*script, error) {
 }
 
 func loadScripts(dir string) ([]*script, error) {
-	fileNames, err := filepath.Glob(path.Join(dir, "*.txt"))
+
+	fileNames := []string{}
+	err := filepath.Walk(dir, func(fileName string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		ext := path.Ext(fileName)
+		if ext != ".txt" && ext != ".csv" {
+			dbug.Printf("WARNING ignoring %s\n", fileName)
+			return nil
+		}
+		fileNames = append(fileNames, fileName)
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}

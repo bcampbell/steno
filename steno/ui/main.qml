@@ -264,29 +264,65 @@ ApplicationWindow {
 
     }
 
+
+
     Dialog {
         id: pickScriptDlg
         title: "Pick script to run..."
+        width: 650
+        height: 400
         contentItem: ColumnLayout {
             spacing: 8
-
-            TableView {
-                id: scriptList
+            TabView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                model: app.scriptsLen
-                TableViewColumn{
-                    title: "script"
-                    width: 200
-                    delegate: Text {
-                        text: app.getScript(styleData.row).name + ": " + app.getScript(styleData.row).desc
+
+                // create a tab per category....
+                Repeater {
+                    model: app.scriptCategoriesLen
+                    Tab {
+                        title: app.getScriptCategory(index)
+
+                        TableView {
+                            id: scriptList
+                            model: ListModel {
+                                // filter scripts by category
+                                Component.onCompleted:
+                                {
+                                    var cat = app.getScriptCategory(index)
+
+                                    for (var i = 0; i < app.scriptsLen; i++)
+                                    {
+                                        var s = app.getScript(i)
+                                        if(s.category == cat) {
+                                            append( { idx:i, name: s.name, desc: s.desc } )
+                                        }
+                                    }
+                                }
+                            }
+
+                            TableViewColumn {
+                                role: "name"
+                                title: "Name"
+                                width: 200
+                            }
+                            TableViewColumn {
+                                role: "desc"
+                                title: "Description"
+                                width: 400
+                            }
+                            onDoubleClicked: {
+                                var idx = model.get(currentRow).idx;
+                                app.current().runScript(idx);
+                                pickScriptDlg.close();
+//                                console.log(idx);
+                                
+                            }
+                        }
                     }
                 }
-                onDoubleClicked: pickScriptDlg.click(StandardButton.Ok)
-             }
+            }
         }
-        standardButtons: StandardButton.Ok | StandardButton.Cancel
-        onAccepted: app.current().runScript(scriptList.currentRow)
     }
 }
 

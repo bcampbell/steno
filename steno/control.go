@@ -533,7 +533,7 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 }
 
 func (ctrl *Control) RunScript(scriptIdx int) {
-	s := ctrl.App.Scripts[scriptIdx]
+	s := ctrl.App.GetScript(scriptIdx)
 	err := s.Run(ctrl.store)
 	if err != nil {
 		dbug.Printf("ERROR running script %s: %s\n", s.Name, err)
