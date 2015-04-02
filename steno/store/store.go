@@ -53,6 +53,7 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 	store.coll.SetWholeWordField("content")
 	store.coll.SetWholeWordField("headline")
 	store.coll.SetWholeWordField("tags")
+	store.coll.SetWholeWordField("byline")
 	store.coll.SetWholeWordField("pub")
 	store.coll.SetWholeWordField("section")
 	store.coll.SetWholeWordField("keywords")
