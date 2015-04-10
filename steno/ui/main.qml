@@ -236,6 +236,11 @@ ApplicationWindow {
 
     Dialog {
         id: slurpDlg
+        function pad (num, size) {
+            var s = num+"";
+            while (s.length < size) s = "0" + s;
+            return s;
+        }
         title: "Slurp articles from server"
         contentItem: ColumnLayout {
             spacing: 4
@@ -257,10 +262,11 @@ ApplicationWindow {
              }
         }
         standardButtons: StandardButton.Ok | StandardButton.Cancel
-        onAccepted: app.current().slurp(
-            slurpSource.currentText,
-            dayPicker.selectedDate.toISOString().slice(0,10),
-            dayPicker.selectedDate.toISOString().slice(0,10))
+        onAccepted: {
+            var d = dayPicker.selectedDate;
+            var dateStr = pad(d.getFullYear(),4) + '-' + pad(d.getMonth(),2) + '-' + pad(d.getDate(),2);
+            app.current().slurp( slurpSource.currentText, dateStr, dateStr);
+        }
 
     }
 
