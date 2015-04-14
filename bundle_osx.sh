@@ -15,6 +15,7 @@ cp Info.plist $APP/Contents/
 cp steno/steno $APP/Contents/MacOS/
 cp -r steno/ui $APP/Contents/Resources/
 cp -r steno/scripts $APP/Contents/Resources/
+cp steno/slurp_sources.csv $APP/Contents/Resources/
 
 
 /usr/local/Cellar/qt5/5.3.2/bin/macdeployqt steno.app -verbose=1 -qmldir=steno.app/Contents/Resources -dmg
