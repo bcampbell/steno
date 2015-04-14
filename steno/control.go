@@ -405,6 +405,24 @@ func (ctrl *Control) ExportOveralls(outFile string) {
 	dbug.Printf("Wrote to %s\n", outFile)
 }
 
+func (ctrl *Control) ExportCSV(outFile string) {
+
+	out, err := os.Create(outFile)
+
+	if err != nil {
+		// TODO: error on gui...
+		dbug.Printf("ERROR: %s", err)
+		return
+	}
+	err = exportCSV(ctrl.Results.arts, out)
+	if err != nil {
+		// TODO: error on gui...
+		dbug.Printf("ERROR exporting overalls: %s", err)
+		return
+	}
+	dbug.Printf("Wrote to %s\n", outFile)
+}
+
 func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 
 	var elapsedFind time.Duration

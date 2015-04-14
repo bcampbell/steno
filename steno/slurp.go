@@ -61,6 +61,7 @@ func Slurp(server SlurpSource, dayFrom, dayTo string) chan Msg {
 		defer close(out)
 		u := fmt.Sprintf("%s/api/slurp?from=%s&to=%s", server.Loc, dayFrom, dayTo)
 
+		fmt.Println(u)
 		resp, err := http.Get(u)
 		if err != nil {
 			out <- Msg{Error: fmt.Sprintf("HTTP Get failed: %s", err)}

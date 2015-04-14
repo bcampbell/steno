@@ -68,8 +68,23 @@ ApplicationWindow {
 
         onAccepted: {
             var f = Helper.filePathFromURL(exportOverallsDialog.fileUrl);
-            console.log("You chose: " + f)
             app.current().exportOveralls(f)
+        }
+        onRejected: {
+            console.log("Canceled")
+        }
+        //Component.onCompleted: visible = true
+    }
+
+    FileDialog {
+        id: exportCSVDialog
+        title: "Export current matches as CSV"
+        nameFilters: [ "CSV files files (*.csv)", "All files (*)" ]
+        selectExisting: false
+
+        onAccepted: {
+            var f = Helper.filePathFromURL(exportCSVDialog.fileUrl);
+            app.current().exportCSV(f)
         }
         onRejected: {
             console.log("Canceled")
@@ -130,7 +145,14 @@ ApplicationWindow {
         //iconSource: "images/fileopen.png"
         text: "Export overall summary csv..."
         onTriggered: exportOverallsDialog.open()
-        enabled: app.hasCurrent
+        enabled: app.hasCurrent && app.current().results.len > 0
+    }
+    Action {
+        id: exportCSVAction
+        //iconSource: "images/fileopen.png"
+        text: "Export matching articles to .csv..."
+        onTriggered: exportCSVDialog.open()
+        enabled: app.hasCurrent && app.current().results.len > 0
     }
     Action {
         id: trainAction
@@ -186,6 +208,7 @@ ApplicationWindow {
             MenuItem { action: trainAction }
             MenuItem { action: classifyAction }
             MenuSeparator { }
+            MenuItem { action: exportCSVAction }
             MenuItem { action: exportOverallsAction }
             MenuSeparator { }
             MenuItem { action: slurpAction }
