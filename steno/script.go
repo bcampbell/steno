@@ -2,9 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
+	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"semprini/steno/steno/store"
@@ -23,9 +24,10 @@ func (l *scriptLine) String() string {
 }
 
 type script struct {
-	Name  string
-	Desc  string
-	lines []scriptLine
+	Category string // taken from subdirectory
+	Name     string
+	Desc     string
+	lines    []scriptLine
 }
 
 // Apply script to a store
@@ -67,7 +69,7 @@ var linePat = regexp.MustCompile(`(?i)^(?:([^#]+?)\s*=>\s*(tag|untag|delete)(?:\
 func strippedName(fullname string) string {
 	b := filepath.Base(fullname)
 
-	return b[0 : len(b)-len(path.Ext(b))]
+	return b[0 : len(b)-len(filepath.Ext(b))]
 }
 
 func loadScript(filename string) (*script, error) {
@@ -78,7 +80,10 @@ func loadScript(filename string) (*script, error) {
 	}
 	defer infile.Close()
 
-	out := &script{Name: strippedName(filename)}
+	out := &script{
+		Category: filepath.Base(filepath.Dir(filename)),
+		Name:     strippedName(filename),
+	}
 	lineNum := 0
 	scanner := bufio.NewScanner(infile)
 	for scanner.Scan() {
@@ -115,8 +120,89 @@ func loadScript(filename string) (*script, error) {
 	return out, nil
 }
 
+// load the simplified CSV-based script format
+func loadCSVScript(filename string) (*script, error) {
+
+	infile, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer infile.Close()
+
+	rdr := csv.NewReader(infile)
+	// read header line
+
+	header, err := rdr.Read()
+	if err != nil {
+		return nil, err
+	}
+
+	out := &script{
+		Category: filepath.Base(filepath.Dir(filename)),
+		Name:     strippedName(filename),
+	}
+
+	lineNum := 1
+	for {
+
+		row, err := rdr.Read()
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				return nil, err
+			}
+
+		}
+
+		frags := []string{}
+		tags := []string{}
+		for i, col := range header {
+			v := strings.TrimSpace(row[i])
+			if col == "TAG" {
+				tags = append(tags, strings.Fields(strings.ToLower(v))...)
+			} else {
+				if strings.ContainsRune(v, ' ') {
+					v = `"` + v + `"`
+				}
+				frags = append(frags, col+":"+v)
+			}
+		}
+
+		q := strings.Join(frags, " ")
+		if q == "" {
+			dbug.Printf("WARNING %s (line %d): empty query. Ignoring\n", filename, lineNum)
+			continue
+		}
+		if len(tags) == 0 {
+			dbug.Printf("WARNING %s (line %d): no tags. Ignoring\n", filename, lineNum)
+			continue
+		}
+		l := scriptLine{srcLine: lineNum, query: q, op: "tag", params: tags}
+		out.lines = append(out.lines, l)
+	}
+
+	//fmt.Printf("%+v\n", out)
+
+	return out, nil
+}
+
 func loadScripts(dir string) ([]*script, error) {
-	fileNames, err := filepath.Glob(path.Join(dir, "*.txt"))
+
+	fileNames := []string{}
+	err := filepath.Walk(dir, func(fileName string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		ext := filepath.Ext(fileName)
+		if ext != ".txt" && ext != ".csv" {
+			dbug.Printf("WARNING ignoring %s\n", fileName)
+			return nil
+		}
+		fileNames = append(fileNames, fileName)
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +210,17 @@ func loadScripts(dir string) ([]*script, error) {
 	//	fmt.Printf("found %d scripts\n", len(fileNames))
 	scripts := []*script{}
 	for _, fileName := range fileNames {
-		s, err := loadScript(fileName)
+		ext := filepath.Ext(fileName)
+		var s *script
+		var err error
+		if ext == ".txt" {
+			s, err = loadScript(fileName)
+		} else if ext == ".csv" {
+			s, err = loadCSVScript(fileName)
+		} else {
+			err = fmt.Errorf("Unknown script type %s\n", ext)
+		}
+
 		if err != nil {
 			return nil, err
 		}

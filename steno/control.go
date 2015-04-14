@@ -405,6 +405,24 @@ func (ctrl *Control) ExportOveralls(outFile string) {
 	dbug.Printf("Wrote to %s\n", outFile)
 }
 
+func (ctrl *Control) ExportCSV(outFile string) {
+
+	out, err := os.Create(outFile)
+
+	if err != nil {
+		// TODO: error on gui...
+		dbug.Printf("ERROR: %s", err)
+		return
+	}
+	err = exportCSV(ctrl.Results.arts, out)
+	if err != nil {
+		// TODO: error on gui...
+		dbug.Printf("ERROR exporting overalls: %s", err)
+		return
+	}
+	dbug.Printf("Wrote to %s\n", outFile)
+}
+
 func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 
 	var elapsedFind time.Duration
@@ -438,9 +456,9 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 
 		ctrl.SlurpProgress.InFlight = true
 		qml.Changed(ctrl, &ctrl.SlurpProgress)
-		incoming := Slurp(*server, dayFrom, dayTo)
 
-		dbug.Printf("Slurping...\n")
+		dbug.Printf("slurping %s..%s\n", dayFrom, dayTo)
+		incoming := Slurp(*server, dayFrom, dayTo)
 
 		batchSize := 200
 
@@ -533,7 +551,7 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 }
 
 func (ctrl *Control) RunScript(scriptIdx int) {
-	s := ctrl.App.Scripts[scriptIdx]
+	s := ctrl.App.GetScript(scriptIdx)
 	err := s.Run(ctrl.store)
 	if err != nil {
 		dbug.Printf("ERROR running script %s: %s\n", s.Name, err)

@@ -68,8 +68,23 @@ ApplicationWindow {
 
         onAccepted: {
             var f = Helper.filePathFromURL(exportOverallsDialog.fileUrl);
-            console.log("You chose: " + f)
             app.current().exportOveralls(f)
+        }
+        onRejected: {
+            console.log("Canceled")
+        }
+        //Component.onCompleted: visible = true
+    }
+
+    FileDialog {
+        id: exportCSVDialog
+        title: "Export current matches as CSV"
+        nameFilters: [ "CSV files files (*.csv)", "All files (*)" ]
+        selectExisting: false
+
+        onAccepted: {
+            var f = Helper.filePathFromURL(exportCSVDialog.fileUrl);
+            app.current().exportCSV(f)
         }
         onRejected: {
             console.log("Canceled")
@@ -130,7 +145,14 @@ ApplicationWindow {
         //iconSource: "images/fileopen.png"
         text: "Export overall summary csv..."
         onTriggered: exportOverallsDialog.open()
-        enabled: app.hasCurrent
+        enabled: app.hasCurrent && app.current().results.len > 0
+    }
+    Action {
+        id: exportCSVAction
+        //iconSource: "images/fileopen.png"
+        text: "Export matching articles to .csv..."
+        onTriggered: exportCSVDialog.open()
+        enabled: app.hasCurrent && app.current().results.len > 0
     }
     Action {
         id: trainAction
@@ -186,6 +208,7 @@ ApplicationWindow {
             MenuItem { action: trainAction }
             MenuItem { action: classifyAction }
             MenuSeparator { }
+            MenuItem { action: exportCSVAction }
             MenuItem { action: exportOverallsAction }
             MenuSeparator { }
             MenuItem { action: slurpAction }
@@ -236,6 +259,11 @@ ApplicationWindow {
 
     Dialog {
         id: slurpDlg
+        function pad (num, size) {
+            var s = num+"";
+            while (s.length < size) s = "0" + s;
+            return s;
+        }
         title: "Slurp articles from server"
         contentItem: ColumnLayout {
             spacing: 4
@@ -257,36 +285,73 @@ ApplicationWindow {
              }
         }
         standardButtons: StandardButton.Ok | StandardButton.Cancel
-        onAccepted: app.current().slurp(
-            slurpSource.currentText,
-            dayPicker.selectedDate.toISOString().slice(0,10),
-            dayPicker.selectedDate.toISOString().slice(0,10))
+        onAccepted: {
+            var d = dayPicker.selectedDate;
+            var dateStr = pad(d.getFullYear(),4) + '-' + pad(d.getMonth()+1,2) + '-' + pad(d.getDate(),2);
+            app.current().slurp( slurpSource.currentText, dateStr, dateStr);
+        }
 
     }
+
+
 
     Dialog {
         id: pickScriptDlg
         title: "Pick script to run..."
+        width: 650
+        height: 400
         contentItem: ColumnLayout {
             spacing: 8
-
-            TableView {
-                id: scriptList
+            TabView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                model: app.scriptsLen
-                TableViewColumn{
-                    title: "script"
-                    width: 200
-                    delegate: Text {
-                        text: app.getScript(styleData.row).name + ": " + app.getScript(styleData.row).desc
+
+                // create a tab per category....
+                Repeater {
+                    model: app.scriptCategoriesLen
+                    Tab {
+                        title: app.getScriptCategory(index)
+
+                        TableView {
+                            id: scriptList
+                            model: ListModel {
+                                // filter scripts by category
+                                Component.onCompleted:
+                                {
+                                    var cat = app.getScriptCategory(index)
+
+                                    for (var i = 0; i < app.scriptsLen; i++)
+                                    {
+                                        var s = app.getScript(i)
+                                        if(s.category == cat) {
+                                            append( { idx:i, name: s.name, desc: s.desc } )
+                                        }
+                                    }
+                                }
+                            }
+
+                            TableViewColumn {
+                                role: "name"
+                                title: "Name"
+                                width: 200
+                            }
+                            TableViewColumn {
+                                role: "desc"
+                                title: "Description"
+                                width: 400
+                            }
+                            onDoubleClicked: {
+                                var idx = model.get(currentRow).idx;
+                                app.current().runScript(idx);
+                                pickScriptDlg.close();
+//                                console.log(idx);
+                                
+                            }
+                        }
                     }
                 }
-                onDoubleClicked: pickScriptDlg.click(StandardButton.Ok)
-             }
+            }
         }
-        standardButtons: StandardButton.Ok | StandardButton.Cancel
-        onAccepted: app.current().runScript(scriptList.currentRow)
     }
 }
 
