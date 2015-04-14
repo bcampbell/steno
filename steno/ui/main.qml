@@ -264,7 +264,7 @@ ApplicationWindow {
         standardButtons: StandardButton.Ok | StandardButton.Cancel
         onAccepted: {
             var d = dayPicker.selectedDate;
-            var dateStr = pad(d.getFullYear(),4) + '-' + pad(d.getMonth(),2) + '-' + pad(d.getDate(),2);
+            var dateStr = pad(d.getFullYear(),4) + '-' + pad(d.getMonth()+1,2) + '-' + pad(d.getDate(),2);
             app.current().slurp( slurpSource.currentText, dateStr, dateStr);
         }
 
