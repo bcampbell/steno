@@ -4,6 +4,7 @@ import (
 	//	"fmt"
 	"github.com/bcampbell/htmlutil"
 	"golang.org/x/net/html"
+	stdhtml "html"
 	"html/template"
 	"regexp"
 	"strings"
@@ -97,11 +98,14 @@ func (art *Article) PlainTextContent() string {
 }
 
 // TODO: this should be out in the gui layer
+// TODO: this will screw up in assorted cases
+//       eg a highlight term of "amp" will cause &amp; escape codes to bork up.
 func (art *Article) FormatContent(highlightTerms string) string {
 	breakPat := regexp.MustCompile(`[\n]{2,}`)
 	foo := strings.Fields(highlightTerms)
 	txt := art.PlainTextContent()
 
+	txt = stdhtml.EscapeString(txt)
 	for _, term := range foo {
 		termPat := regexp.MustCompile("(?i)" + regexp.QuoteMeta(term))
 		txt = termPat.ReplaceAllStringFunc(txt, func(t string) string {
@@ -112,12 +116,6 @@ func (art *Article) FormatContent(highlightTerms string) string {
 
 	return txt
 }
-
-/*
-func (art *Article) Hoo() *string {
-	return &art.Headline
-}
-*/
 
 func (art *Article) URL() string {
 	if art.CanonicalURL != "" {

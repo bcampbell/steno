@@ -25,7 +25,7 @@ Item {
                 id: artInfo
                 Layout.minimumHeight: 100
                 function showArt(art,highlightTerms) {
-                   content.text = art.formatContent(highlightTerms)
+                   content.text = art.formatContent(highlightTerms);
                 }
                 ScrollView {
                     anchors.fill: parent
