@@ -46,6 +46,7 @@ func run() error {
 		dbug.Printf("Error starting App: %s\n", err)
 		os.Exit(1)
 	}
+
 	if flag.NArg() > 0 {
 		dbFilename := flag.Arg(0)
 		app.OpenProject(dbFilename)

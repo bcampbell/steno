@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"semprini/scrapeomat/slurp"
 	"semprini/steno/steno/store"
+	"time"
 )
 
 type SlurpSource struct {
@@ -54,14 +56,20 @@ func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
 	return srcs, nil
 }
 
-func Slurp(server SlurpSource, dayFrom, dayTo string) chan Msg {
+func Slurp(server SlurpSource, timeFrom, timeTo time.Time) chan Msg {
 	out := make(chan Msg)
 
 	go func() {
 		defer close(out)
-		u := fmt.Sprintf("%s/api/slurp?from=%s&to=%s", server.Loc, dayFrom, dayTo)
+
+		params := url.Values{}
+		params.Set("pubfrom", timeFrom.Format(time.RFC3339))
+		params.Set("pubto", timeTo.Format(time.RFC3339))
+
+		u := fmt.Sprintf("%s/api/slurp?%s", server.Loc, params.Encode())
 
 		fmt.Println(u)
+
 		resp, err := http.Get(u)
 		if err != nil {
 			out <- Msg{Error: fmt.Sprintf("HTTP Get failed: %s", err)}

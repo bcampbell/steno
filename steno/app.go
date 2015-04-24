@@ -2,10 +2,12 @@ package main
 
 import (
 	//"fmt"
+	"fmt"
 	"gopkg.in/qml.v1"
 	"io/ioutil"
 	"path"
 	"semprini/steno/steno/kludge"
+	"time"
 	//	"strings"
 )
 
@@ -31,15 +33,28 @@ type App struct {
 	ErrorMsg string
 }
 
+// return seconds offset as [+-]HH:MM
+func formatZone(offset int) string {
+	sign := '+'
+	if offset < 0 {
+		offset = -offset
+		sign = '-'
+	}
+	return fmt.Sprintf("%c%02d:%02d", sign, offset/3600, (offset%3600)/60)
+}
+
 func NewApp() (*App, error) {
 	var err error
+
+	// show the current timezone
+	zone, offset := time.Now().Zone()
+	dbug.Printf("current timezone: %s %s\n", zone, formatZone(offset))
 
 	//    dataPath := "/Users/ben/semprini/steno/steno.app/Contents/Resources"
 	dataPath, err := kludge.DataPath()
 	if err != nil {
 		return nil, err
 	}
-	dbug.Printf("Data path: %s\n", dataPath)
 
 	engine := qml.NewEngine()
 	ctx := engine.Context()

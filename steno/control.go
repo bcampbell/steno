@@ -444,6 +444,21 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 		return
 	}
 
+	//
+	const shortForm = "2006-01-02"
+	timeFrom, err := time.ParseInLocation(shortForm, dayFrom, time.Local)
+	if err != nil {
+		dbug.Printf("ERROR: bad dayFrom: %s (%s)\n", dayFrom, err)
+		return
+	}
+	timeTo, err := time.ParseInLocation(shortForm, dayTo, time.Local)
+	if err != nil {
+		dbug.Printf("ERROR: bad dayTo: %s (%s)\n", dayTo, err)
+		return
+	}
+	// HACK: want one day's worth
+	timeTo = timeTo.AddDate(0, 0, 1)
+
 	go func() {
 
 		ctrl.SlurpProgress = SlurpProgress{}
@@ -457,8 +472,8 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 		ctrl.SlurpProgress.InFlight = true
 		qml.Changed(ctrl, &ctrl.SlurpProgress)
 
-		dbug.Printf("slurping %s..%s\n", dayFrom, dayTo)
-		incoming := Slurp(*server, dayFrom, dayTo)
+		//		dbug.Printf("slurping %s..%s\n", dayFrom, dayTo)
+		incoming := Slurp(*server, timeFrom, timeTo)
 
 		batchSize := 200
 
