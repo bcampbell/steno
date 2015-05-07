@@ -30,10 +30,15 @@ type script struct {
 	lines    []scriptLine
 }
 
+type ProgressFunc func(expected int, completed int, msg string)
+
 // Apply script to a store
-func (s *script) Run(store *store.Store) error {
+func (s *script) Run(store *store.Store, progress ProgressFunc) error {
 	dbug.Printf("running script '%s'\n", s.Name)
-	for _, line := range s.lines {
+	for lineNum, line := range s.lines {
+		if progress != nil {
+			progress(len(s.lines), lineNum, fmt.Sprintf("running %s: %d/%d", s.Name, lineNum+1, len(s.lines)))
+		}
 		matching, err := store.Search(line.query)
 		if err != nil {
 			return fmt.Errorf("Bad query on line %d (%s): %s", line.srcLine, line.query, err)
@@ -60,6 +65,7 @@ func (s *script) Run(store *store.Store) error {
 				return fmt.Errorf("error deleting (during query '%s'): %s", line.query, err)
 			}
 		}
+
 	}
 	return nil
 }

@@ -19,6 +19,7 @@ type Facet struct {
 	Cnt int
 }
 
+// TODO: kill SlurpProgress and replace with more generic Progress struct
 type SlurpProgress struct {
 	TotalCnt int
 	NewCnt   int
@@ -32,6 +33,15 @@ func (p *SlurpProgress) String() string {
 	} else {
 		return fmt.Sprintf("Received %d articles (%d new)", p.TotalCnt, p.NewCnt)
 	}
+}
+
+type Progress struct {
+	InFlight     bool
+	Title        string
+	ExpectedCnt  int // 0=unknown
+	CompletedCnt int
+	StatusMsg    string
+	ErrorMsg     string
 }
 
 type Results struct {
@@ -234,7 +244,9 @@ type Control struct {
 
 	ViewMode string // "tweet" or "article"
 
+	// Phasing out slurp progress with generic progress
 	SlurpProgress SlurpProgress
+	Progress      Progress
 	StatusText    string
 	HelpText      string
 }
@@ -567,13 +579,33 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 
 func (ctrl *Control) RunScript(scriptIdx int) {
 	s := ctrl.App.GetScript(scriptIdx)
-	err := s.Run(ctrl.store)
-	if err != nil {
-		dbug.Printf("ERROR running script %s: %s\n", s.Name, err)
-		ctrl.App.SetError(err.Error())
-	}
-	// rerun the current query
-	ctrl.setQuery(ctrl.Results.Query)
+
+	// run as goroutine to avoid freezing gui
+	go func() {
+		ctrl.Progress = Progress{}
+		prog := &ctrl.Progress
+
+		defer func() {
+			prog.InFlight = false
+			qml.Changed(ctrl, &ctrl.Progress)
+		}()
+
+		prog.Title = fmt.Sprintf("running %s...", s.Name)
+		ctrl.Progress.InFlight = true
+		qml.Changed(ctrl, &ctrl.Progress)
+		err := s.Run(ctrl.store, func(expected int, completed int, status string) {
+			prog.StatusMsg = status
+			qml.Changed(ctrl, &ctrl.Progress)
+		})
+		if err != nil {
+			dbug.Printf("ERROR running script %s: %s\n", s.Name, err)
+			prog.ErrorMsg = err.Error()
+			qml.Changed(ctrl, &ctrl.Progress)
+			ctrl.App.SetError(err.Error())
+		}
+		// rerun the current query
+		ctrl.setQuery(ctrl.Results.Query)
+	}()
 }
 
 func (ctrl *Control) Train() {
