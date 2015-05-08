@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/qml.v1"
 	"io/ioutil"
-	"path"
+	"path/filepath"
 	"semprini/steno/steno/kludge"
 	"time"
 	//	"strings"
@@ -14,7 +14,7 @@ import (
 type App struct {
 	Window        *qml.Window
 	HelpText      string
-	dataPath      string
+	DataPath      string
 	projComponent qml.Object
 	ctx           *qml.Context
 	project       *Control
@@ -50,7 +50,6 @@ func NewApp() (*App, error) {
 	zone, offset := time.Now().Zone()
 	dbug.Printf("current timezone: %s %s\n", zone, formatZone(offset))
 
-	//    dataPath := "/Users/ben/semprini/steno/steno.app/Contents/Resources"
 	dataPath, err := kludge.DataPath()
 	if err != nil {
 		return nil, err
@@ -60,11 +59,11 @@ func NewApp() (*App, error) {
 	ctx := engine.Context()
 	app := &App{}
 	app.ctx = ctx
-	app.dataPath = dataPath
+	app.DataPath = dataPath
 
 	// all the qml/js/html stuff is in the ui dir
-	uiPath := path.Join(app.dataPath, "ui")
-	buf, err := ioutil.ReadFile(path.Join(uiPath, "help.html"))
+	uiPath := filepath.Join(app.DataPath, "ui")
+	buf, err := ioutil.ReadFile(filepath.Join(uiPath, "help.html"))
 	if err != nil {
 		return nil, err
 	}
@@ -76,11 +75,11 @@ func NewApp() (*App, error) {
 	// expose us to the qml side
 	ctx.SetVar("app", app)
 
-	component, err := engine.LoadFile(path.Join(uiPath, "main.qml"))
+	component, err := engine.LoadFile(filepath.Join(uiPath, "main.qml"))
 	if err != nil {
 		return nil, err
 	}
-	proj, err := engine.LoadFile(path.Join(uiPath, "project.qml"))
+	proj, err := engine.LoadFile(filepath.Join(uiPath, "project.qml"))
 	app.projComponent = proj
 	if err != nil {
 		return nil, err
@@ -143,7 +142,7 @@ func (app *App) NewProject(storePath string) {
 }
 
 func (app *App) RefreshScripts() {
-	scripts, err := loadScripts(path.Join(app.dataPath, "scripts"))
+	scripts, err := loadScripts(filepath.Join(app.DataPath, "scripts"))
 	if err != nil {
 		dbug.Printf("ERROR: %s\n", err)
 		app.SetError(err.Error())
@@ -180,7 +179,7 @@ func (app *App) RefreshScripts() {
 }
 
 func (app *App) initSlurpSources() {
-	srcs, err := LoadSlurpSources(path.Join(app.dataPath, "slurp_sources.csv"))
+	srcs, err := LoadSlurpSources(filepath.Join(app.DataPath, "slurp_sources.csv"))
 	if err != nil {
 		dbug.Printf("ERROR: %s\n", err)
 		app.SetError(err.Error())
