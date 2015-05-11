@@ -887,3 +887,46 @@ func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 
 	return nil
 }
+
+// HACK - update all the links for the given articles
+func (store *Store) UpdateLinks(arts ArtList) error {
+	tx, err := store.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	delStmt, err := tx.Prepare("DELETE FROM article_link WHERE article_id=?")
+	if err != nil {
+		return err
+	}
+	defer delStmt.Close()
+
+	insStmt, err := tx.Prepare("INSERT INTO article_link(article_id,url) VALUES(?,?)")
+	if err != nil {
+		return err
+	}
+	defer insStmt.Close()
+
+	for _, art := range arts {
+		// zap old links
+		_, err = delStmt.Exec(art.ID)
+		if err != nil {
+			return err
+		}
+
+		// add new links
+		for _, link := range art.Links {
+			_, err = insStmt.Exec(art.ID, link)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

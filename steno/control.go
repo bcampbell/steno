@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"gopkg.in/qml.v1"
 	"os"
+	"path/filepath"
 	"regexp"
 	"semprini/steno/steno/store"
 	"strings"
@@ -619,4 +620,49 @@ func (ctrl *Control) Classify() {
 // open link in a web browser
 func (ctrl *Control) OpenLink(link string) {
 	openURL(link)
+}
+
+func (ctrl *Control) EmbiggenShortlinks() {
+
+	shortlinkDomainsFile := filepath.Join(ctrl.App.DataPath, "shortlink_domains.txt")
+
+	allArts, err := ctrl.store.AllArts()
+	if err != nil {
+		dbug.Println(err.Error())
+		ctrl.App.SetError(err.Error())
+		return
+	}
+
+	prog := &ctrl.Progress
+	prog.InFlight = true
+	qml.Changed(ctrl, prog)
+	// run as goroutine to prevent gui freezing
+	go func() {
+		defer func() {
+			prog.InFlight = false
+			qml.Changed(ctrl, prog)
+		}()
+		affected, err := embiggenArts(allArts, shortlinkDomainsFile, func(expected int, completed int, status string) {
+			prog.StatusMsg = status
+			qml.Changed(ctrl, prog)
+		})
+		if err != nil {
+			prog.ErrorMsg = err.Error()
+			qml.Changed(ctrl, prog)
+			dbug.Println(err.Error())
+			ctrl.App.SetError(err.Error())
+			return
+		}
+		dbug.Printf("Committing changes to db...\n")
+		err = ctrl.store.UpdateLinks(affected)
+		if err != nil {
+			prog.ErrorMsg = err.Error()
+			qml.Changed(ctrl, prog)
+			dbug.Println(err.Error())
+			ctrl.App.SetError(err.Error())
+			return
+		}
+		dbug.Printf("finished embiggening\n")
+		ctrl.forceArtsRefresh()
+	}()
 }

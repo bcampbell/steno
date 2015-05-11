@@ -141,6 +141,14 @@ ApplicationWindow {
         enabled: app.hasCurrent
     }
     Action {
+        id: embiggenShortLinksAction
+        text: "Embiggen shortlinks..."
+        onTriggered: {
+                app.current().embiggenShortlinks();
+        }
+        enabled: app.hasCurrent
+    }
+    Action {
         id: exportOverallsAction
         //iconSource: "images/fileopen.png"
         text: "Export overall summary csv..."
@@ -205,8 +213,9 @@ ApplicationWindow {
         Menu {
             title: "Tools"
             MenuItem { action: runScriptAction }
-            MenuItem { action: trainAction }
-            MenuItem { action: classifyAction }
+            //MenuItem { action: trainAction }
+            //MenuItem { action: classifyAction }
+            MenuItem { action: embiggenShortLinksAction }
             MenuSeparator { }
             MenuItem { action: exportCSVAction }
             MenuItem { action: exportOverallsAction }
