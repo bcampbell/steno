@@ -149,6 +149,14 @@ ApplicationWindow {
         enabled: app.hasCurrent
     }
     Action {
+        id: tagRetweetsAction
+        text: "Tag all retweets..."
+        onTriggered: {
+                app.current().tagRetweets();
+        }
+        enabled: app.hasCurrent
+    }
+    Action {
         id: exportOverallsAction
         //iconSource: "images/fileopen.png"
         text: "Export overall summary csv..."
@@ -216,6 +224,7 @@ ApplicationWindow {
             //MenuItem { action: trainAction }
             //MenuItem { action: classifyAction }
             MenuItem { action: embiggenShortLinksAction }
+            MenuItem { action: tagRetweetsAction }
             MenuSeparator { }
             MenuItem { action: exportCSVAction }
             MenuItem { action: exportOverallsAction }

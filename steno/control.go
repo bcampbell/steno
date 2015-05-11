@@ -666,3 +666,33 @@ func (ctrl *Control) EmbiggenShortlinks() {
 		ctrl.forceArtsRefresh()
 	}()
 }
+
+func (ctrl *Control) TagRetweets() {
+	allArts, err := ctrl.store.AllArts()
+	if err != nil {
+		dbug.Println(err.Error())
+		ctrl.App.SetError(err.Error())
+		return
+	}
+
+	rts := store.ArtList{}
+	for _, art := range allArts {
+		if strings.Index(art.Content, "RT ") == 0 {
+			rts = append(rts, art)
+		}
+	}
+
+	if len(rts) > 0 {
+		tagList := []string{"rt"}
+		affected, err := ctrl.store.AddTags(rts, tagList)
+		if err != nil {
+			dbug.Printf("AddTags(%q): ERROR: %s\n", tagList, err)
+		} else {
+			dbug.Printf("AddTags(%q): %d affected\n", tagList, len(affected))
+		}
+
+		// rerun the current query
+		ctrl.setQuery(ctrl.Results.Query)
+	}
+
+}
