@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -44,6 +45,53 @@ func (arts ArtList) Subtract(other ArtList) ArtList {
 		}
 	}
 	return out
+}
+
+// Debug helper to gauge memory usage of displayed fields...
+// TODO: missing publication date,twitter-specific fields
+func (arts ArtList) DumpAverages() {
+	if len(arts) == 0 {
+		return
+	}
+	var headlineCnt, pubCnt, sectionCnt, tagsCnt, bylineCnt, urlCnt, kwCnt int
+
+	for _, art := range arts {
+		headlineCnt += len(art.Headline)
+		pubCnt += len(art.Pub)
+		sectionCnt += len(art.Section)
+		tagsCnt += len(art.TagsString())
+		bylineCnt += len(art.BylineString())
+		urlCnt += len(art.URL())
+		kwCnt += len(art.KeywordsString())
+	}
+	n := len(arts)
+	headlineCnt /= n
+	pubCnt /= n
+	sectionCnt /= n
+	tagsCnt /= n
+	bylineCnt /= n
+	urlCnt /= n
+	kwCnt /= n
+
+	fmt.Printf(`-----averages-----
+headline: %d
+pub:      %d
+section:  %d
+tags:     %d
+byline:   %d
+url:      %d
+kw:       %d
+TOTAL:    %d
+`,
+		headlineCnt,
+		pubCnt,
+		sectionCnt,
+		tagsCnt,
+		bylineCnt,
+		urlCnt,
+		kwCnt,
+		headlineCnt+pubCnt+sectionCnt+tagsCnt+bylineCnt+urlCnt+kwCnt)
+
 }
 
 //***************************

@@ -48,6 +48,9 @@ func (res *Results) setArts(arts store.ArtList) {
 		res.facets = append(res.facets, &Facet{txt, cnt})
 	}
 	res.FacetLen = len(res.facets)
+
+	//	arts.DumpAverages()
+
 }
 
 // return terms from current query, for highlighting
