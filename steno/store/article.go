@@ -28,6 +28,8 @@ type Author struct {
 	Twitter string
 }
 
+type ArtID int
+
 /*
 type Keyword struct {
 	Name string
@@ -37,7 +39,7 @@ type Keyword struct {
 
 //
 type Article struct {
-	ID           int // id in local sqlite db
+	ID           ArtID // id in local sqlite db
 	CanonicalURL string
 	URLs         []string
 	Headline     string

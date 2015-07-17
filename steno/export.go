@@ -59,17 +59,20 @@ func exportCSV(arts store.ArtList, out io.Writer) error {
 	}
 
 	// rows
-	for _, art := range arts {
-		row := make([]string, len(fields))
+	/* XYZZY */
+	/*
+		for _, art := range arts {
+			row := make([]string, len(fields))
 
-		for i, fld := range fields {
-			row[i] = getArtField(art, fld)
+			for i, fld := range fields {
+				row[i] = getArtField(art, fld)
+			}
+			err := w.Write(row)
+			if err != nil {
+				return err
+			}
 		}
-		err := w.Write(row)
-		if err != nil {
-			return err
-		}
-	}
+	*/
 	w.Flush()
 
 	return nil

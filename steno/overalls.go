@@ -1,65 +1,66 @@
 package main
 
 import (
-	"encoding/csv"
-	"fmt"
+	//	"encoding/csv"
+	//	"fmt"
 	"io"
 	"semprini/steno/steno/store"
 )
 
-func exportOverallsCSV(arts store.ArtList, out io.Writer) error {
+func exportOverallsCSV(arts []*store.Article, out io.Writer) error {
+	/* XYZZY */
+	/*
+		pubs := arts.Pubs()
+		pubs = append(pubs, "TOTAL")
+		days := arts.Days()
+		days = append(days, "TOTAL")
 
-	pubs := arts.Pubs()
-	pubs = append(pubs, "TOTAL")
-	days := arts.Days()
-	days = append(days, "TOTAL")
+		data := map[string]map[string]int{}
 
-	data := map[string]map[string]int{}
-
-	for _, pub := range pubs {
-		data[pub] = map[string]int{}
-	}
-
-	for _, art := range arts {
-		data[art.Pub][art.Day()]++
-		data["TOTAL"][art.Day()]++
-		data[art.Pub]["TOTAL"]++
-		data["TOTAL"]["TOTAL"]++
-	}
-
-	w := csv.NewWriter(out)
-
-	// header
-	headerRow := make([]string, 1+len(days))
-	headerRow[0] = ""
-	for i, day := range days {
-		if day == "" {
-			day = "<missing>"
+		for _, pub := range pubs {
+			data[pub] = map[string]int{}
 		}
-		headerRow[1+i] = day
-	}
 
-	//fmt.Println(headerRow)
-	err := w.Write(headerRow)
-	if err != nil {
-		return err
-	}
+		for _, art := range arts {
+			data[art.Pub][art.Day()]++
+			data["TOTAL"][art.Day()]++
+			data[art.Pub]["TOTAL"]++
+			data["TOTAL"]["TOTAL"]++
+		}
 
-	// rows
-	for _, pub := range pubs {
-		row := make([]string, 1+len(days))
-		row[0] = pub
+		w := csv.NewWriter(out)
+
+		// header
+		headerRow := make([]string, 1+len(days))
+		headerRow[0] = ""
 		for i, day := range days {
-			v := data[pub][day]
-			row[1+i] = fmt.Sprintf("%d", v)
+			if day == "" {
+				day = "<missing>"
+			}
+			headerRow[1+i] = day
 		}
-		err := w.Write(row)
-		//fmt.Println(row)
+
+		//fmt.Println(headerRow)
+		err := w.Write(headerRow)
 		if err != nil {
 			return err
 		}
-	}
-	w.Flush()
 
+		// rows
+		for _, pub := range pubs {
+			row := make([]string, 1+len(days))
+			row[0] = pub
+			for i, day := range days {
+				v := data[pub][day]
+				row[1+i] = fmt.Sprintf("%d", v)
+			}
+			err := w.Write(row)
+			//fmt.Println(row)
+			if err != nil {
+				return err
+			}
+		}
+		w.Flush()
+	*/
 	return nil
 }

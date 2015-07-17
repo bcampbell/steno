@@ -31,6 +31,7 @@ func isShortlink(link string) bool {
 // a) domain is on our list
 // b) entire URL < 30 chars
 func embiggenArts(arts store.ArtList, shortLinkDomainsFile string, progress ProgressFunc) (store.ArtList, error) {
+
 	numWorkers := 32
 	/*
 		// read in list of shortlink domains
@@ -60,19 +61,22 @@ func embiggenArts(arts store.ArtList, shortLinkDomainsFile string, progress Prog
 	totalShortLinks := 0
 
 	affected := store.ArtList{}
-	for _, art := range arts {
-		nShortLinks := 0
-		for _, link := range art.Links {
-			if isShortlink(link) {
-				nShortLinks++
+	/* XYZZY */
+	/*
+		for _, art := range arts {
+			nShortLinks := 0
+			for _, link := range art.Links {
+				if isShortlink(link) {
+					nShortLinks++
+				}
+			}
+
+			if nShortLinks > 0 {
+				totalShortLinks += nShortLinks
+				affected = append(affected, art)
 			}
 		}
-
-		if nShortLinks > 0 {
-			totalShortLinks += nShortLinks
-			affected = append(affected, art)
-		}
-	}
+	*/
 
 	dbug.Printf("%s shortlinks to resolve\n", totalShortLinks)
 
@@ -113,17 +117,19 @@ func embiggenArts(arts store.ArtList, shortLinkDomainsFile string, progress Prog
 	}
 
 	// do it!
-	for _, art := range affected {
-		queue <- art
-		if progress != nil {
-			nOK := atomic.LoadInt64(&numLinksResolved)
-			nErr := atomic.LoadInt64(&numErrors)
-			progress(int(totalShortLinks), int(nOK+nErr), fmt.Sprintf("Embiggening shortlinks: %d/%d (%d ok, %d failed)", nOK+nErr, totalShortLinks, nOK, nErr))
+	/* XYZZY */
+	/*
+		for _, art := range affected {
+			queue <- art
+			if progress != nil {
+				nOK := atomic.LoadInt64(&numLinksResolved)
+				nErr := atomic.LoadInt64(&numErrors)
+				progress(int(totalShortLinks), int(nOK+nErr), fmt.Sprintf("Embiggening shortlinks: %d/%d (%d ok, %d failed)", nOK+nErr, totalShortLinks, nOK, nErr))
+			}
 		}
-	}
+	*/
 	close(queue)
 	wg.Wait()
-
 	return affected, nil
 }
 

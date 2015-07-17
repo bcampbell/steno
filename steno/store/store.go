@@ -3,11 +3,13 @@ package store
 import (
 	"database/sql"
 	"fmt"
+	"sort"
 	//"github.com/bcampbell/arts/arts"
 	"github.com/bcampbell/badger"
 	"github.com/bcampbell/badger/query"
 	_ "github.com/mattn/go-sqlite3"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -45,7 +47,8 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 		return nil, err
 	}
 
-	arts, err := store.readAllArts()
+	// fetch ALL articles
+	arts, err := store.Fetch()
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +60,8 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 	store.coll.SetWholeWordField("pub")
 	store.coll.SetWholeWordField("section")
 	store.coll.SetWholeWordField("keywords")
+
+	store.dbug.Printf("Indexing %d articles\n", len(arts))
 
 	for _, art := range arts {
 		store.coll.Put(art)
@@ -309,7 +314,7 @@ func (store *Store) cleanDanglingData() error {
 func (store *Store) readAllArts() (ArtList, error) {
 	db := store.db
 
-	tab := map[int]*Article{}
+	tab := map[ArtID]*Article{}
 
 	// now grab all the articles!
 	rows, err := db.Query("SELECT id,canonical_url,headline,content,published,updated,pub,section,retweet_count,favourite_count FROM article")
@@ -337,7 +342,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 	}
 
 	for rows.Next() {
-		var artID int
+		var artID ArtID
 		var u string
 		err = rows.Scan(&artID, &u)
 		if err != nil {
@@ -358,7 +363,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 	}
 
 	for rows.Next() {
-		var artID int
+		var artID ArtID
 		// TODO: restore use of full Keyword struct
 		var name string
 		var u string
@@ -381,7 +386,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 	}
 
 	for rows.Next() {
-		var artID int
+		var artID ArtID
 		var link string
 		err = rows.Scan(&artID, &link)
 		if err != nil {
@@ -402,7 +407,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 	}
 
 	for rows.Next() {
-		var artID int
+		var artID ArtID
 		var tag string
 		err = rows.Scan(&artID, &tag)
 		if err != nil {
@@ -424,7 +429,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 	}
 
 	for rows.Next() {
-		var artID int
+		var artID ArtID
 		var name string
 		err = rows.Scan(&artID, &name)
 		if err != nil {
@@ -455,7 +460,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 		// evil hack (TODO: less evil, please)
 		art.Byline = art.BylineString()
 
-		out = append(out, art)
+		out = append(out, art.ID)
 	}
 	return out, nil
 }
@@ -463,7 +468,7 @@ func (store *Store) readAllArts() (ArtList, error) {
 //standin - return all articles
 func (store *Store) AllArts() (ArtList, error) {
 	q := badger.NewAllQuery()
-	var arts ArtList
+	var arts []*Article
 	store.coll.Find(q, &arts)
 
 	publishedDesc := func(a1, a2 *Article) bool {
@@ -471,10 +476,15 @@ func (store *Store) AllArts() (ArtList, error) {
 	}
 	By(publishedDesc).Sort(arts)
 
-	return arts, nil
+	out := make(ArtList, len(arts))
+	for idx, art := range arts {
+		out[idx] = art.ID
+	}
+	return out, nil
 }
 
 // search performs a search and returns the results
+// XYZZY: add sort criteria
 func (store *Store) Search(queryString string) (ArtList, error) {
 	q, err := query.Parse(queryString, store.coll.ValidFields(), defaultField)
 	if err != nil {
@@ -485,7 +495,7 @@ func (store *Store) Search(queryString string) (ArtList, error) {
 		return store.AllArts()
 	}
 
-	var arts ArtList
+	var arts []*Article
 	store.coll.Find(q, &arts)
 
 	publishedDesc := func(a1, a2 *Article) bool {
@@ -493,7 +503,14 @@ func (store *Store) Search(queryString string) (ArtList, error) {
 	}
 	By(publishedDesc).Sort(arts)
 
-	return arts, nil
+	out := make(ArtList, len(arts))
+	for idx, art := range arts {
+		out[idx] = art.ID
+	}
+
+	store.dbug.Printf("Search(%s): %d matches\n", queryString, len(out))
+
+	return out, nil
 }
 
 func fileNameFromQuery(q string) string {
@@ -530,14 +547,14 @@ func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 	}
 	defer insStmt.Close()
 
-	for _, art := range arts {
+	for _, artID := range arts {
 		for _, tag := range tags {
 			tag = strings.ToLower(tag)
-			_, err = delStmt.Exec(art.ID, tag)
+			_, err = delStmt.Exec(artID, tag)
 			if err != nil {
 				return nil, err
 			}
-			_, err = insStmt.Exec(art.ID, tag)
+			_, err = insStmt.Exec(artID, tag)
 			if err != nil {
 				return nil, err
 			}
@@ -550,18 +567,21 @@ func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 
 	// apply to index
 	affected := ArtList{}
-	for _, art := range arts {
-		modified := false
-		for _, tag := range tags {
-			tag = strings.ToLower(tag)
-			if art.AddTag(tag) {
-				modified = true
+	/* XYZZY */
+	/*
+		for _, art := range arts {
+			modified := false
+			for _, tag := range tags {
+				tag = strings.ToLower(tag)
+				if art.AddTag(tag) {
+					modified = true
+				}
+			}
+			if modified {
+				affected = append(affected, art)
 			}
 		}
-		if modified {
-			affected = append(affected, art)
-		}
-	}
+	*/
 
 	return affected, nil
 }
@@ -587,7 +607,7 @@ func (store *Store) RemoveTags(arts ArtList, tags []string) (ArtList, error) {
 	for _, art := range arts {
 		for _, tag := range tags {
 			tag = strings.ToLower(tag)
-			_, err = delStmt.Exec(art.ID, tag)
+			_, err = delStmt.Exec(art, tag)
 			if err != nil {
 				return nil, err
 			}
@@ -599,19 +619,23 @@ func (store *Store) RemoveTags(arts ArtList, tags []string) (ArtList, error) {
 	}
 
 	// apply to index
+
 	affected := ArtList{}
-	for _, art := range arts {
-		modified := false
-		for _, tag := range tags {
-			tag = strings.ToLower(tag)
-			if art.RemoveTag(tag) {
-				modified = true
+	/* XYZZY */
+	/*
+		for _, art := range arts {
+			modified := false
+			for _, tag := range tags {
+				tag = strings.ToLower(tag)
+				if art.RemoveTag(tag) {
+					modified = true
+				}
+			}
+			if modified {
+				affected = append(affected, art)
 			}
 		}
-		if modified {
-			affected = append(affected, art)
-		}
-	}
+	*/
 
 	return affected, nil
 }
@@ -678,34 +702,34 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 	}
 	defer delArtStmt.Close()
 
-	for _, art := range arts {
+	for _, artID := range arts {
 
-		_, err = delTagsStmt.Exec(art.ID)
+		_, err = delTagsStmt.Exec(artID)
 		if err != nil {
 			return 0, err
 		}
 
-		_, err = delURLsStmt.Exec(art.ID)
+		_, err = delURLsStmt.Exec(artID)
 		if err != nil {
 			return 0, err
 		}
 
-		_, err = delLinksStmt.Exec(art.ID)
+		_, err = delLinksStmt.Exec(artID)
 		if err != nil {
 			return 0, err
 		}
 
-		_, err = delKeywordsStmt.Exec(art.ID)
+		_, err = delKeywordsStmt.Exec(artID)
 		if err != nil {
 			return 0, err
 		}
 
-		_, err = delAuthorsStmt.Exec(art.ID)
+		_, err = delAuthorsStmt.Exec(artID)
 		if err != nil {
 			return 0, err
 		}
 
-		r, err := delArtStmt.Exec(art.ID)
+		r, err := delArtStmt.Exec(artID)
 		if err != nil {
 			return 0, err
 		}
@@ -718,9 +742,12 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 	}
 
 	// now update the index
-	for _, art := range arts {
-		store.coll.Remove(art)
-	}
+	/* XYZZY */
+	/*
+		for _, art := range arts {
+			store.coll.Remove(art)
+		}
+	*/
 	return affected, nil
 }
 
@@ -744,7 +771,7 @@ func getPublications() ([]string, error) {
 }
 */
 
-func (store *Store) FindArt(urls []string) (int, error) {
+func (store *Store) FindArt(urls []string) (ArtID, error) {
 	placeholders := make([]string, len(urls))
 	params := make([]interface{}, len(urls))
 	for i, _ := range urls {
@@ -753,7 +780,7 @@ func (store *Store) FindArt(urls []string) (int, error) {
 	}
 	foo := fmt.Sprintf(`SELECT article_id FROM article_url WHERE url IN(%s)`, strings.Join(placeholders, ","))
 
-	var artID int
+	var artID ArtID
 	err := store.db.QueryRow(foo, params...).Scan(&artID)
 	if err == sql.ErrNoRows {
 		return 0, nil // article not found
@@ -809,7 +836,7 @@ func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 	}
 
 	if artID, err := result.LastInsertId(); err == nil {
-		art.ID = int(artID)
+		art.ID = ArtID(artID)
 	} else {
 		return err
 	}
@@ -890,43 +917,253 @@ func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 
 // HACK - update all the links for the given articles
 func (store *Store) UpdateLinks(arts ArtList) error {
-	tx, err := store.db.Begin()
-	if err != nil {
-		return err
-	}
-
-	delStmt, err := tx.Prepare("DELETE FROM article_link WHERE article_id=?")
-	if err != nil {
-		return err
-	}
-	defer delStmt.Close()
-
-	insStmt, err := tx.Prepare("INSERT INTO article_link(article_id,url) VALUES(?,?)")
-	if err != nil {
-		return err
-	}
-	defer insStmt.Close()
-
-	for _, art := range arts {
-		// zap old links
-		_, err = delStmt.Exec(art.ID)
+	/* XYZZY */
+	return nil
+	/*
+		tx, err := store.db.Begin()
 		if err != nil {
 			return err
 		}
 
-		// add new links
-		for _, link := range art.Links {
-			_, err = insStmt.Exec(art.ID, link)
+		delStmt, err := tx.Prepare("DELETE FROM article_link WHERE article_id=?")
+		if err != nil {
+			return err
+		}
+		defer delStmt.Close()
+
+		insStmt, err := tx.Prepare("INSERT INTO article_link(article_id,url) VALUES(?,?)")
+		if err != nil {
+			return err
+		}
+		defer insStmt.Close()
+
+		for _, art := range arts {
+			// zap old links
+			_, err = delStmt.Exec(art.ID)
 			if err != nil {
 				return err
 			}
+
+			// add new links
+			for _, link := range art.Links {
+				_, err = insStmt.Exec(art.ID, link)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			return err
+		}
+
+		return nil
+	*/
+}
+
+func idList(ids []ArtID) string {
+	frags := make([]string, len(ids))
+	for idx, id := range ids {
+		frags[idx] = strconv.Itoa(int(id))
+	}
+	return strings.Join(frags, ",")
+
+}
+
+// read in articles from DB. Empty artIDs means fetch _all_ arts :-)
+func (store *Store) Fetch(artIDs ...ArtID) ([]*Article, error) {
+	db := store.db
+
+	tab := map[ArtID]*Article{}
+
+	var where string
+	if len(artIDs) > 0 {
+		where = " WHERE id IN (" + idList(artIDs) + ")"
+	}
+	// now grab all the articles!
+	rows, err := db.Query(`SELECT id,canonical_url,headline,content,published,updated,pub,section,retweet_count,favourite_count FROM article` + where)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		a := &Article{}
+		err = rows.Scan(&a.ID, &a.CanonicalURL, &a.Headline, &a.Content, &a.Published, &a.Updated, &a.Pub, &a.Section, &a.Retweets, &a.Favourites)
+		if err != nil {
+			return nil, err
+		}
+		tab[a.ID] = a
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(artIDs) > 0 {
+		// all auxillary tables indexed by article_id
+		where = " WHERE article_id IN (" + idList(artIDs) + ")"
+	}
+
+	// URLs
+	rows, err = db.Query("SELECT article_id,url FROM article_url" + where)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID ArtID
+		var u string
+		err = rows.Scan(&artID, &u)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.URLs = append(art.URLs, u)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// Keywords
+	rows, err = db.Query("SELECT article_id,name,url FROM article_keyword" + where)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID ArtID
+		// TODO: restore use of full Keyword struct
+		var name string
+		var u string
+		err = rows.Scan(&artID, &name, &u)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.Keywords = append(art.Keywords, name)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// Links
+	rows, err = db.Query("SELECT article_id,url FROM article_link" + where)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID ArtID
+		var link string
+		err = rows.Scan(&artID, &link)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.Links = append(art.Links, link)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// tags
+	rows, err = db.Query("SELECT article_id,tag FROM article_tag" + where)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID ArtID
+		var tag string
+		err = rows.Scan(&artID, &tag)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.Tags = append(art.Tags, tag)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// authors
+	danglingAuthorCnt := 0
+	rows, err = db.Query("SELECT article_id,name FROM article_author" + where)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var artID ArtID
+		var name string
+		err = rows.Scan(&artID, &name)
+		if err != nil {
+			return nil, err
+		}
+		art, got := tab[artID]
+		if got {
+			art.Authors = append(art.Authors, Author{Name: name})
+		} else {
+			danglingAuthorCnt++
+
 		}
 	}
-
-	err = tx.Commit()
+	err = rows.Err()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	if danglingAuthorCnt > 0 {
+		store.dbug.Printf("WARNING: found %d dangling authors from deleted articles.\n", danglingAuthorCnt)
+		store.dbug.Printf("not a big deal, but db can be repaired manually via sql:\n")
+		store.dbug.Printf("  DELETE FROM article_author WHERE article_id NOT IN (SELECT id FROM article);\n")
+	}
+
+	// all done
+	out := []*Article{}
+	for _, art := range tab {
+		// evil hack (TODO: less evil, please)
+		art.Byline = art.BylineString()
+
+		out = append(out, art)
+	}
+	return out, nil
+}
+
+//***************************
+// support for sorting Articles
+
+type By func(p1, p2 *Article) bool
+
+func (by By) Sort(arts []*Article) {
+	ps := &artSorter{
+		arts: arts,
+		by:   by,
+	}
+	sort.Sort(ps)
+}
+
+type artSorter struct {
+	arts []*Article
+	by   func(p1, p2 *Article) bool
+}
+
+// Len is part of sort.Interface.
+func (s *artSorter) Len() int {
+	return len(s.arts)
+}
+
+// Swap is part of sort.Interface.
+func (s *artSorter) Swap(i, j int) {
+	s.arts[i], s.arts[j] = s.arts[j], s.arts[i]
+}
+
+// Less is part of sort.Interface. It is implemented by calling the "by" closure in the sorter.
+func (s *artSorter) Less(i, j int) bool {
+	return s.by(s.arts[i], s.arts[j])
 }

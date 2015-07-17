@@ -116,8 +116,9 @@ func (ctrl *Control) SetViewMode(mode string) {
 }
 
 func (ctrl *Control) ApplySorting(sortColumn string, sortOrder int) {
-	ctrl.Results = ctrl.Results.Sort(sortColumn, sortOrder)
-	qml.Changed(ctrl, &ctrl.Results)
+	// XYZZY - implement sorting again
+	//	ctrl.Results = ctrl.Results.Sort(sortColumn, sortOrder)
+	//	qml.Changed(ctrl, &ctrl.Results)
 }
 
 // TODO: provide a function to validate query...
@@ -214,21 +215,23 @@ func (ctrl *Control) forceArtsRefresh() {
 }
 
 func (ctrl *Control) ExportOveralls(outFile string) {
+	/* XYZZY */
+	/*
+		out, err := os.Create(outFile)
 
-	out, err := os.Create(outFile)
-
-	if err != nil {
-		// TODO: error on gui...
-		dbug.Printf("ERROR: %s", err)
-		return
-	}
-	err = exportOverallsCSV(ctrl.Results.arts, out)
-	if err != nil {
-		// TODO: error on gui...
-		dbug.Printf("ERROR exporting overalls: %s", err)
-		return
-	}
-	dbug.Printf("Wrote to %s\n", outFile)
+		if err != nil {
+			// TODO: error on gui...
+			dbug.Printf("ERROR: %s", err)
+			return
+		}
+		err = exportOverallsCSV(ctrl.Results.arts, out)
+		if err != nil {
+			// TODO: error on gui...
+			dbug.Printf("ERROR exporting overalls: %s", err)
+			return
+		}
+		dbug.Printf("Wrote to %s\n", outFile)
+	*/
 }
 
 func (ctrl *Control) ExportCSV(outFile string) {
@@ -422,14 +425,6 @@ func (ctrl *Control) RunScript(scriptIdx int) {
 	}()
 }
 
-func (ctrl *Control) Train() {
-	Train(ctrl.Results.arts)
-}
-
-func (ctrl *Control) Classify() {
-	Classify(ctrl.Results.arts, ctrl.store)
-}
-
 // open link in a web browser
 func (ctrl *Control) OpenLink(link string) {
 	openURL(link)
@@ -481,31 +476,33 @@ func (ctrl *Control) EmbiggenShortlinks() {
 }
 
 func (ctrl *Control) TagRetweets() {
-	allArts, err := ctrl.store.AllArts()
-	if err != nil {
-		dbug.Println(err.Error())
-		ctrl.App.SetError(err.Error())
-		return
-	}
-
-	rts := store.ArtList{}
-	for _, art := range allArts {
-		if strings.Index(art.Content, "RT ") == 0 {
-			rts = append(rts, art)
-		}
-	}
-
-	if len(rts) > 0 {
-		tagList := []string{"rt"}
-		affected, err := ctrl.store.AddTags(rts, tagList)
+	/* XYZZY */
+	/*
+		allArts, err := ctrl.store.AllArts()
 		if err != nil {
-			dbug.Printf("AddTags(%q): ERROR: %s\n", tagList, err)
-		} else {
-			dbug.Printf("AddTags(%q): %d affected\n", tagList, len(affected))
+			dbug.Println(err.Error())
+			ctrl.App.SetError(err.Error())
+			return
 		}
 
-		// rerun the current query
-		ctrl.setQuery(ctrl.Results.Query)
-	}
+		rts := store.ArtList{}
+		for _, art := range allArts {
+			if strings.Index(art.Content, "RT ") == 0 {
+				rts = append(rts, art)
+			}
+		}
 
+		if len(rts) > 0 {
+			tagList := []string{"rt"}
+			affected, err := ctrl.store.AddTags(rts, tagList)
+			if err != nil {
+				dbug.Printf("AddTags(%q): ERROR: %s\n", tagList, err)
+			} else {
+				dbug.Printf("AddTags(%q): %d affected\n", tagList, len(affected))
+			}
+
+			// rerun the current query
+			ctrl.setQuery(ctrl.Results.Query)
+		}
+	*/
 }

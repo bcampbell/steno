@@ -14,6 +14,10 @@ type Results struct {
 
 	FacetLen int
 	facets   []*Facet
+
+	db *store.Store
+	// cheesy-ass cache. Cacheing should probably be done inside store instead...
+	hydrated map[store.ArtID]*store.Article
 }
 
 func NewResults(db *store.Store, query string) (*Results, error) {
@@ -29,7 +33,11 @@ func NewResults(db *store.Store, query string) (*Results, error) {
 		return nil, err
 	}
 
-	res := Results{Query: query}
+	res := Results{
+		Query:    query,
+		db:       db,
+		hydrated: map[store.ArtID]*store.Article{},
+	}
 	res.setArts(arts)
 	return &res, nil
 }
@@ -38,17 +46,19 @@ func (res *Results) setArts(arts store.ArtList) {
 	res.arts = arts
 	res.Len = len(res.arts)
 
-	// calc facets
-	tab := map[string]int{}
-	for _, art := range res.arts {
-		tab[art.Pub]++
-	}
-	res.facets = []*Facet{}
-	for txt, cnt := range tab {
-		res.facets = append(res.facets, &Facet{txt, cnt})
-	}
-	res.FacetLen = len(res.facets)
-
+	/* XYZZY */
+	/*
+		// calc facets
+		tab := map[string]int{}
+		for _, art := range res.arts {
+			tab[art.Pub]++
+		}
+		res.facets = []*Facet{}
+		for txt, cnt := range tab {
+			res.facets = append(res.facets, &Facet{txt, cnt})
+		}
+		res.FacetLen = len(res.facets)
+	*/
 	//	arts.DumpAverages()
 
 }
@@ -107,15 +117,31 @@ func (res *Results) FindReverse(artIdx int, needle string) int {
 }
 
 func (res *Results) Art(idx int) *store.Article {
-	if idx >= 0 && idx < len(res.arts) {
-		return res.arts[idx]
+	if idx < 0 || idx >= len(res.arts) {
+		// sometimes get here... seems to be tableview doing one last refresh on
+		// old delegates before zapping/recycling them
+		// TODO: investigate!
+		//	dbug.Printf("bad idx: %d\n", idx)
+		return &store.Article{Headline: fmt.Sprintf("<BAD> %d", idx)}
 	}
 
-	// sometimes get here... seems to be tableview doing one last refresh on
-	// old delegates before zapping/recycling them
-	// TODO: investigate!
-	//	dbug.Printf("bad idx: %d\n", idx)
-	return &store.Article{Headline: fmt.Sprintf("<BAD> %d", idx)}
+	artID := res.arts[idx]
+	art, got := res.hydrated[artID]
+	if got {
+		return art
+	}
+	// not in cache - fetch it!
+
+	dbug.Printf("fetch art %d\n", artID)
+	fetchedArts, err := res.db.Fetch(artID)
+	if err != nil {
+		return &store.Article{Headline: fmt.Sprintf("<BAD> %d", idx)}
+	}
+
+	art = fetchedArts[0]
+	// cache it
+	res.hydrated[artID] = art
+	return art
 }
 
 func (res *Results) Facet(idx int) *Facet {
@@ -124,8 +150,8 @@ func (res *Results) Facet(idx int) *Facet {
 
 // returns new Results
 // order: 1: ascending, 0: descending
+/*
 func (res *Results) Sort(sortColumn string, sortOrder int) *Results {
-	//dbug.Printf("new sorting: %d %d\n", sortColumn, sortOrder)
 
 	sorted := make(store.ArtList, len(res.arts))
 	copy(sorted, res.arts)
@@ -195,3 +221,4 @@ func (res *Results) Sort(sortColumn string, sortOrder int) *Results {
 		FacetLen: res.FacetLen,
 	}
 }
+*/
