@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sort"
 	//"github.com/bcampbell/arts/arts"
-	"github.com/bcampbell/badger"
-	"github.com/bcampbell/badger/query"
 	_ "github.com/mattn/go-sqlite3"
 	"regexp"
 	"strconv"
@@ -20,18 +18,26 @@ type Logger interface {
 //
 var defaultField string = "content"
 
+type indexer interface {
+	add(...*Article) error
+	search(string, string) (ArtList, error)
+	// addTags, removeTags, delete
+}
+
 // Store is the core representation of our data set.
 // Provides base methods for querying, tagging, whatever
 type Store struct {
 	db   *sql.DB
-	coll *badger.Collection
 	dbug Logger
+	idx  indexer
 }
 
 func New(dbFile string, dbug Logger) (*Store, error) {
 	store := &Store{dbug: dbug}
 
 	var err error
+
+	//
 	store.db, err = sql.Open("sqlite3", dbFile)
 	if err != nil {
 		return nil, err
@@ -47,31 +53,31 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 		return nil, err
 	}
 
-	// fetch ALL articles
+	// set up indexer
+	store.idx, err = newBleveIndex(store.dbug)
+	if err != nil {
+		return nil, err
+	}
+
+	// index all articles
 	arts, err := store.Fetch()
 	if err != nil {
 		return nil, err
 	}
-	store.coll = badger.NewCollection(&Article{})
-	store.coll.SetWholeWordField("content")
-	store.coll.SetWholeWordField("headline")
-	store.coll.SetWholeWordField("tags")
-	store.coll.SetWholeWordField("byline")
-	store.coll.SetWholeWordField("pub")
-	store.coll.SetWholeWordField("section")
-	store.coll.SetWholeWordField("keywords")
-
 	store.dbug.Printf("Indexing %d articles\n", len(arts))
-
-	for _, art := range arts {
-		store.coll.Put(art)
+	err = store.idx.add(arts...)
+	if err != nil {
+		return nil, err
 	}
+
+	//
+
 	return store, nil
 }
 
 func DummyStore() *Store {
 	store := &Store{}
-	store.coll = badger.NewCollection(&Article{})
+	store.idx = newBadgerIndex()
 	return store
 }
 
@@ -81,11 +87,19 @@ func (store *Store) Close() {
 		store.db.Close()
 		store.db = nil
 	}
-	store.coll = badger.NewCollection(&Article{})
+	store.idx = newBadgerIndex()
 }
 
 func (store *Store) TotalArts() int {
-	return store.coll.Count()
+	var cnt int
+	var err error
+	err = store.db.QueryRow(`SELECT COUNT(*) FROM article`).Scan(&cnt)
+	if err != nil {
+		store.dbug.Printf("TotalArts() failed: %s\n", err)
+		return 0
+	}
+
+	return cnt
 }
 
 func (store *Store) schemaVersion() (int, error) {
@@ -467,47 +481,17 @@ func (store *Store) readAllArts() (ArtList, error) {
 
 //standin - return all articles
 func (store *Store) AllArts() (ArtList, error) {
-	q := badger.NewAllQuery()
-	var arts []*Article
-	store.coll.Find(q, &arts)
-
-	publishedDesc := func(a1, a2 *Article) bool {
-		return a1.Published > a2.Published
-	}
-	By(publishedDesc).Sort(arts)
-
-	out := make(ArtList, len(arts))
-	for idx, art := range arts {
-		out[idx] = art.ID
-	}
-	return out, nil
+	return store.Search("")
 }
 
 // search performs a search and returns the results
 // XYZZY: add sort criteria
 func (store *Store) Search(queryString string) (ArtList, error) {
-	q, err := query.Parse(queryString, store.coll.ValidFields(), defaultField)
+	out, err := store.idx.search(queryString, "")
 	if err != nil {
+		store.dbug.Printf("Search(%s) error: %s\n", queryString, err)
 		return nil, err
 	}
-	// TODO: fix badger so it's not so silly!
-	if q == nil {
-		return store.AllArts()
-	}
-
-	var arts []*Article
-	store.coll.Find(q, &arts)
-
-	publishedDesc := func(a1, a2 *Article) bool {
-		return a1.Published > a2.Published
-	}
-	By(publishedDesc).Sort(arts)
-
-	out := make(ArtList, len(arts))
-	for idx, art := range arts {
-		out[idx] = art.ID
-	}
-
 	store.dbug.Printf("Search(%s): %d matches\n", queryString, len(out))
 
 	return out, nil
@@ -807,6 +791,12 @@ func (store *Store) Stash(arts []*Article) error {
 			break
 		}
 	}
+
+	if err == nil {
+		// update the index
+		err = store.idx.add(arts...)
+	}
+
 	if err == nil {
 		err = tx.Commit()
 	} else {
@@ -908,9 +898,6 @@ func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 			return err
 		}
 	}
-
-	// done.
-	store.coll.Put(art)
 
 	return nil
 }
