@@ -481,12 +481,35 @@ func (store *Store) readAllArts() (ArtList, error) {
 
 //standin - return all articles
 func (store *Store) AllArts() (ArtList, error) {
-	return store.Search("")
+
+	rows, err := store.db.Query("SELECT id FROM article")
+	if err != nil {
+		return nil, err
+	}
+	out := make(ArtList, 0, 2000)
+	for rows.Next() {
+		var artID ArtID
+		err = rows.Scan(&artID)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, artID)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 // search performs a search and returns the results
 // XYZZY: add sort criteria
 func (store *Store) Search(queryString string) (ArtList, error) {
+	// cheesy-ass hackery
+	if queryString == "" {
+		return store.AllArts()
+	}
+
 	out, err := store.idx.search(queryString, "")
 	if err != nil {
 		store.dbug.Printf("Search(%s) error: %s\n", queryString, err)
