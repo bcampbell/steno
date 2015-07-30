@@ -6,6 +6,7 @@ import (
 	"sort"
 	//"github.com/bcampbell/arts/arts"
 	_ "github.com/mattn/go-sqlite3"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -53,21 +54,36 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 		return nil, err
 	}
 
-	// set up indexer
-	store.idx, err = newBleveIndex(store.dbug)
-	if err != nil {
-		return nil, err
-	}
+	indexDir := dbFile + ".bleve"
+	fi, err := os.Stat(indexDir)
+	if os.IsNotExist(err) {
+		store.dbug.Printf("Create new index from scratch\n")
+		// new indexer
+		store.idx, err = newBleveIndex(store.dbug, indexDir)
+		if err != nil {
+			return nil, err
+		}
 
-	// index all articles
-	arts, err := store.Fetch()
-	if err != nil {
-		return nil, err
-	}
-	store.dbug.Printf("Indexing %d articles\n", len(arts))
-	err = store.idx.add(arts...)
-	if err != nil {
-		return nil, err
+		// index all articles
+		arts, err := store.Fetch()
+		if err != nil {
+			return nil, err
+		}
+		store.dbug.Printf("Indexing %d articles\n", len(arts))
+		err = store.idx.add(arts...)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		store.dbug.Printf("Open existing index %s\n", indexDir)
+		// open existing indexer
+		if !fi.IsDir() {
+			return nil, fmt.Errorf("expected %s to be a directory", indexDir)
+		}
+		store.idx, err = openBleveIndex(store.dbug, indexDir)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %s", indexDir, err)
+		}
 	}
 
 	//
