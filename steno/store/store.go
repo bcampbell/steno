@@ -20,9 +20,10 @@ type Logger interface {
 var defaultField string = "content"
 
 type indexer interface {
-	add(...*Article) error
+	// add or update articles
+	index(...*Article) error
+	zap(...ArtID) error
 	search(string, string) (ArtList, error)
-	// addTags, removeTags, delete
 }
 
 // Store is the core representation of our data set.
@@ -70,7 +71,7 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 			return nil, err
 		}
 		store.dbug.Printf("Indexing %d articles\n", len(arts))
-		err = store.idx.add(arts...)
+		err = store.idx.index(arts...)
 		if err != nil {
 			return nil, err
 		}
@@ -589,22 +590,18 @@ func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 	}
 
 	// apply to index
-	affected := ArtList{}
-	/* XYZZY */
-	/*
-		for _, art := range arts {
-			modified := false
-			for _, tag := range tags {
-				tag = strings.ToLower(tag)
-				if art.AddTag(tag) {
-					modified = true
-				}
-			}
-			if modified {
-				affected = append(affected, art)
-			}
-		}
-	*/
+	affected := arts
+
+	// a bit cumbersome, but bleve has no way to update select fields?
+	fullArts, err := store.Fetch(affected...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = store.idx.index(fullArts...)
+	if err != nil {
+		return nil, err
+	}
 
 	return affected, nil
 }
@@ -643,7 +640,18 @@ func (store *Store) RemoveTags(arts ArtList, tags []string) (ArtList, error) {
 
 	// apply to index
 
-	affected := ArtList{}
+	affected := arts
+
+	// a bit cumbersome, but bleve has no way to update select fields?
+	fullArts, err := store.Fetch(affected...)
+	if err != nil {
+		return nil, err
+	}
+
+	err = store.idx.index(fullArts...)
+	if err != nil {
+		return nil, err
+	}
 	/* XYZZY */
 	/*
 		for _, art := range arts {
@@ -765,12 +773,8 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 	}
 
 	// now update the index
-	/* XYZZY */
-	/*
-		for _, art := range arts {
-			store.coll.Remove(art)
-		}
-	*/
+	store.idx.zap(arts...)
+
 	return affected, nil
 }
 
@@ -833,7 +837,7 @@ func (store *Store) Stash(arts []*Article) error {
 
 	if err == nil {
 		// update the index
-		err = store.idx.add(arts...)
+		err = store.idx.index(arts...)
 	}
 
 	if err == nil {

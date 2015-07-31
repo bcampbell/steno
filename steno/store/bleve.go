@@ -1,8 +1,6 @@
 package store
 
 import (
-	"fmt"
-	//"github.com/bcampbell/arts/arts"
 	"github.com/blevesearch/bleve"
 	"strconv"
 )
@@ -27,8 +25,8 @@ type bleveArt struct {
 }
 
 type bleveIndex struct {
-	index bleve.Index
-	dbug  Logger
+	idx  bleve.Index
+	dbug Logger
 }
 
 func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
@@ -66,8 +64,8 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 	}
 
 	idx := &bleveIndex{
-		index: index,
-		dbug:  dbug}
+		idx:  index,
+		dbug: dbug}
 
 	/*
 		idx.coll.SetWholeWordField("content")
@@ -88,15 +86,15 @@ func openBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 	}
 
 	idx := &bleveIndex{
-		index: index,
-		dbug:  dbug}
+		idx:  index,
+		dbug: dbug}
 
 	return idx, nil
 }
 
-func (idx *bleveIndex) add(srcArts ...*Article) error {
-	fmt.Printf("start bleve indexing...\n")
-	batch := idx.index.NewBatch()
+func (idx *bleveIndex) index(srcArts ...*Article) error {
+	idx.dbug.Printf("bleve: indexing %d articles\n", len(srcArts))
+	batch := idx.idx.NewBatch()
 	for _, src := range srcArts {
 		artID := strconv.Itoa(int(src.ID))
 		art := bleveArt{
@@ -116,9 +114,9 @@ func (idx *bleveIndex) add(srcArts ...*Article) error {
 
 		batch.Index(artID, art)
 	}
-	fmt.Printf("committing...\n")
-	idx.index.Batch(batch)
-	fmt.Printf("done bleve indexing.\n")
+	idx.dbug.Printf("bleve: committing...\n")
+	idx.idx.Batch(batch)
+	idx.dbug.Printf("bleve: done indexing\n")
 	return nil
 }
 
@@ -129,7 +127,7 @@ func (idx *bleveIndex) search(queryString string, order string) (ArtList, error)
 	q := bleve.NewQueryStringQuery(queryString)
 	// TODO: improve upon kludgy max size
 	req := bleve.NewSearchRequestOptions(q, 1000000, 0, false)
-	results, err := idx.index.Search(req)
+	results, err := idx.idx.Search(req)
 	if err != nil {
 		return ArtList{}, err
 	}
@@ -146,4 +144,17 @@ func (idx *bleveIndex) search(queryString string, order string) (ArtList, error)
 		out[idx] = ArtID(id)
 	}
 	return out, nil
+}
+
+func (idx *bleveIndex) zap(theDoomed ...ArtID) error {
+	idx.dbug.Printf("bleve: delete %d articles\n", len(theDoomed))
+	batch := idx.idx.NewBatch()
+	for _, id := range theDoomed {
+		artIDStr := strconv.Itoa(int(id))
+		batch.Delete(artIDStr)
+	}
+	idx.dbug.Printf("bleve: committing...\n")
+	idx.idx.Batch(batch)
+	idx.dbug.Printf("bleve: done deleting\n")
+	return nil
 }

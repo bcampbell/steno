@@ -158,7 +158,7 @@ func (ctrl *Control) DeleteArticles(artIndices []int) {
 		dbug.Printf("ERROR: delete failed: %s\n", err)
 		return
 	}
-	//	dbug.Printf("%d articles deleted\n", len(arts))
+	dbug.Printf("%d articles deleted\n", len(arts))
 
 	// rerun the current query
 	ctrl.setQuery(ctrl.Results.Query)

@@ -2,6 +2,7 @@ package store
 
 import (
 	//	"sort"
+	"fmt"
 	//"github.com/bcampbell/arts/arts"
 	"github.com/bcampbell/badger"
 	"github.com/bcampbell/badger/query"
@@ -24,7 +25,7 @@ func newBadgerIndex() *badgerIndex {
 	return idx
 }
 
-func (idx *badgerIndex) add(arts ...*Article) error {
+func (idx *badgerIndex) index(arts ...*Article) error {
 	for _, art := range arts {
 		idx.coll.Put(art)
 	}
@@ -54,4 +55,8 @@ func (idx *badgerIndex) search(queryString string, order string) (ArtList, error
 		out[idx] = art.ID
 	}
 	return out, nil
+}
+
+func (idx *badgerIndex) zap(theDoomed ...ArtID) error {
+	return fmt.Errorf("Not implemented")
 }
