@@ -34,26 +34,34 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 
 	artMapping := bleve.NewDocumentMapping()
 
-	textFieldMappings := map[string]*bleve.FieldMapping{
-		"urls":       bleve.NewTextFieldMapping(),
-		"Headline":   bleve.NewTextFieldMapping(),
-		"content":    bleve.NewTextFieldMapping(),
-		"published":  bleve.NewTextFieldMapping(),
-		"keywords":   bleve.NewTextFieldMapping(),
-		"section":    bleve.NewTextFieldMapping(),
-		"tags":       bleve.NewTextFieldMapping(),
-		"retweets":   bleve.NewTextFieldMapping(),
-		"favourites": bleve.NewTextFieldMapping(),
-		"links":      bleve.NewTextFieldMapping(),
-		"pub":        bleve.NewTextFieldMapping(),
-		"byline":     bleve.NewTextFieldMapping(),
-	}
+	// english text - stemming etc...
+	textFld := bleve.NewTextFieldMapping()
+	textFld.Analyzer = "en"
+	textFld.Store = false
 
-	for name, fm := range textFieldMappings {
-		fm.Analyzer = "en"
-		fm.Store = false
-		artMapping.AddFieldMappingsAt(name, fm)
-	}
+	// simple field - split by whitespace and lowercase
+	simpleFld := bleve.NewTextFieldMapping()
+	simpleFld.Analyzer = "simple"
+	simpleFld.Store = false
+
+	numFld := bleve.NewNumericFieldMapping()
+	numFld.Store = false
+
+	dateFld := bleve.NewDateTimeFieldMapping()
+	dateFld.Store = false
+
+	artMapping.AddFieldMappingsAt("urls", textFld)
+	artMapping.AddFieldMappingsAt("headline", textFld)
+	artMapping.AddFieldMappingsAt("content", textFld)
+	artMapping.AddFieldMappingsAt("published", dateFld)
+	artMapping.AddFieldMappingsAt("keywords", simpleFld)
+	artMapping.AddFieldMappingsAt("section", simpleFld)
+	artMapping.AddFieldMappingsAt("tags", simpleFld)
+	artMapping.AddFieldMappingsAt("retweets", numFld)
+	artMapping.AddFieldMappingsAt("favourites", numFld)
+	artMapping.AddFieldMappingsAt("links", textFld)
+	artMapping.AddFieldMappingsAt("pub", simpleFld)
+	artMapping.AddFieldMappingsAt("byline", textFld)
 
 	indexMapping.DefaultType = "article" //artMapping
 	indexMapping.AddDocumentMapping("article", artMapping)
