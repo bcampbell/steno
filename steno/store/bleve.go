@@ -7,16 +7,18 @@ import (
 
 // article data massasged for bleve indexing
 type bleveArt struct {
-	ID         string   `json:"id"`
-	Urls       []string `json:"urls"`
-	Headline   string   `json:"headline"`
-	Content    string   `json:"content"`
-	Published  string   `json:"published"`
-	Keywords   []string `json:"keywords"`
-	Section    string   `json:"section"`
-	Tags       []string `json:"tags"`
-	Retweets   int      `json:"retweets"`
-	Favourites int      `json:"favourites"`
+	ID       string   `json:"id"`
+	Urls     []string `json:"urls"`
+	Headline string   `json:"headline"`
+	Content  string   `json:"content"`
+	// TODO: this needs to be a time.Time!
+	Published string   `json:"published"`
+	Keywords  []string `json:"keywords"`
+	Section   string   `json:"section"`
+	Tags      []string `json:"tags"`
+	// note: bleve only indexes float64 numeric fields
+	Retweets   float64  `json:"retweets"`
+	Favourites float64  `json:"favourites"`
 	Links      []string `json:"links"`
 
 	// fudge fields
@@ -30,6 +32,8 @@ type bleveIndex struct {
 }
 
 func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
+	bleve.Config.DefaultKVStore = "goleveldb"
+
 	indexMapping := bleve.NewIndexMapping()
 
 	artMapping := bleve.NewDocumentMapping()
@@ -88,6 +92,8 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 }
 
 func openBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
+	bleve.Config.DefaultKVStore = "goleveldb"
+
 	index, err := bleve.Open(idxName)
 	if err != nil {
 		return nil, err
@@ -113,8 +119,8 @@ func (idx *bleveIndex) index(srcArts ...*Article) error {
 			Keywords:   src.Keywords,
 			Section:    src.Section,
 			Tags:       src.Tags,
-			Retweets:   src.Retweets,
-			Favourites: src.Favourites,
+			Retweets:   float64(src.Retweets),
+			Favourites: float64(src.Favourites),
 			Links:      src.Links,
 			Pub:        src.Pub,
 			Byline:     src.BylineString(),
