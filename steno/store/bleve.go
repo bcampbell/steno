@@ -2,6 +2,7 @@ package store
 
 import (
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/qs"
 	"strconv"
 )
 
@@ -138,7 +139,15 @@ func (idx *bleveIndex) search(queryString string, order string) (ArtList, error)
 	if queryString == "" {
 		return ArtList{}, nil
 	}
-	q := bleve.NewQueryStringQuery(queryString)
+
+	//	q := bleve.NewQueryStringQuery(queryString)
+	//	q.MustMatch = true
+
+	q, err := qs.Parse(queryString)
+	if err != nil {
+		return ArtList{}, err
+	}
+
 	// TODO: improve upon kludgy max size
 	req := bleve.NewSearchRequestOptions(q, 1000000, 0, false)
 	results, err := idx.idx.Search(req)
