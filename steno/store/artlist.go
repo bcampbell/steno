@@ -1,8 +1,21 @@
 package store
 
-import ()
+import (
+	"strconv"
+	"strings"
+)
 
 type ArtList []ArtID
+
+//type ArtSet map[ArtID]struct{}{}
+
+func (arts ArtList) StringList() string {
+	frags := make([]string, len(arts))
+	for idx, id := range arts {
+		frags[idx] = strconv.Itoa(int(id))
+	}
+	return strings.Join(frags, ",")
+}
 
 func (arts *ArtList) Days() []string {
 	return []string{}
@@ -52,52 +65,31 @@ func (arts ArtList) Subtract(other ArtList) ArtList {
 	return out
 }
 
-// Debug helper to gauge memory usage of displayed fields...
-// TODO: missing publication date,twitter-specific fields
-func (arts ArtList) DumpAverages() {
-	return
-	/*XYZZY*/
-	/*
-			if len(arts) == 0 {
-				return
-			}
-			var headlineCnt, pubCnt, sectionCnt, tagsCnt, bylineCnt, urlCnt, kwCnt int
+func (arts ArtList) Intersection(other ArtList) ArtList {
+	lookup := map[ArtID]struct{}{}
+	for _, id := range other {
+		lookup[id] = struct{}{}
+	}
+	out := ArtList{}
+	for _, id := range arts {
+		if _, got := lookup[id]; got {
+			out = append(out, id)
+		}
+	}
+	return out
+}
 
-			for _, art := range arts {
-				headlineCnt += len(art.Headline)
-				pubCnt += len(art.Pub)
-				sectionCnt += len(art.Section)
-				tagsCnt += len(art.TagsString())
-				bylineCnt += len(art.BylineString())
-				urlCnt += len(art.URL())
-				kwCnt += len(art.KeywordsString())
-			}
-			n := len(arts)
-			headlineCnt /= n
-			pubCnt /= n
-			sectionCnt /= n
-			tagsCnt /= n
-			bylineCnt /= n
-			urlCnt /= n
-			kwCnt /= n
-
-			fmt.Printf(`-----averages-----
-		headline: %d
-		pub:      %d
-		section:  %d
-		tags:     %d
-		byline:   %d
-		url:      %d
-		kw:       %d
-		TOTAL:    %d
-		`,
-				headlineCnt,
-				pubCnt,
-				sectionCnt,
-				tagsCnt,
-				bylineCnt,
-				urlCnt,
-				kwCnt,
-				headlineCnt+pubCnt+sectionCnt+tagsCnt+bylineCnt+urlCnt+kwCnt)
-	*/
+func (arts ArtList) Union(other ArtList) ArtList {
+	lookup := map[ArtID]struct{}{}
+	for _, id := range other {
+		lookup[id] = struct{}{}
+	}
+	for _, id := range arts {
+		lookup[id] = struct{}{}
+	}
+	out := make(ArtList, 0, len(lookup))
+	for id, _ := range lookup {
+		out = append(out, id)
+	}
+	return out
 }

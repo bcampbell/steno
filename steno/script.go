@@ -35,6 +35,7 @@ type ProgressFunc func(expected int, completed int, msg string)
 // Apply script to a store
 func (s *script) Run(store *store.Store, progress ProgressFunc) error {
 	dbug.Printf("running script '%s'\n", s.Name)
+
 	for lineNum, line := range s.lines {
 		if progress != nil {
 			progress(len(s.lines), lineNum, fmt.Sprintf("running %s: %d/%d", s.Name, lineNum+1, len(s.lines)))

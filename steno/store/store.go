@@ -66,7 +66,7 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 		}
 
 		// index all articles
-		arts, err := store.Fetch()
+		arts, err := store.FetchAll()
 		if err != nil {
 			return nil, err
 		}
@@ -553,45 +553,29 @@ func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 	if store.db == nil {
 		return ArtList{}, nil
 	}
-
 	// apply to db
 	tx, err := store.db.Begin()
 	if err != nil {
 		return nil, err
 	}
 
-	delStmt, err := tx.Prepare("DELETE FROM article_tag WHERE article_id=? AND tag=?")
-	if err != nil {
-		return nil, err
-	}
-	defer delStmt.Close()
-	insStmt, err := tx.Prepare("INSERT INTO article_tag(article_id,tag) VALUES(?,?)")
-	if err != nil {
-		return nil, err
-	}
-	defer insStmt.Close()
-
-	for _, artID := range arts {
-		for _, tag := range tags {
-			tag = strings.ToLower(tag)
-			_, err = delStmt.Exec(artID, tag)
-			if err != nil {
-				return nil, err
-			}
-			_, err = insStmt.Exec(artID, tag)
-			if err != nil {
-				return nil, err
-			}
+	affected := ArtList{}
+	for _, tag := range tags {
+		newlyTagged, err := store.addTag(tx, arts, tag)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
 		}
+		store.dbug.Printf("added '%s' tag from %d articles\n", tag, len(newlyTagged))
+		affected = affected.Union(newlyTagged)
 	}
+
 	err = tx.Commit()
 	if err != nil {
 		return nil, err
 	}
 
-	// apply to index
-	affected := arts
-
+	// now apply to belve index
 	// a bit cumbersome, but bleve has no way to update select fields?
 	fullArts, err := store.Fetch(affected...)
 	if err != nil {
@@ -601,6 +585,44 @@ func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 	err = store.idx.index(fullArts...)
 	if err != nil {
 		return nil, err
+	}
+
+	return affected, nil
+}
+
+func (store *Store) addTag(tx *sql.Tx, arts ArtList, tag string) (ArtList, error) {
+
+	tag = strings.ToLower(tag)
+
+	// find any article which already have the tag
+	gotRows, err := store.db.Query(`SELECT article_id FROM article_tag WHERE tag=? AND article_id IN (`+arts.StringList()+`)`, tag)
+	if err != nil {
+		return nil, err
+	}
+
+	got := ArtList{}
+	for gotRows.Next() {
+		var id ArtID
+		err = gotRows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		got = append(got, id)
+	}
+
+	// tag the ones that need it
+	affected := arts.Subtract(got)
+	insStmt, err := tx.Prepare("INSERT INTO article_tag(article_id,tag) VALUES(?,?)")
+	if err != nil {
+		return nil, err
+	}
+	defer insStmt.Close()
+
+	for _, artID := range affected {
+		_, err = insStmt.Exec(artID, tag)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return affected, nil
@@ -618,57 +640,61 @@ func (store *Store) RemoveTags(arts ArtList, tags []string) (ArtList, error) {
 		return nil, err
 	}
 
-	delStmt, err := tx.Prepare("DELETE FROM article_tag WHERE article_id=? AND tag=?")
-	if err != nil {
-		return nil, err
-	}
-	defer delStmt.Close()
-
-	for _, art := range arts {
-		for _, tag := range tags {
-			tag = strings.ToLower(tag)
-			_, err = delStmt.Exec(art, tag)
-			if err != nil {
-				return nil, err
-			}
+	affected := ArtList{}
+	for _, tag := range tags {
+		newly, err := store.removeTag(tx, arts, tag)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
 		}
+		store.dbug.Printf("removed '%s' tag from %d articles\n", tag, len(newly))
+		affected = affected.Union(newly)
 	}
+
 	err = tx.Commit()
 	if err != nil {
 		return nil, err
 	}
 
-	// apply to index
-
-	affected := arts
-
+	// now apply to belve index
 	// a bit cumbersome, but bleve has no way to update select fields?
 	fullArts, err := store.Fetch(affected...)
 	if err != nil {
 		return nil, err
 	}
-
 	err = store.idx.index(fullArts...)
 	if err != nil {
 		return nil, err
 	}
-	/* XYZZY */
-	/*
-		for _, art := range arts {
-			modified := false
-			for _, tag := range tags {
-				tag = strings.ToLower(tag)
-				if art.RemoveTag(tag) {
-					modified = true
-				}
-			}
-			if modified {
-				affected = append(affected, art)
-			}
-		}
-	*/
-
 	return affected, nil
+}
+
+func (store *Store) removeTag(tx *sql.Tx, arts ArtList, tag string) (ArtList, error) {
+	tag = strings.ToLower(tag)
+
+	// find which articles need the tag removed
+	rows, err := store.db.Query(`SELECT article_id FROM article_tag WHERE tag=? AND article_id IN (`+idList(arts)+`)`, tag)
+
+	if err != nil {
+		return nil, err
+	}
+
+	got := ArtList{}
+	for rows.Next() {
+		var id ArtID
+		err = rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		got = append(got, id)
+	}
+
+	_, err = store.db.Exec(`DELETE FROM article_tag WHERE tag=? AND article_id IN (`+idList(got)+`)`, tag)
+	if err != nil {
+		return nil, err
+	}
+
+	return got, nil
 }
 
 // delete articles
@@ -1001,8 +1027,19 @@ func idList(ids []ArtID) string {
 
 }
 
-// read in articles from DB. Empty artIDs means fetch _all_ arts :-)
 func (store *Store) Fetch(artIDs ...ArtID) ([]*Article, error) {
+	if len(artIDs) > 0 {
+		return store.doFetch(artIDs)
+	}
+	return []*Article{}, nil
+}
+
+func (store *Store) FetchAll() ([]*Article, error) {
+	return store.doFetch(ArtList{})
+}
+
+// read in articles from DB. Empty list means fetch _all_ arts :-)
+func (store *Store) doFetch(artIDs ArtList) ([]*Article, error) {
 	db := store.db
 
 	tab := map[ArtID]*Article{}
