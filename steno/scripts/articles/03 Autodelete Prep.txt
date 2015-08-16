@@ -79,7 +79,7 @@ urls: /auhome => TAG cruft
 urls: /usshowbiz => TAG cruft manual
 urls: /indiahome/ => TAG cruft
 pub: dailymail urls: /health/ => TAG cruft manual
-pub: =telegraph urls: /columns/ => TAG cruft
+pub: telegraph urls: /columns/ => TAG cruft
 headline: obituary => TAG cruft
 urls: /celebritynews/ => TAG cruft manual
 urls: /men/ => TAG cruft
@@ -89,7 +89,7 @@ urls: /mother-tongue/ => TAG cruft
 urls: /sex/ => TAG cruft
 urls: /howaboutthat => TAG cruft
 urls: /personalfinance/ -tags: party -tags: ptyldr => TAG cruft
-pub: =telegraph urls: /science/ -urls: /science-news/ => TAG cruft manual
+pub: telegraph urls: /science/ -urls: /science-news/ => TAG cruft manual
 urls: /Stephen-hawking/ => TAG cruft
 urls: /video-games/ => TAG cruft
 urls: /fashion/ => TAG cruft
@@ -238,29 +238,29 @@ urls: /wildlife/ -tags: party => TAG cruft
 urls: ": live" => TAG cruft
 urls: /newsvideo/ => TAG cruft
 urls: /luxury/ => TAG cruft
-pub: =telegraph urls: /property/ => TAG cruft
-pub: =telegraph urls: /worldnews -tags: ptyldr => TAG cruft
+pub: telegraph urls: /property/ => TAG cruft
+pub: telegraph urls: /worldnews -tags: ptyldr => TAG cruft
 urls: /telegraphchristmas => TAG cruft
-pub: =telegraph urls: /culture/ => TAG cruft
+pub: telegraph urls: /culture/ => TAG cruft
 urls: /religion/ => TAG cruft
 headline: "maximise your health" => TAG cruft
 urls: /theroyalfamily/ => TAG cruft
 urls: /shopping-and-consumer-news/ => TAG cruft manual
-pub: =telegraph urls: /technology/ => TAG cruft
+pub: telegraph urls: /technology/ => TAG cruft
 urls: /predictions/ => TAG cruft
 urls: /honours-list/ => TAG cruft
 urls: /aviation/ => TAG cruft
-pub: =telegraph, urls: /science/ => TAG cruft
-pub: =telegraph, urls: /topics/ => TAG cruft manual
+pub: telegraph, urls: /science/ => TAG cruft
+pub: telegraph, urls: /topics/ => TAG cruft manual
 urls: /expat/ => TAG cruft
 urls: /globalbusiness/ -tags: ptyldr => TAG cruft
-pub: =telegraph urls: /weather/ => TAG cruft
+pub: telegraph urls: /weather/ => TAG cruft
 urls: /marketreport/ => TAG cruft
 urls: /festival-of-business/ => TAG cruft
 headline: "in 60 seconds" => TAG cruft
 urls: /expathealth/ => TAG cruft
 urls: /elderhealth/ => TAG cruft
-pub: =telegraph headline: "health q&a" => TAG cruft
+pub: telegraph headline: "health q&a" => TAG cruft
 urls: /earthvideo/ => TAG cruft
 urls: /business-club-video/ => TAG cruft
 urls: /quaestor/ => TAG cruft
@@ -331,17 +331,17 @@ pub: dailymail section: "strayer management" => TAG cruft
 pub: dailymail section: "travel news" => TAG cruft
 pub: mirror section: vauxhall => TAG cruft
 pub: mirror section: "corrections & clarifications" => TAG cruft
-pub: =telegraph section: sponsored => TAG cruft
-pub: =telegraph headline: "week ahead in" => TAG cruft
-pub: =telegraph section: "telegraph video" => TAG cruft
-pub: =telegraph urls: /travel/ => TAG cruft
-pub: =telegraph urls: /luxury/ => TAG cruft
-pub: =telegraph section: men => TAG cruft
-pub: =telegraph byline: =ap/ => TAG cruft
-pub: =telegraph urls: /picturegalleries/ => TAG cruft
-pub: =telegraph urls: /technology/ => TAG cruft
-pub: =telegraph urls: /galleries/ => TAG cruft
-pub: =telegraph urls: /videos/ => TAG cruft
+pub: telegraph section: sponsored => TAG cruft
+pub: telegraph headline: "week ahead in" => TAG cruft
+pub: telegraph section: "telegraph video" => TAG cruft
+pub: telegraph urls: /travel/ => TAG cruft
+pub: telegraph urls: /luxury/ => TAG cruft
+pub: telegraph section: men => TAG cruft
+pub: telegraph byline: ap/ => TAG cruft
+pub: telegraph urls: /picturegalleries/ => TAG cruft
+pub: telegraph urls: /technology/ => TAG cruft
+pub: telegraph urls: /galleries/ => TAG cruft
+pub: telegraph urls: /videos/ => TAG cruft
 pub: independent section: "student life" => TAG cruft
 pub: independent section: sharewatch => TAG cruft
 pub: independent section: "spend & save" => TAG cruft
@@ -423,7 +423,7 @@ pub: ft section: chemicals => TAG cruft
 pub: ft section: "capital markets" => TAG cruft
 pub: ft section: "business education" => TAG cruft
 pub: ft section: "middle east & north africa" => TAG cruft
-pub: ft section: =markets => TAG cruft
+pub: ft section: markets => TAG cruft
 pub: ft section: management => TAG cruft
 pub: ft section: "live music" => TAG cruft
 pub: ft section: "life & arts" => TAG cruft
@@ -515,9 +515,9 @@ pub: ft section: masterclasses => TAG cruft
 pub: ft section: collecting => TAG cruft
 pub: ft section: aerospace => TAG cruft
 pub: ft section: energy => TAG cruft
-pub: =telegraph urls: /markets/ => TAG cruft
-pub: =telegraph urls: /financevideo/ => TAG cruft
-pub: =telegraph headline: "telegraph city" => TAG cruft
+pub: telegraph urls: /markets/ => TAG cruft
+pub: telegraph urls: /financevideo/ => TAG cruft
+pub: telegraph headline: "telegraph city" => TAG cruft
 headline: "the city roundup" => TAG cruft
 headline: "letters and" => TAG cruft
 
@@ -612,7 +612,7 @@ pub: dailymail byline: "press association" content: "formula 1" => TAG cruft
 pub: sundaytimes urls: film_and_tv => TAG cruft
 pub: express byline: "jim holden" => TAG cruft
 byline: "australian associated press" => TAG cruft
-byline: ="associated press" => TAG cruft
+byline: "associated press" => TAG cruft
 urls: showbiz/ => TAG cruft
 urls: /wildlife/ => TAG cruft
 content: "andy murray" => TAG cruft
@@ -652,7 +652,7 @@ immigration headline: obama => TAG cruft
 pub: guardian byline: "chris riddell" => TAG cruft
 pub: dailymail urls: /markets/ -headline: labour -headline: conservative -headline: cameron -headline: labour => TAG cruft
 pub: ft section: "exchange traded funds" => TAG cruft
-pub: =telegraph urls: /goodlife/ => TAG cruft
+pub: telegraph urls: /goodlife/ => TAG cruft
 pub: ft section: books => TAG cruft
 pub: thetimes urls: /magazine/ => TAG cruft
 pub: guardian section: "world news" => TAG cruft

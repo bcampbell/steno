@@ -51,25 +51,25 @@ pub: mirror byline: nigelnelson => TAG comment
 # Telegraph --------------------
 
 # Leader (telegraph)
-pub: =telegraph byline: "telegraph view" => TAG leader
+pub: telegraph byline: "telegraph view" => TAG leader
 
 # Comment (telegraph)
-pub: =telegraph section: journalists => TAG comment
-pub: =telegraph section: comment => TAG comment
-pub: =telegraph byline: "dan hodges" => TAG comment
-pub: =telegraph byline: "boris johnson" => TAG comment
-pub: =telegraph byline: "charles moore" => TAG comment
-pub: =telegraph byline: "allison pearson" => TAG comment
-pub: =telegraph byline: "fraser nelson" => TAG comment
-pub: =telegraph byline: "peter oborne" => TAG comment
-pub: =telegraph byline: "philip johnstone" => TAG comment
-pub: =telegraph byline: "christopher booker" => TAG comment
-pub: =telegraph byline: "toby young" => TAG comment
-pub: =telegraph byline: "judith woods" => TAG comment
-pub: =telegraph byline: "janet daley" => TAG comment
-pub: =telegraph byline: "jemima lewis" => TAG comment
-pub: =telegraph byline: "mary riddell" => TAG comment
-pub: =telegraph byline: "rowan pelling" => TAG comment
+pub: telegraph section: journalists => TAG comment
+pub: telegraph section: comment => TAG comment
+pub: telegraph byline: "dan hodges" => TAG comment
+pub: telegraph byline: "boris johnson" => TAG comment
+pub: telegraph byline: "charles moore" => TAG comment
+pub: telegraph byline: "allison pearson" => TAG comment
+pub: telegraph byline: "fraser nelson" => TAG comment
+pub: telegraph byline: "peter oborne" => TAG comment
+pub: telegraph byline: "philip johnstone" => TAG comment
+pub: telegraph byline: "christopher booker" => TAG comment
+pub: telegraph byline: "toby young" => TAG comment
+pub: telegraph byline: "judith woods" => TAG comment
+pub: telegraph byline: "janet daley" => TAG comment
+pub: telegraph byline: "jemima lewis" => TAG comment
+pub: telegraph byline: "mary riddell" => TAG comment
+pub: telegraph byline: "rowan pelling" => TAG comment
 
 
 # Times -----------------------

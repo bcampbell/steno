@@ -16,8 +16,8 @@ tags: econ content: "chinese economy" => TAG issclean
 tags: econ content: "french economy" => TAG issclean
 tags: econ content: "german economy" => TAG issclean
 tags: econ content: "greek economy" => TAG issclean
-tags: econ pub: =telegraph urls: /newsbysector/ => TAG issclean
-tags: econ pub: =telegraph urls: /economics/ => TAG issclean
+tags: econ pub: telegraph urls: /newsbysector/ => TAG issclean
+tags: econ pub: telegraph urls: /economics/ => TAG issclean
 
 tags: crimlaw content: "domestic violence" => TAG issclean
 tags: crimlaw content: "domestic abuse" => TAG issclean

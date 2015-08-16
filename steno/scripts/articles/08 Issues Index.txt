@@ -30,7 +30,7 @@
 # ----------------------
 
 "immigration policy" => TAG imm
-pub: =telegraph urls: /immigration/ => TAG imm
+pub: telegraph urls: /immigration/ => TAG imm
 immigration => TAG imm
 immigrants => TAG imm
 immigrant => TAG imm
@@ -82,7 +82,7 @@ migrationwatch => TAG imm
 
 "nhs policy" => TAG nhs
 "health policy" => TAG nhs
-pub: =telegraph urls: /nhs/ => TAG nhs
+pub: telegraph urls: /nhs/ => TAG nhs
 pub: thetimes urls: /health/ => TAG nhs
 headline: nhs => TAG nhs
 nhs => TAG nhs
