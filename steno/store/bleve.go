@@ -129,9 +129,9 @@ func (idx *bleveIndex) index(srcArts ...*Article) error {
 
 		batch.Index(artID, art)
 	}
-	idx.dbug.Printf("bleve: committing...\n")
+	//idx.dbug.Printf("bleve: committing...\n")
 	idx.idx.Batch(batch)
-	idx.dbug.Printf("bleve: done indexing\n")
+	//idx.dbug.Printf("bleve: done indexing\n")
 	return nil
 }
 

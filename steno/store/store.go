@@ -66,15 +66,15 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 		}
 
 		// index all articles
-		arts, err := store.FetchAll()
+		allArts, err := store.AllArts()
 		if err != nil {
 			return nil, err
 		}
-		store.dbug.Printf("Indexing %d articles\n", len(arts))
-		err = store.idx.index(arts...)
+		err = store.reindex(allArts)
 		if err != nil {
 			return nil, err
 		}
+
 	} else {
 		store.dbug.Printf("Open existing index %s\n", indexDir)
 		// open existing indexer
@@ -577,17 +577,39 @@ func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 
 	// now apply to belve index
 	// a bit cumbersome, but bleve has no way to update select fields?
-	fullArts, err := store.Fetch(affected...)
+	err = store.reindex(affected)
 	if err != nil {
 		return nil, err
 	}
-
-	err = store.idx.index(fullArts...)
-	if err != nil {
-		return nil, err
-	}
-
 	return affected, nil
+}
+
+func (store *Store) reindex(arts ArtList) error {
+
+	start := 0
+	for start < len(arts) {
+		n := 500
+		end := start + n
+		if end > len(arts) {
+			end = len(arts)
+		}
+
+		//store.dbug.Printf("chunk %d:%d (of %d)\n", start, end, len(arts))
+		chunk := arts[start:end]
+		start = end
+
+		fullArts, err := store.Fetch(chunk...)
+		if err != nil {
+			return err
+		}
+
+		err = store.idx.index(fullArts...)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (store *Store) addTag(tx *sql.Tx, arts ArtList, tag string) (ArtList, error) {
@@ -658,11 +680,7 @@ func (store *Store) RemoveTags(arts ArtList, tags []string) (ArtList, error) {
 
 	// now apply to belve index
 	// a bit cumbersome, but bleve has no way to update select fields?
-	fullArts, err := store.Fetch(affected...)
-	if err != nil {
-		return nil, err
-	}
-	err = store.idx.index(fullArts...)
+	err = store.reindex(affected)
 	if err != nil {
 		return nil, err
 	}
