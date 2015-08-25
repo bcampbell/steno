@@ -37,14 +37,47 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 
 	indexMapping := bleve.NewIndexMapping()
 
+	// add a custom tokenizer and analyzer for handling urls
+	var err error
+	err = indexMapping.AddCustomTokenizer("url_parts",
+		map[string]interface{}{
+			"regexp": `(\p{L}+)|([\d]+)|[\S]`,
+			"type":   `regexp`,
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	err = indexMapping.AddCustomAnalyzer("url",
+		map[string]interface{}{
+			"type": `custom`,
+			"char_filters": []interface{}{
+				`zero_width_spaces`,
+			},
+			"tokenizer": `url_parts`,
+			"token_filters": []interface{}{
+				`to_lower`,
+			},
+		})
+	if err != nil {
+		return nil, err
+	}
+
 	artMapping := bleve.NewDocumentMapping()
 
-	// english text - stemming etc...
+	// english text - stemming, remove stopwords etc...
 	textFld := bleve.NewTextFieldMapping()
 	textFld.Analyzer = "en"
 	textFld.Store = false
 
-	// simple field - split by whitespace and lowercase
+	// urls - split into words or one-char tokens
+	// http://www.example.com/wibble/foo-bar-wibble.html
+	// => [ http : / / www . example . com / wibble / foo - bar - wibble . html ]
+	urlFld := bleve.NewTextFieldMapping()
+	urlFld.Analyzer = "url"
+	urlFld.Store = false
+
+	// simple field - split by whitespace and lowercase, no stemming or stopwords
 	simpleFld := bleve.NewTextFieldMapping()
 	simpleFld.Analyzer = "simple"
 	simpleFld.Store = false
@@ -55,7 +88,7 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 	dateFld := bleve.NewDateTimeFieldMapping()
 	dateFld.Store = false
 
-	artMapping.AddFieldMappingsAt("urls", textFld)
+	artMapping.AddFieldMappingsAt("urls", urlFld)
 	artMapping.AddFieldMappingsAt("headline", textFld)
 	artMapping.AddFieldMappingsAt("content", textFld)
 	artMapping.AddFieldMappingsAt("published", dateFld)
@@ -64,7 +97,7 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 	artMapping.AddFieldMappingsAt("tags", simpleFld)
 	artMapping.AddFieldMappingsAt("retweets", numFld)
 	artMapping.AddFieldMappingsAt("favourites", numFld)
-	artMapping.AddFieldMappingsAt("links", textFld)
+	artMapping.AddFieldMappingsAt("links", urlFld)
 	artMapping.AddFieldMappingsAt("pub", simpleFld)
 	artMapping.AddFieldMappingsAt("byline", textFld)
 
