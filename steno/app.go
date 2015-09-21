@@ -4,6 +4,7 @@ import (
 	//"fmt"
 	"fmt"
 	"gopkg.in/qml.v1"
+	"gopkg.in/xlab/clipboard.v2"
 	"io/ioutil"
 	"path/filepath"
 	"semprini/steno/steno/kludge"
@@ -15,6 +16,7 @@ type App struct {
 	Window        *qml.Window
 	HelpText      string
 	DataPath      string
+	Clipboard     *clipboard.Clipboard
 	projComponent qml.Object
 	ctx           *qml.Context
 	project       *Control
@@ -60,6 +62,7 @@ func NewApp() (*App, error) {
 	app := &App{}
 	app.ctx = ctx
 	app.DataPath = dataPath
+	app.Clipboard = clipboard.New(engine)
 
 	// all the qml/js/html stuff is in the ui dir
 	uiPath := filepath.Join(app.DataPath, "ui")

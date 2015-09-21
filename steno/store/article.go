@@ -7,6 +7,7 @@ import (
 	stdhtml "html"
 	"html/template"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -174,4 +175,44 @@ func (art *Article) RemoveTag(tag string) bool {
 		art.Tags = newTags
 	}
 	return dirtied
+}
+
+//
+func (art *Article) FieldString(fieldName string) string {
+
+	switch fieldName {
+	case "canonical_url":
+		return art.CanonicalURL
+		//TODO: URLs
+	case "headline":
+		return art.Headline
+		//TODO: Authors
+	case "content":
+		return art.Content
+	case "published":
+		return art.Published
+	// TODO: Updated, Publication, Keywords
+	case "keywords":
+		return art.KeywordsString()
+	case "section":
+		return art.Section
+	case "tags":
+		return art.TagsString()
+	case "retweets":
+		return strconv.Itoa(art.Retweets)
+	case "favourites":
+		return strconv.Itoa(art.Favourites)
+	case "links":
+		return art.LinksString()
+
+		// assorted fudge feilds
+	case "url":
+		return art.URL()
+	case "pub":
+		return art.Pub
+	case "byline":
+		return art.Byline
+	default:
+		return ""
+	}
 }

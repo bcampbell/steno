@@ -68,6 +68,39 @@ Item {
         enabled:  findText.text!=""
     }
 
+    // context menu for cutting&pasting text from results tableview
+    Item {
+        Menu {
+            id: copyMenu
+            property string pickedCol
+            property int pickedRow
+            MenuItem {
+                enabled: artList.selection.count > 0
+                text: artList.selection.count>1 ? ("Copy " + artList.selection.count + " selected " + copyMenu.pickedCol + "s") : ("Copy " + copyMenu.pickedCol)
+                onTriggered: {
+                    var sel = artList.selectedArts();
+                    ctrl.copyCells(sel, copyMenu.pickedCol);
+                }
+            }
+            MenuItem {
+                enabled: (artList.selection.count>0)
+                text: artList.selection.count>1 ? "Copy " + artList.selection.count + " rows" : "Copy row"
+                shortcut: "Ctrl+C"
+                onTriggered: {
+                    var sel = artList.selectedArts();
+                    ctrl.copyRows(sel);
+                }
+            }
+
+            // pop up the menu for a specific cell
+            function gogogo( styleData ) {
+                pickedCol = styleData.role;
+                pickedRow = styleData.row;
+                popup();
+            }
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
     //    Layout.fillHeight: true
@@ -88,6 +121,12 @@ Item {
                 objectName: "tagEntry"
                 text: ""
                 placeholderText: "tag"
+            }
+            Button {
+                id: buttonTEST
+                enabled:  true
+                text: "Testy test test test"
+                onClicked: testMenu.popup()
             }
             Button {
                 id: buttonAddTag
@@ -144,7 +183,7 @@ Item {
                     color: styleData.textColor
                     elide: Text.ElideRight
                     text: ctrl.results.art(styleData.row).headline
-
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }
@@ -158,6 +197,7 @@ Item {
                     color: styleData.textColor
                     elide: styleData.elideMode
                     text: ctrl.results.art(styleData.row).pub
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }
@@ -173,6 +213,7 @@ Item {
                     color: styleData.textColor
                     elide: styleData.elideMode
                     text: ctrl.results.art(styleData.row).published
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }
@@ -184,6 +225,7 @@ Item {
                     return '<a href="'+s+'">'+s+'</a>';
                 }
                 clip: true
+
                 Text {
                     anchors.fill: parent
                     color: styleData.textColor
@@ -191,6 +233,7 @@ Item {
                     text: asLink(ctrl.results.art(styleData.row).canonicalURL)
                     //onLinkActivated: Qt.openUrlExternally(link)
                     onLinkActivated: ctrl.openLink(link)
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                         
                 }
             }
@@ -205,6 +248,7 @@ Item {
                     color: styleData.textColor
                     elide: styleData.elideMode
                     text: ctrl.results.art(styleData.row).section
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }
@@ -218,6 +262,7 @@ Item {
                     color: styleData.textColor
                     elide: Text.ElideRight
                     text: ctrl.results.art(styleData.row).tagsString()
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }
@@ -231,6 +276,7 @@ Item {
                     color: styleData.textColor
                     elide: Text.ElideRight
                     text: ctrl.results.art(styleData.row).bylineString()
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }
@@ -244,6 +290,7 @@ Item {
                     color: styleData.textColor
                     elide: Text.ElideRight
                     text: ctrl.results.art(styleData.row).retweets
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }
@@ -256,6 +303,7 @@ Item {
                     color: styleData.textColor
                     elide: Text.ElideRight
                     text: ctrl.results.art(styleData.row).favourites
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }
@@ -268,6 +316,7 @@ Item {
                     color: styleData.textColor
                     elide: Text.ElideRight
                     text: ctrl.results.art(styleData.row).linksString()
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }
@@ -280,6 +329,7 @@ Item {
                     color: styleData.textColor
                     elide: Text.ElideRight
                     text: ctrl.results.art(styleData.row).keywordsString()
+                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }
         }

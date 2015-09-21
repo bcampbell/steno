@@ -5,6 +5,8 @@ package main
 // separate core functionality from GUI
 
 import (
+	"bytes"
+	"encoding/csv"
 	"fmt"
 	"gopkg.in/qml.v1"
 	"os"
@@ -505,4 +507,46 @@ func (ctrl *Control) TagRetweets() {
 			ctrl.setQuery(ctrl.Results.Query)
 		}
 	*/
+}
+
+func (ctrl *Control) CopyCells(artIndices []int, colName string) {
+
+	bits := []string{}
+
+	for _, artIdx := range artIndices {
+		foo := ctrl.Results.Art(artIdx).FieldString(colName)
+		bits = append(bits, foo)
+	}
+
+	val := strings.Join(bits, "\n")
+
+	err := ctrl.App.Clipboard.WriteAll(val)
+	if err != nil {
+		dbug.Printf("Copy failed: %s\n", err)
+	}
+}
+
+func (ctrl *Control) CopyRows(artIndices []int) {
+	fieldNames := []string{"headline", "published", "tags", "byline", "url", "retweets", "favourites", "keywords", "links"}
+	var out bytes.Buffer
+	w := csv.NewWriter(&out)
+	for _, artIdx := range artIndices {
+		fieldVals := []string{}
+		art := ctrl.Results.Art(artIdx)
+		for _, fldName := range fieldNames {
+			fieldVals = append(fieldVals, art.FieldString(fldName))
+		}
+		err := w.Write(fieldVals)
+		if err != nil {
+			dbug.Printf("Copy failed (csv write failed): %s\n", err)
+			return
+		}
+	}
+
+	w.Flush()
+
+	err := ctrl.App.Clipboard.WriteAll(out.String())
+	if err != nil {
+		dbug.Printf("Copy failed: %s\n", err)
+	}
 }
