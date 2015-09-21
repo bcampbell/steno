@@ -2,6 +2,12 @@ package store
 
 import (
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzers/custom_analyzer"
+	"github.com/blevesearch/bleve/analysis/analyzers/simple_analyzer"
+	"github.com/blevesearch/bleve/analysis/char_filters/zero_width_non_joiner"
+	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
+	"github.com/blevesearch/bleve/analysis/tokenizers/regexp_tokenizer"
+	"github.com/blevesearch/bleve/index/store/goleveldb"
 	"github.com/blevesearch/bleve/qs"
 	"strconv"
 )
@@ -33,7 +39,7 @@ type bleveIndex struct {
 }
 
 func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
-	bleve.Config.DefaultKVStore = "goleveldb"
+	bleve.Config.DefaultKVStore = goleveldb.Name
 
 	indexMapping := bleve.NewIndexMapping()
 
@@ -42,7 +48,7 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 	err = indexMapping.AddCustomTokenizer("url_parts",
 		map[string]interface{}{
 			"regexp": `(\p{L}+)|([\d]+)|[\S]`,
-			"type":   `regexp`,
+			"type":   regexp_tokenizer.Name,
 		})
 	if err != nil {
 		return nil, err
@@ -50,13 +56,13 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 
 	err = indexMapping.AddCustomAnalyzer("url",
 		map[string]interface{}{
-			"type": `custom`,
+			"type": custom_analyzer.Name,
 			"char_filters": []interface{}{
-				`zero_width_spaces`,
+				zero_width_non_joiner.Name,
 			},
 			"tokenizer": `url_parts`,
 			"token_filters": []interface{}{
-				`to_lower`,
+				lower_case_filter.Name,
 			},
 		})
 	if err != nil {
@@ -79,7 +85,7 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 
 	// simple field - split by whitespace and lowercase, no stemming or stopwords
 	simpleFld := bleve.NewTextFieldMapping()
-	simpleFld.Analyzer = "simple"
+	simpleFld.Analyzer = simple_analyzer.Name
 	simpleFld.Store = false
 
 	numFld := bleve.NewNumericFieldMapping()
@@ -126,7 +132,7 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 }
 
 func openBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
-	bleve.Config.DefaultKVStore = "goleveldb"
+	bleve.Config.DefaultKVStore = goleveldb.Name
 
 	index, err := bleve.Open(idxName)
 	if err != nil {
