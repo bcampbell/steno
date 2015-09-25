@@ -84,7 +84,7 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 		return nil, err
 	}
 
-	ctrl.ViewMode = "tweet"
+	ctrl.ViewMode = "article"
 	ctrl.SortColumn = 3 // Published
 	ctrl.SortOrder = 0
 
