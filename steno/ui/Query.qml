@@ -76,7 +76,7 @@ Item {
             property int pickedRow
             MenuItem {
                 enabled: artList.selection.count > 0
-                text: artList.selection.count>1 ? ("Copy " + artList.selection.count + " selected " + copyMenu.pickedCol + "s") : ("Copy " + copyMenu.pickedCol)
+                text: "Copy '" + copyMenu.pickedCol + "'"
                 onTriggered: {
                     var sel = artList.selectedArts();
                     ctrl.copyCells(sel, copyMenu.pickedCol);
@@ -84,8 +84,16 @@ Item {
             }
             MenuItem {
                 enabled: (artList.selection.count>0)
-                text: artList.selection.count>1 ? "Copy " + artList.selection.count + " rows" : "Copy row"
+                text: "Copy date-headline-url"
                 shortcut: "Ctrl+C"
+                onTriggered: {
+                    var sel = artList.selectedArts();
+                    ctrl.copyArtSummaries(sel);
+                }
+            }
+            MenuItem {
+                enabled: (artList.selection.count>0)
+                text: "Copy Row"
                 onTriggered: {
                     var sel = artList.selectedArts();
                     ctrl.copyRows(sel);
@@ -121,12 +129,6 @@ Item {
                 objectName: "tagEntry"
                 text: ""
                 placeholderText: "tag"
-            }
-            Button {
-                id: buttonTEST
-                enabled:  true
-                text: "Testy test test test"
-                onClicked: testMenu.popup()
             }
             Button {
                 id: buttonAddTag

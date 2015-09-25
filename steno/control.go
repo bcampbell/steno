@@ -530,6 +530,7 @@ func (ctrl *Control) CopyRows(artIndices []int) {
 	fieldNames := []string{"headline", "published", "tags", "byline", "url", "retweets", "favourites", "keywords", "links"}
 	var out bytes.Buffer
 	w := csv.NewWriter(&out)
+	w.Comma = '\t'
 	for _, artIdx := range artIndices {
 		fieldVals := []string{}
 		art := ctrl.Results.Art(artIdx)
@@ -544,6 +545,27 @@ func (ctrl *Control) CopyRows(artIndices []int) {
 	}
 
 	w.Flush()
+
+	err := ctrl.App.Clipboard.WriteAll(out.String())
+	if err != nil {
+		dbug.Printf("Copy failed: %s\n", err)
+	}
+}
+
+func (ctrl *Control) CopyArtSummaries(artIndices []int) {
+	var out bytes.Buffer
+	for _, artIdx := range artIndices {
+		art := ctrl.Results.Art(artIdx)
+
+		var pretty string
+		t, err := time.ParseInLocation(time.RFC3339, art.Published, time.Local)
+		if err == nil {
+			pretty = t.Format("2-Jan-2006")
+		} else {
+			pretty = art.Published
+		}
+		fmt.Fprintf(&out, "%s %s %s\n", pretty, art.Headline, art.URL())
+	}
 
 	err := ctrl.App.Clipboard.WriteAll(out.String())
 	if err != nil {
