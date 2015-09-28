@@ -1220,6 +1220,65 @@ func (store *Store) doFetch(artIDs ArtList) ([]*Article, error) {
 	return out, nil
 }
 
+type SortOrder int
+
+const (
+	Ascending SortOrder = iota
+	Descending
+)
+
+// Sort an article list (by hitting the sqlite db)
+func (store *Store) Sort(artIDs ArtList, fieldName string, order SortOrder) (ArtList, error) {
+
+	dbOrder := "ASC"
+	if order == Descending {
+		dbOrder = "DESC"
+	}
+
+	// TODO: special case handling required for tags, byline, links, keywords
+	dbField := ""
+	switch fieldName {
+	case "headline":
+		dbField = "headline"
+	case "published":
+		dbField = "published"
+	case "pub":
+		dbField = "pub"
+	case "url":
+		dbField = "canonical_url"
+	case "section":
+		dbField = "section"
+	case "retweets":
+		dbField = "retweet_count"
+	case "favourites":
+		dbField = "favourite_count"
+	default:
+		return nil, fmt.Errorf("unsupported sort field '%s'", fieldName)
+	}
+
+	q := fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
+	rows, err := store.db.Query(q)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(ArtList, 0, len(artIDs))
+	for rows.Next() {
+		var artID ArtID
+		err = rows.Scan(&artID)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, artID)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 //***************************
 // support for sorting Articles
 

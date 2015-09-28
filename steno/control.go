@@ -118,9 +118,8 @@ func (ctrl *Control) SetViewMode(mode string) {
 }
 
 func (ctrl *Control) ApplySorting(sortColumn string, sortOrder int) {
-	// XYZZY - implement sorting again
-	//	ctrl.Results = ctrl.Results.Sort(sortColumn, sortOrder)
-	//	qml.Changed(ctrl, &ctrl.Results)
+	ctrl.Results = ctrl.Results.Sort(sortColumn, sortOrder)
+	qml.Changed(ctrl, &ctrl.Results)
 }
 
 // TODO: provide a function to validate query...

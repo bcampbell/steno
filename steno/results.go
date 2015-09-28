@@ -151,6 +151,29 @@ func (res *Results) Facet(idx int) *Facet {
 	return res.facets[idx]
 }
 
+func (res *Results) Sort(sortColumn string, sortOrder int) *Results {
+	ord := store.Ascending
+	if sortOrder != 0 {
+		ord = store.Descending
+	}
+
+	sorted, err := res.db.Sort(res.arts, sortColumn, ord)
+	if err != nil {
+		//TODO: log error to dbug?
+		return res
+	}
+
+	return &Results{
+		Query:    res.Query,
+		arts:     sorted,
+		Len:      len(sorted),
+		facets:   res.facets, // facets don't change
+		FacetLen: res.FacetLen,
+		db:       res.db,
+		hydrated: res.hydrated,
+	}
+}
+
 // returns new Results
 // order: 1: ascending, 0: descending
 /*
