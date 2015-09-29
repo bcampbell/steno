@@ -47,28 +47,6 @@ Item {
     }
 
 
-    // TODO: phase this out and use generic progressDlg instead
-    Dialog {
-        id: slurpProgressDlg
-        width: 400
-        height: 200
-        title: "Slurping..."
-        visible: (ctrl.slurpProgress.inFlight || ctrl.slurpProgress.errorMsg != "")
-        contentItem: ColumnLayout {
-            spacing: 4
-            Text {
-                Layout.fillWidth: true;
-                visible: ctrl.slurpProgress.errorMsg != ""
-                color: "#FF4444"
-                font.bold: true
-                wrapMode: Text.Wrap
-                text: "ERROR: " + ctrl.slurpProgress.errorMsg }
-            Text { text: "received "+ctrl.slurpProgress.totalCnt + " articles (" +ctrl.slurpProgress.newCnt + " new)" }
-            BusyIndicator { running: ctrl.slurpProgress.inFlight }
-        }
-        standardButtons: StandardButton.Ok | StandardButton.Cancel
-    }
-
     Dialog {
         id: progressDlg
         width: 400
