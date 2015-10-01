@@ -13,3 +13,12 @@ function filePathFromURL(url) {
     return f;
 }
 
+
+// mark up links in plain text
+function markupLinks(txt) {
+    var url_match = /https?:\S+/g;
+    var out = txt.replace(url_match,'<a href="$&">$&</a>');
+    return out;
+}
+
+

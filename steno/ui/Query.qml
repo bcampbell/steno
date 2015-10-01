@@ -6,6 +6,7 @@ import QtQuick.Layouts 1.0
 import QtQuick.Dialogs 1.0
 
 
+import "helper.js" as Helper
 // This is the main bit, where the query and results and tools are shown.
 
 Item {
@@ -223,20 +224,21 @@ Item {
         Component {
             id: urlDelegate
             Item {
-                function asLink(s) {
-                    return '<a href="'+s+'">'+s+'</a>';
-                }
                 clip: true
 
                 Text {
                     anchors.fill: parent
                     color: styleData.textColor
                     elide: Text.ElideRight
-                    text: asLink(ctrl.results.art(styleData.row).canonicalURL)
+                    text: Helper.markupLinks(ctrl.results.art(styleData.row).canonicalURL.toString())
                     //onLinkActivated: Qt.openUrlExternally(link)
                     onLinkActivated: ctrl.openLink(link)
-                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
-                        
+                    MouseArea {
+                        cursorShape: parent.hoveredLink=="" ? Qt.ArrorCursor : Qt.PointingHandCursor;
+                        acceptedButtons: Qt.RightButton;
+                        anchors.fill: parent;
+                        onClicked: { copyMenu.gogogo(styleData); }
+                    }
                 }
             }
         }
@@ -317,8 +319,15 @@ Item {
                     anchors.fill: parent
                     color: styleData.textColor
                     elide: Text.ElideRight
-                    text: ctrl.results.art(styleData.row).linksString()
-                    MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
+                    text: Helper.markupLinks(ctrl.results.art(styleData.row).linksString())
+                    //onLinkActivated: Qt.openUrlExternally(link)
+                    onLinkActivated: ctrl.openLink(link)
+                    MouseArea {
+                        cursorShape: parent.hoveredLink=="" ? Qt.ArrorCursor : Qt.PointingHandCursor;
+                        acceptedButtons: Qt.RightButton;
+                        anchors.fill: parent;
+                        onClicked: { copyMenu.gogogo(styleData); }
+                    }
                 }
             }
         }
