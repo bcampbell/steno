@@ -179,10 +179,10 @@ func (idx *bleveIndex) search(queryString string, order string) (ArtList, error)
 		return ArtList{}, nil
 	}
 
-	//	q := bleve.NewQueryStringQuery(queryString)
-	//	q.MustMatch = true
+	parser := &qs.Parser{}
+	parser.ImpliedOp = qs.AND
 
-	q, err := qs.Parse(queryString)
+	q, err := parser.Parse(queryString)
 	if err != nil {
 		return ArtList{}, err
 	}
