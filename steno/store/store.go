@@ -566,7 +566,7 @@ func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 			tx.Rollback()
 			return nil, err
 		}
-		store.dbug.Printf("added '%s' tag from %d articles\n", tag, len(newlyTagged))
+		store.dbug.Printf("added '%s' tag to %d articles\n", tag, len(newlyTagged))
 		affected = affected.Union(newlyTagged)
 	}
 
