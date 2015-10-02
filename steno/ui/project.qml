@@ -49,12 +49,22 @@ Item {
 
     Dialog {
         id: progressDlg
-        width: 400
-        height: 200
+        width: 500
+        height: 100
         title: ctrl.progress.title
         visible: (ctrl.progress.inFlight || ctrl.progress.errorMsg != "")
         contentItem: ColumnLayout {
+            anchors.fill: parent
+        anchors.margins: 12
             spacing: 4
+            ProgressBar {
+                Layout.fillWidth: true;
+                visible: ctrl.progress.inFlight
+                value: ctrl.progress.completedCnt
+                minimumValue: 0
+                maximumValue: ctrl.progress.expectedCnt
+                indeterminate: (ctrl.progress.expectedCnt==0) ? true:false
+            }
             Text {
                 Layout.fillWidth: true;
                 visible: ctrl.progress.errorMsg != ""
@@ -63,7 +73,7 @@ Item {
                 wrapMode: Text.Wrap
                 text: "ERROR: " + ctrl.progress.errorMsg }
             Text { text: ctrl.progress.statusMsg }
-            BusyIndicator { running: ctrl.progress.inFlight }
+            //BusyIndicator { running: ctrl.progress.inFlight }
         }
         standardButtons: StandardButton.Ok | StandardButton.Cancel
     }

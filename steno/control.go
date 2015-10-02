@@ -240,6 +240,9 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 	var elapsedFind time.Duration
 	var elapsedStash time.Duration
 
+	ctrl.Progress = Progress{}
+	prog := &ctrl.Progress
+
 	// look up the server by name
 	var server *SlurpSource
 	for _, src := range ctrl.App.SlurpSources {
@@ -272,17 +275,18 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 	timeTo = timeTo.AddDate(0, 0, 1)
 
 	go func() {
-
-		ctrl.Progress = Progress{}
-		prog := &ctrl.Progress
+		newCnt := 0
+		receivedCnt := 0
 
 		defer func() {
 			prog.InFlight = false
-			qml.Changed(ctrl, &ctrl.Progress)
+			qml.Changed(ctrl, prog)
 		}()
 
-		ctrl.Progress.InFlight = true
-		qml.Changed(ctrl, &ctrl.Progress)
+		prog.InFlight = true
+		prog.Title = "Slurping"
+		prog.StatusMsg = "Slurping..."
+		qml.Changed(ctrl, prog)
 
 		//		dbug.Printf("slurping %s..%s\n", dayFrom, dayTo)
 		incoming := Slurp(*server, timeFrom, timeTo)
@@ -302,8 +306,8 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 				// handle errors
 				if msg.Error != "" {
 					uhoh := fmt.Sprintf("Slurp error from server: %s", msg.Error)
-					ctrl.Progress.ErrorMsg = uhoh
-					qml.Changed(ctrl, &ctrl.Progress)
+					prog.ErrorMsg = uhoh
+					qml.Changed(ctrl, prog)
 					dbug.Printf("%s\n", uhoh)
 					return
 				}
@@ -313,12 +317,15 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 				}
 
 				arts = append(arts, msg.Article)
+				receivedCnt += 1
 			}
 
 			// empty batch? all done?
 			if len(arts) == 0 {
 				break
 			}
+
+			qml.Changed(ctrl, prog)
 
 			// check which articles are new
 			newArts := []*store.Article{}
@@ -328,8 +335,8 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 				elapsedFind += time.Since(startTime)
 				if err != nil {
 					uhoh := fmt.Sprintf("FindArt() failed: %s", err)
-					ctrl.Progress.ErrorMsg = uhoh
-					qml.Changed(ctrl, &ctrl.Progress)
+					prog.ErrorMsg = uhoh
+					qml.Changed(ctrl, prog)
 					dbug.Printf("%s\n", uhoh)
 					return
 				}
@@ -350,22 +357,21 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 				elapsedStash += time.Since(startTime)
 				if err != nil {
 					uhoh := fmt.Sprintf("Stash failed: %s", err)
-					ctrl.Progress.ErrorMsg = uhoh
-					qml.Changed(ctrl, &ctrl.Progress)
+					prog.ErrorMsg = uhoh
+					qml.Changed(ctrl, prog)
 					dbug.Printf("%s\n", uhoh)
 					return
 				}
 			}
 			//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
 			// TODO: not right, but hey
-			ctrl.Progress.CompletedCnt += len(newArts)
-			ctrl.Progress.ExpectedCnt += len(arts)
-			qml.Changed(ctrl, &ctrl.Progress)
+			newCnt += len(newArts)
+
+			prog.StatusMsg = fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt)
+			qml.Changed(ctrl, prog)
 		}
 
 		dbug.Printf("Slurp finished.\n")
-		ctrl.App.SetError("")
-		//dbug.Printf("slurped %d (%d new)\n", gotCnt+newCnt, newCnt)
 
 		// re-run the current query
 		r2, err := NewResults(ctrl.store, ctrl.Results.Query)
@@ -393,15 +399,17 @@ func (ctrl *Control) RunScript(scriptIdx int) {
 
 		prog.Title = fmt.Sprintf("running %s...", s.Name)
 		ctrl.Progress.InFlight = true
-		qml.Changed(ctrl, &ctrl.Progress)
+		qml.Changed(ctrl, prog)
 		err := s.Run(ctrl.store, func(expected int, completed int, status string) {
 			prog.StatusMsg = status
-			qml.Changed(ctrl, &ctrl.Progress)
+			prog.ExpectedCnt = expected
+			prog.CompletedCnt = completed
+			qml.Changed(ctrl, prog)
 		})
 		if err != nil {
 			dbug.Printf("ERROR running script %s: %s\n", s.Name, err)
 			prog.ErrorMsg = err.Error()
-			qml.Changed(ctrl, &ctrl.Progress)
+			qml.Changed(ctrl, prog)
 			ctrl.App.SetError(err.Error())
 		}
 		// rerun the current query
@@ -435,6 +443,8 @@ func (ctrl *Control) EmbiggenShortlinks() {
 			qml.Changed(ctrl, prog)
 		}()
 		affected, err := embiggenArts(allArts, shortlinkDomainsFile, func(expected int, completed int, status string) {
+			prog.ExpectedCnt = expected
+			prog.CompletedCnt = completed
 			prog.StatusMsg = status
 			qml.Changed(ctrl, prog)
 		})
