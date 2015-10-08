@@ -282,9 +282,14 @@ ApplicationWindow {
             while (s.length < size) s = "0" + s;
             return s;
         }
+
+        width: 320
+        height: 400
+
+        standardButtons: StandardButton.Ok | StandardButton.Cancel
         title: "Slurp articles from server"
-        contentItem: ColumnLayout {
-            spacing: 4
+        ColumnLayout {
+            anchors.fill: parent
             Label { text:"Source" }
             ComboBox {
                 id: slurpSource
@@ -296,17 +301,20 @@ ApplicationWindow {
                     return names;
                 }
             }
-            Label { text:"Pick day" }
-            Calendar {
+            Label { text:"Pick day(s)" }
+            FancyCal {
                 id: dayPicker
-                onDoubleClicked: slurpDlg.click(StandardButton.Ok)
+                maxDays: 14
              }
         }
-        standardButtons: StandardButton.Ok | StandardButton.Cancel
+
+
         onAccepted: {
-            var d = dayPicker.selectedDate;
-            var dateStr = pad(d.getFullYear(),4) + '-' + pad(d.getMonth()+1,2) + '-' + pad(d.getDate(),2);
-            app.current().slurp( slurpSource.currentText, dateStr, dateStr);
+            var fromD = dayPicker.dateStart;
+            var toD = dayPicker.dateEnd;
+            var fromStr = pad(fromD.getFullYear(),4) + '-' + pad(fromD.getMonth()+1,2) + '-' + pad(fromD.getDate(),2);
+            var toStr = pad(toD.getFullYear(),4) + '-' + pad(toD.getMonth()+1,2) + '-' + pad(toD.getDate(),2);
+            app.current().slurp( slurpSource.currentText, fromStr, toStr);
         }
 
     }
