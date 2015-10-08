@@ -28,6 +28,26 @@ type Progress struct {
 	CompletedCnt int
 	StatusMsg    string
 	ErrorMsg     string
+	ctrl         *Control
+}
+
+func (p *Progress) SetError(err error) {
+	p.ErrorMsg = err.Error()
+	qml.Changed(p.ctrl, p)
+}
+
+func (p *Progress) SetStatus(msg string) {
+	p.StatusMsg = msg
+	qml.Changed(p.ctrl, p)
+}
+
+func (p *Progress) Reset() {
+	p.InFlight = false
+	p.Title = ""
+	p.ExpectedCnt = 0
+	p.CompletedCnt = 0
+	p.StatusMsg = ""
+	p.ErrorMsg = ""
 }
 
 //
@@ -77,6 +97,9 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 	w := app.Window.Root().ObjectByName("mainSpace")
 	ctrl.obj = gui.Create(nil)
 	ctrl.obj.Set("parent", w)
+
+	//
+	ctrl.Progress.ctrl = ctrl
 
 	/*
 		obj := window.Root().ObjectByName("query")
@@ -236,12 +259,8 @@ func (ctrl *Control) ExportCSV(outFile string) {
 }
 
 func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
-
-	var elapsedFind time.Duration
-	var elapsedStash time.Duration
-
-	ctrl.Progress = Progress{}
 	prog := &ctrl.Progress
+	prog.Reset()
 
 	// look up the server by name
 	var server *SlurpSource
@@ -252,10 +271,7 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 		}
 	}
 	if server == nil {
-		uhoh := fmt.Sprintf("ERROR: unknown server '%s'", slurpSourceName)
-		ctrl.Progress.ErrorMsg = uhoh
-		qml.Changed(ctrl, &ctrl.Progress)
-		dbug.Printf("%s\n", uhoh)
+		prog.SetError(fmt.Errorf("unknown server '%s'", slurpSourceName))
 		return
 	}
 
@@ -263,21 +279,21 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 	const shortForm = "2006-01-02"
 	timeFrom, err := time.ParseInLocation(shortForm, dayFrom, time.Local)
 	if err != nil {
-		dbug.Printf("ERROR: bad dayFrom: %s (%s)\n", dayFrom, err)
+		prog.SetError(fmt.Errorf("ERROR: bad dayFrom: %s (%s)\n", dayFrom, err))
 		return
 	}
 	timeTo, err := time.ParseInLocation(shortForm, dayTo, time.Local)
 	if err != nil {
-		dbug.Printf("ERROR: bad dayTo: %s (%s)\n", dayTo, err)
+		prog.SetError(fmt.Errorf("ERROR: bad dayTo: %s (%s)\n", dayTo, err))
 		return
 	}
 	// HACK: want one day's worth
 	timeTo = timeTo.AddDate(0, 0, 1)
 
-	go func() {
-		newCnt := 0
-		receivedCnt := 0
+	// -----
 
+	go func() {
+		startTime := time.Now()
 		defer func() {
 			prog.InFlight = false
 			qml.Changed(ctrl, prog)
@@ -288,90 +304,10 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 		prog.StatusMsg = "Slurping..."
 		qml.Changed(ctrl, prog)
 
-		//		dbug.Printf("slurping %s..%s\n", dayFrom, dayTo)
-		incoming := Slurp(*server, timeFrom, timeTo)
-
-		batchSize := 200
-
-		for {
-			// read in a batch of articles
-			arts := []*store.Article{}
-			for i := 0; i < batchSize; i++ {
-				msg, ok := <-incoming
-
-				if !ok {
-					break
-				}
-
-				// handle errors
-				if msg.Error != "" {
-					uhoh := fmt.Sprintf("Slurp error from server: %s", msg.Error)
-					prog.ErrorMsg = uhoh
-					qml.Changed(ctrl, prog)
-					dbug.Printf("%s\n", uhoh)
-					return
-				}
-				if msg.Article == nil {
-					dbug.Printf("Slurp WARN: missing article\n")
-					continue
-				}
-
-				arts = append(arts, msg.Article)
-				receivedCnt += 1
-			}
-
-			// empty batch? all done?
-			if len(arts) == 0 {
-				break
-			}
-
-			qml.Changed(ctrl, prog)
-
-			// check which articles are new
-			newArts := []*store.Article{}
-			for _, art := range arts {
-				startTime := time.Now()
-				got, err := ctrl.store.FindArt(art.URLs)
-				elapsedFind += time.Since(startTime)
-				if err != nil {
-					uhoh := fmt.Sprintf("FindArt() failed: %s", err)
-					prog.ErrorMsg = uhoh
-					qml.Changed(ctrl, prog)
-					dbug.Printf("%s\n", uhoh)
-					return
-				}
-				if got > 0 {
-					// already got it.
-					continue
-				}
-				newArts = append(newArts, art)
-			}
-
-			// stash the new articles
-			if len(newArts) > 0 {
-				startTime := time.Now()
-
-				//dbug.Printf("%s find:%s stash:%s\n", ctrl.Progress.String(), elapsedFind.String(), elapsedStash.String())
-
-				err := ctrl.store.Stash(newArts)
-				elapsedStash += time.Since(startTime)
-				if err != nil {
-					uhoh := fmt.Sprintf("Stash failed: %s", err)
-					prog.ErrorMsg = uhoh
-					qml.Changed(ctrl, prog)
-					dbug.Printf("%s\n", uhoh)
-					return
-				}
-			}
-			//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
-			// TODO: not right, but hey
-			newCnt += len(newArts)
-
-			prog.StatusMsg = fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt)
-			qml.Changed(ctrl, prog)
+		err := Slurp(ctrl.store, server, timeFrom, timeTo, prog)
+		if err != nil {
+			prog.SetError(err)
 		}
-
-		dbug.Printf("Slurp finished.\n")
 
 		// re-run the current query
 		r2, err := NewResults(ctrl.store, ctrl.Results.Query)
@@ -381,6 +317,9 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 		}
 		ctrl.Results = r2
 		qml.Changed(ctrl, &ctrl.Results)
+
+		elapsed := time.Since(startTime)
+		dbug.Printf("Slurp finished (took %s)\n", elapsed)
 	}()
 }
 
@@ -389,8 +328,8 @@ func (ctrl *Control) RunScript(scriptIdx int) {
 
 	// run as goroutine to avoid freezing gui
 	go func() {
-		ctrl.Progress = Progress{}
 		prog := &ctrl.Progress
+		prog.Reset()
 
 		defer func() {
 			prog.InFlight = false

@@ -2,11 +2,7 @@ package main
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"os"
 	"semprini/scrapeomat/slurp"
 	"semprini/steno/steno/store"
@@ -56,60 +52,84 @@ func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
 	return srcs, nil
 }
 
-func Slurp(server SlurpSource, timeFrom, timeTo time.Time) chan Msg {
-	out := make(chan Msg)
+func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, progress *Progress) error {
 
-	go func() {
-		defer close(out)
+	slurper := slurp.NewSlurper(server.Loc)
 
-		params := url.Values{}
-		params.Set("pubfrom", timeFrom.Format(time.RFC3339))
-		params.Set("pubto", timeTo.Format(time.RFC3339))
+	filt := &slurp.Filter{
+		PubFrom: timeFrom,
+		PubTo:   timeTo,
+	}
 
-		u := fmt.Sprintf("%s/api/slurp?%s", server.Loc, params.Encode())
+	stream, cancel := slurper.Slurp(filt)
 
-		fmt.Println(u)
+	batchSize := 200
 
-		resp, err := http.Get(u)
-		if err != nil {
-			out <- Msg{Error: fmt.Sprintf("HTTP Get failed: %s", err)}
-			return
-		}
-		defer resp.Body.Close()
+	newCnt := 0
+	receivedCnt := 0
+	for {
+		// read a batch of articles in from the wire...
+		arts := []*store.Article{}
+		for i := 0; i < batchSize; i++ {
+			msg, ok := <-stream
 
-		dec := json.NewDecoder(resp.Body)
-		for {
-			// read in a message from the wire
-			var msg struct {
-				Article *wireFmtArt `json:"article,omitempty"`
-				Error   string      `json:"error,omitempty"`
-			}
-			if err := dec.Decode(&msg); err == io.EOF {
+			if !ok {
 				break
-			} else if err != nil {
-				out <- Msg{Error: fmt.Sprintf("Decode error: %s", err)}
-				return
 			}
 
-			cooked := Msg{}
-
+			// handle errors
 			if msg.Error != "" {
-				cooked.Error = msg.Error
+				cancel <- struct{}{} // TODO: this isn't enough.
+				return fmt.Errorf("Slurp error from server: %s", msg.Error)
+			}
+			if msg.Article == nil {
+				dbug.Printf("Slurp WARN: missing article\n")
+				continue
 			}
 
-			if msg.Article != nil {
-				cooked.Article = convertArt(msg.Article)
-			}
-
-			out <- cooked
+			art := convertArt(msg.Article)
+			arts = append(arts, art)
+			receivedCnt += 1
 		}
-	}()
 
-	return out
+		// empty batch? all done?
+		if len(arts) == 0 {
+			break
+		}
+
+		// check which articles are new
+		newArts := []*store.Article{}
+		for _, art := range arts {
+			got, err := db.FindArt(art.URLs)
+			if err != nil {
+				cancel <- struct{}{} // TODO: this isn't enough.
+				return fmt.Errorf("FindArt() failed: %s", err)
+			}
+			if got > 0 {
+				// already got it.
+				continue
+			}
+			newArts = append(newArts, art)
+		}
+
+		// stash the new articles
+		if len(newArts) > 0 {
+			err := db.Stash(newArts)
+			if err != nil {
+				cancel <- struct{}{} // TODO: this isn't enough.
+				return fmt.Errorf("Stash failed: %s", err)
+			}
+		}
+		//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
+		// TODO: not right, but hey
+		newCnt += len(newArts)
+		progress.SetStatus(fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt))
+	}
+	return nil
 }
 
 // convert the wire-format article into our local form
-func convertArt(in *wireFmtArt) *store.Article {
+func convertArt(in *slurp.Article) *store.Article {
 	out := &store.Article{
 		CanonicalURL: in.CanonicalURL,
 		URLs:         make([]string, len(in.URLs)),
