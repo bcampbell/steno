@@ -1,26 +1,12 @@
-STENO - NEXT 4 WEEKS (in rough order)
+STENO - OCTOBER
 =====================================
 
-this week:
----------
-
-busy/progress dialog for all lengthy operations
-
-all links should be clickable
-
----------
+w/c 5/10
 
 try and slim down win32 build
   currently using big bloated debug versions of the GUI toolkit.
   Should be possible to get it to use the (much smaller) release version
   instead.
-
-finish query language
-  - missing date/number ranges
-
-support column sorting for tags, keywords, bylines
-
----------
 
 better slurp interface (gui):
   + slurp multiple days
@@ -28,6 +14,18 @@ better slurp interface (gui):
   + preview options (eg show article counts per day as you browse
     calender, say)
 
+Send new build to GR and MM
+
+---------
+
+w/c 12/10
+
+TESTING: GR & MM to test new build and feedback
+
+finish query language
+  - missing date/number ranges
+
+support column sorting for tags, keywords, bylines
 
 mac link-clicking bug
 
@@ -38,6 +36,8 @@ better display of dates
 
 ----------
 
+w/c 19/10
+
 in-app documentation:
   - general intro
   - query language syntax and examples
@@ -47,9 +47,22 @@ speed up tagging/untagging
   - the issue is that bleve requires full reindexing of modified documents
     so adding/removing tags from a whole bunch at once can be slow.
 
+Send new build to GR and MM
+
+----------
+
+w/c 26/10
+
+TESTING: GR & MM to test new build and feedback
+
+figure out licensing/source release if any
+
+Documentation on server side
+  - how to set up a server
+  - how to configure publications
 
 
-FURTHER OUT (>4 weeks away, in no particular order)
+FURTHER OUT (ie November, in no particular order)
 ---------------------------------------------------
 
 would be nice to have an icon/logo for it
@@ -57,16 +70,6 @@ would be nice to have an icon/logo for it
 access tokens (api) - to govern and track other users of our servers
 
 manual article entry/editing
-
-figure out licensing/source release if any
-  - suggest Affero GPL all round. Free for all to use and contribute to,
-    but nobody can build on it unless they're prepared to be open source.
-    TODO: if we want to be able to build closed stuff on top of it, then
-    we need to be able to license it. At the moment, MST owns all the code.
-    However, if we get contributions from other people, they will own those
-    changes. So we either need agreement from them to use their work under
-    non-AGPL terms, or get them to assign over the copyright.
-
 
 publicise it more!
 
@@ -76,10 +79,7 @@ server-side shortlink embiggening?
   - might be better leaving it in the client side after all... it's
     an inexact process and requires a little hand-holding
 
-Documentation on server side
-  - how to set up a server
-  - how to configure publications
-
 Assorted Server-side improvements
   - better logging, notifications etc...
+
 
