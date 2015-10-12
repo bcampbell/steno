@@ -7,6 +7,7 @@ import (
 	stdhtml "html"
 	"html/template"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -147,6 +148,7 @@ func (art *Article) BylineString() string {
 	for i, a := range art.Authors {
 		names[i] = a.Name
 	}
+	sort.Strings(names)
 	return strings.Join(names, ", ")
 }
 

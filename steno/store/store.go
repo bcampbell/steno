@@ -1212,9 +1212,13 @@ func (store *Store) doFetch(artIDs ArtList) ([]*Article, error) {
 	// all done
 	out := []*Article{}
 	for _, art := range tab {
+
+		sort.Strings(art.Tags)
+		sort.Strings(art.Keywords)
+		sort.Strings(art.Links)
+
 		// evil hack (TODO: less evil, please)
 		art.Byline = art.BylineString()
-
 		out = append(out, art)
 	}
 	return out, nil
@@ -1235,7 +1239,6 @@ func (store *Store) Sort(artIDs ArtList, fieldName string, order SortOrder) (Art
 		dbOrder = "DESC"
 	}
 
-	// TODO: special case handling required for tags, byline, links, keywords
 	dbField := ""
 	switch fieldName {
 	case "headline":
@@ -1252,11 +1255,45 @@ func (store *Store) Sort(artIDs ArtList, fieldName string, order SortOrder) (Art
 		dbField = "retweet_count"
 	case "favourites":
 		dbField = "favourite_count"
+	case "tags":
+		dbField = "t.tag"
+	case "keywords":
+		dbField = "kw.name"
+	case "byline":
+		dbField = "auth.name"
+	case "links":
+		dbField = "l.url"
 	default:
 		return nil, fmt.Errorf("unsupported sort field '%s'", fieldName)
 	}
 
-	q := fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
+	var q string
+	switch dbField {
+	case "t.tag": // tags
+		q = fmt.Sprintf(
+			`SELECT DISTINCT a.id
+            FROM (article a LEFT JOIN article_tag t ON t.article_id=a.id)
+            WHERE a.id IN (%s) ORDER BY %s %s`, artIDs.StringList(), dbField, dbOrder)
+	case "kw.name": // keywords
+		q = fmt.Sprintf(
+			`SELECT DISTINCT a.id
+            FROM (article a LEFT JOIN article_keyword kw ON kw.article_id=a.id)
+            WHERE a.id IN (%s) ORDER BY %s %s`, artIDs.StringList(), dbField, dbOrder)
+	case "auth.name": // byline
+		q = fmt.Sprintf(
+			`SELECT DISTINCT a.id
+            FROM (article a LEFT JOIN article_author auth ON auth.article_id=a.id)
+            WHERE a.id IN (%s) ORDER BY %s %s`, artIDs.StringList(), dbField, dbOrder)
+	case "l.url": // links
+		q = fmt.Sprintf(
+			`SELECT DISTINCT a.id
+            FROM (article a LEFT JOIN article_link l ON l.article_id=a.id)
+            WHERE a.id IN (%s) ORDER BY %s %s`, artIDs.StringList(), dbField, dbOrder)
+	default:
+		// the nice simple case - no joins
+		q = fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
+	}
+
 	rows, err := store.db.Query(q)
 	if err != nil {
 		return nil, err
