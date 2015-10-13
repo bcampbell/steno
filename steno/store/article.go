@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // dehydrated article (enough for list in gui):
@@ -69,6 +70,19 @@ type Article struct {
 	// fudge fields
 	Pub    string
 	Byline string
+}
+
+func (art *Article) FormattedPubDate(fmt string) string {
+	t, err := time.Parse(time.RFC3339, art.Published)
+
+	if err != nil {
+		t, err = time.Parse("2006-01-02", art.Published)
+		if err != nil {
+			return "???"
+		}
+	}
+	// eg "Mon Jan 2 2006"
+	return t.Format(fmt)
 }
 
 func (art *Article) Day() string {

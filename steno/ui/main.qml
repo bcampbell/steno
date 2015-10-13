@@ -210,6 +210,39 @@ ApplicationWindow {
         }
     }
 
+    ExclusiveGroup {
+        id: dateFmtGroup
+        Action {
+            id: dateFmt1
+            text: "Mon 02/01/2006"
+            checkable: true
+            checked: true
+            onToggled: { if(app.hasCurrent && checked) { app.current().setDateFmt(text) }; }
+            enabled: app.hasCurrent
+        }
+        Action {
+            id: dateFmt2
+            text: "2006-01-02"
+            checkable: true
+            onToggled: { if(app.hasCurrent && checked) { app.current().setDateFmt(text) }; }
+            enabled: app.hasCurrent
+        }
+        Action {
+            id: dateFmt3
+            text: "2006-01-02 15:04"
+            checkable: true
+            onToggled: { if(app.hasCurrent && checked) { app.current().setDateFmt(text) }; }
+            enabled: app.hasCurrent
+        }
+        Action {
+            id: dateFmt4
+            text: "2006-01-02T15:04:05Z07:00"
+            checkable: true
+            onToggled: { if(app.hasCurrent && checked) { app.current().setDateFmt(text) }; }
+            enabled: app.hasCurrent
+        }
+    }
+
     menuBar: MenuBar {
         Menu {
             title: "File"
@@ -232,9 +265,19 @@ ApplicationWindow {
             MenuItem { action: slurpAction }
         }
         Menu {
-            title: "ViewMode"
-            MenuItem { action: tweetModeAction }
-            MenuItem { action: articleModeAction }
+            title: "View"
+            Menu {
+                title: "Mode"
+                MenuItem { action: tweetModeAction }
+                MenuItem { action: articleModeAction }
+            }
+            Menu {
+                title: "Date format"
+                MenuItem { action: dateFmt1 }
+                MenuItem { action: dateFmt2 }
+                MenuItem { action: dateFmt3 }
+                MenuItem { action: dateFmt4 }
+            }
         }
         Menu {
             title: "Help"

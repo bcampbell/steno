@@ -215,7 +215,7 @@ Item {
                     anchors.fill: parent
                     color: styleData.textColor
                     elide: styleData.elideMode
-                    text: ctrl.results.art(styleData.row).published
+                    text: ctrl.results.art(styleData.row).formattedPubDate(ctrl.dateFmt)
                     MouseArea { acceptedButtons: Qt.RightButton; anchors.fill: parent; onClicked: { copyMenu.gogogo(styleData); }}
                 }
             }

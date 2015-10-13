@@ -64,6 +64,8 @@ type Control struct {
 
 	ViewMode string // "tweet" or "article"
 
+	DateFmt string // format for date display in results (time.Time format)
+
 	Progress   Progress
 	StatusText string
 	HelpText   string
@@ -89,6 +91,8 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 	ctrl.ViewMode = "article"
 	ctrl.SortColumn = 3 // Published
 	ctrl.SortOrder = 0
+
+	ctrl.DateFmt = "Mon 02/01/06"
 
 	// expose us to the qml side
 	app.ctx.SetVar("ctrl", ctrl)
@@ -120,6 +124,12 @@ func (ctrl *Control) Close() {
 func (ctrl *Control) SetViewMode(mode string) {
 	ctrl.ViewMode = mode
 	qml.Changed(ctrl, &ctrl.ViewMode)
+}
+
+func (ctrl *Control) SetDateFmt(fmt string) {
+	ctrl.DateFmt = fmt
+	qml.Changed(ctrl, &ctrl.DateFmt)
+	ctrl.forceArtsRefresh()
 }
 
 func (ctrl *Control) ApplySorting(sortColumn string, sortOrder int) {
