@@ -1,6 +1,7 @@
 package store
 
 import (
+	"github.com/bcampbell/qs"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzers/custom_analyzer"
 	"github.com/blevesearch/bleve/analysis/analyzers/simple_analyzer"
@@ -8,7 +9,6 @@ import (
 	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
 	"github.com/blevesearch/bleve/analysis/tokenizers/regexp_tokenizer"
 	"github.com/blevesearch/bleve/index/store/goleveldb"
-	"github.com/blevesearch/bleve/qs"
 	"strconv"
 )
 
@@ -180,7 +180,7 @@ func (idx *bleveIndex) search(queryString string, order string) (ArtList, error)
 	}
 
 	parser := &qs.Parser{}
-	parser.ImpliedOp = qs.AND
+	parser.DefaultOp = qs.AND
 
 	q, err := parser.Parse(queryString)
 	if err != nil {
