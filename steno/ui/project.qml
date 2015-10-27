@@ -25,7 +25,8 @@ Item {
                 id: artInfo
                 Layout.minimumHeight: 100
                 function showArt(art,highlightTerms) {
-                   content.text = art.formatContent(highlightTerms);
+                   content.text = ctrl.renderContent(art);
+                    console.log(content.text);
                 }
                 ScrollView {
                     anchors.fill: parent
@@ -38,7 +39,7 @@ Item {
 
 
                         wrapMode: Text.WordWrap
-                        textFormat: Text.StyledText
+                        textFormat: Text.RichText
                     }
                 
                 }

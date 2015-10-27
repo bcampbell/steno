@@ -8,9 +8,11 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"golang.org/x/net/html"
 	"gopkg.in/qml.v1"
 	"os"
 	"path/filepath"
+	"semprini/steno/steno/quote"
 	"semprini/steno/steno/store"
 	"strings"
 	"time"
@@ -512,4 +514,21 @@ func (ctrl *Control) CopyArtSummaries(artIndices []int) {
 	if err != nil {
 		dbug.Printf("Copy failed: %s\n", err)
 	}
+}
+
+func (ctrl *Control) RenderContent(art *store.Article) string {
+	r := strings.NewReader(art.Content)
+	root, err := html.Parse(r)
+	if err != nil {
+		return ""
+	}
+	quote.HighlightQuotes(root)
+
+	var buf bytes.Buffer
+	err = html.Render(&buf, root)
+	if err != nil {
+		return ""
+	}
+
+	return buf.String()
 }
