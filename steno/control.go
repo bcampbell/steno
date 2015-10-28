@@ -9,6 +9,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 	"gopkg.in/qml.v1"
 	"os"
 	"path/filepath"
@@ -516,13 +517,30 @@ func (ctrl *Control) CopyArtSummaries(artIndices []int) {
 	}
 }
 
+func stripImg(n *html.Node) {
+	if n.Type == html.ElementNode && n.DataAtom == atom.Img {
+		n.Parent.RemoveChild(n)
+		return
+	}
+
+	var next *html.Node
+	for child := n.FirstChild; child != nil; child = next {
+		next = child.NextSibling
+		stripImg(child)
+	}
+}
+
 func (ctrl *Control) RenderContent(art *store.Article) string {
+	fmt.Printf("Art %d\n", art.ID)
 	r := strings.NewReader(art.Content)
 	root, err := html.Parse(r)
 	if err != nil {
 		return ""
 	}
 	quote.HighlightQuotes(root)
+
+	// strip images
+	stripImg(root)
 
 	var buf bytes.Buffer
 	err = html.Render(&buf, root)
