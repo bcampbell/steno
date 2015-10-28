@@ -277,13 +277,9 @@ func lexSingleQuoted(l *lexer) stateFn {
 			break
 		}
 		r := l.next()
-		if strings.ContainsRune(`’›‘`, r) {
-			end = l.prevpos
-			break
-		}
+		if strings.ContainsRune(`'’›‘`, r) {
 
-		// make sure things like "don't" don't close the quote prematurely
-		if r == '\'' {
+			// make sure things like "don't" don't close the quote prematurely
 			end = l.prevpos
 			r2 := l.peek()
 			if !unicode.IsLetter(r2) && !unicode.IsDigit(r2) {
