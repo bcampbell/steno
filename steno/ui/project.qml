@@ -26,7 +26,6 @@ Item {
                 Layout.minimumHeight: 100
                 function showArt(art,highlightTerms) {
                    content.text = ctrl.renderContent(art);
-                    console.log(content.text);
                 }
                 ScrollView {
                     anchors.fill: parent
