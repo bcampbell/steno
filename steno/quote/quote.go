@@ -66,14 +66,14 @@ func nextNode(n *html.Node) *html.Node {
 	}
 }
 
-type foo struct {
+type NodeSpans struct {
 	n     *html.Node
 	spans []int
 }
 
 func HighlightQuotes(n *html.Node) {
 
-	quotes := []foo{}
+	quotes := []NodeSpans{}
 
 	for ; n != nil; n = nextNode(n) {
 		if n.Type != html.TextNode {
@@ -81,31 +81,81 @@ func HighlightQuotes(n *html.Node) {
 		}
 
 		spans := FindQuoted(n.Data)
-		quotes = append(quotes, foo{n: n, spans: spans})
+		if len(spans) > 0 {
+			quotes = append(quotes, NodeSpans{n: n, spans: spans})
+		}
 
 	}
 
 	for _, q := range quotes {
-		HighlightSpans(q.n, q.spans)
+		HighlightSpans(q.n, q.spans, nil)
 	}
 }
 
-func HighlightSpans(orig *html.Node, spans []int) {
+func buildStringsMatcher(terms []string) *regexp.Regexp {
 
+	parts := make([]string, len(terms))
+	for i, term := range terms {
+		parts[i] = regexp.QuoteMeta(term)
+	}
+	pat := "(?i)" + strings.Join(parts, "|")
+	return regexp.MustCompile(pat)
+}
+
+func HighlightText(n *html.Node, highlightTerms []string) {
+
+	if len(highlightTerms) == 0 {
+		return
+	}
+	pat := buildStringsMatcher(highlightTerms)
+
+	quotes := []NodeSpans{}
+
+	for ; n != nil; n = nextNode(n) {
+		if n.Type != html.TextNode {
+			continue
+		}
+
+		matches := pat.FindAllStringSubmatchIndex(n.Data, -1)
+		spans := []int{}
+		for _, m := range matches {
+			spans = append(spans, m[0], m[1])
+		}
+		if len(spans) > 0 {
+			quotes = append(quotes, NodeSpans{n: n, spans: spans})
+		}
+	}
+
+	for _, q := range quotes {
+		HighlightSpans(q.n, q.spans,
+			&html.Node{
+				Type:     html.ElementNode,
+				DataAtom: atom.Span, //atom.Font,
+				Data:     "span",    //"font",
+				Attr: []html.Attribute{
+					{Key: "class", Val: "hl"},
+					//					{Key: "style", Val: "color: #ffdd44;"},
+				},
+			})
+	}
+}
+
+func HighlightSpans(orig *html.Node, spans []int, wrapNode *html.Node) {
 	if len(spans) == 0 {
 		return
 	}
-	/*
-		if orig.Type != html.TextNode {
-			panic("not textnode")
+
+	if wrapNode == nil {
+		wrapNode = &html.Node{
+			Type:     html.ElementNode,
+			DataAtom: atom.Span, //atom.Font,
+			Data:     "span",    //"font",
+			Attr: []html.Attribute{
+				{Key: "class", Val: "quote"},
+				//{Key: "style", Val: "color: #ff0000; background-color: #ffff00;"},
+			},
 		}
-		if orig.Parent == nil {
-			panic("orphan node")
-		}
-		if orig.FirstChild != nil {
-			panic("who'll save the wee turtles!")
-		}
-	*/
+	}
 	newNodes := []*html.Node{}
 
 	pos := 0
@@ -121,21 +171,13 @@ func HighlightSpans(orig *html.Node, spans []int) {
 			newNodes = append(newNodes, leading)
 		}
 
-		hl := &html.Node{
-			Type:     html.ElementNode,
-			DataAtom: atom.Font,
-			Data:     "font",
-			Attr: []html.Attribute{
-				//				{Key: "color", Val: "#ff0000"},
-				{Key: "style", Val: "color: #ff0000; background-color: #ffff00;"},
-			},
-		}
+		var hl = *wrapNode
 
 		frag := orig.Data[begin:end]
 		pos = end
 		hlContent := &html.Node{Type: html.TextNode, Data: frag}
 		hl.AppendChild(hlContent)
-		newNodes = append(newNodes, hl)
+		newNodes = append(newNodes, &hl)
 	}
 	if pos < len(orig.Data) {
 		trailing := &html.Node{
@@ -152,33 +194,8 @@ func HighlightSpans(orig *html.Node, spans []int) {
 	orig.Parent.RemoveChild(orig)
 }
 
-var quotePat = regexp.MustCompile(`(?:[‘‹‚](.*?)[’›‘])|(?:["“«„](.*?)["”»“])|(?:["“«„](.*?)\s*$)`)
-
 func FindQuoted(s string) []int {
 	return lex(s)
-	/*
-		matches := quotePat.FindAllStringSubmatchIndex(s, -1)
-
-		out := []int{}
-		for _, m := range matches {
-			//		fmt.Println(m)
-			if m[2] != -1 {
-				out = append(out, m[2], m[3])
-				continue
-			}
-			if m[4] != -1 {
-				out = append(out, m[4], m[5])
-				continue
-			}
-			if m[6] != -1 {
-				out = append(out, m[6], m[7])
-				continue
-			}
-
-		}
-
-		return out
-	*/
 }
 
 type stateFn func(*lexer) stateFn

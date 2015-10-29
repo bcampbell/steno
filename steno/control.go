@@ -530,17 +530,83 @@ func stripImg(n *html.Node) {
 	}
 }
 
-func (ctrl *Control) RenderContent(art *store.Article) string {
-	fmt.Printf("Art %d\n", art.ID)
+// dupe (see also quote pkg)
+func nextNode(n *html.Node) *html.Node {
+
+	if n.FirstChild != nil {
+		return n.FirstChild
+	}
+	if n.NextSibling != nil {
+		return n.NextSibling
+	}
+
+	for {
+		n = n.Parent
+		if n == nil {
+			return nil
+		}
+		if n.NextSibling != nil {
+			return n.NextSibling
+		}
+	}
+}
+
+func addStyle(root *html.Node, styleData string) {
+	for n := root; n != nil; n = nextNode(n) {
+		if n.DataAtom == atom.Head {
+
+			sn := &html.Node{
+				Type:     html.ElementNode,
+				Data:     "style",
+				DataAtom: atom.Style,
+			}
+
+			txt := &html.Node{
+				Type: html.TextNode,
+				Data: styleData,
+			}
+			sn.AppendChild(txt)
+			n.AppendChild(sn)
+			return
+		}
+
+	}
+}
+
+func (ctrl *Control) RenderContent(art *store.Article, highlightTerms string) string {
+	//	fmt.Printf("Art %d\n", art.ID)
 	r := strings.NewReader(art.Content)
 	root, err := html.Parse(r)
 	if err != nil {
 		return ""
 	}
-	quote.HighlightQuotes(root)
 
 	// strip images
 	stripImg(root)
+
+	// add styling
+	styles := `
+body {
+    background-color: #fff;
+    color: #222;
+    margin: 0px;
+    padding: 16px;
+}
+
+.hl {
+    color: #f80;
+}
+
+.quote {
+    color: #008;
+}
+`
+
+	addStyle(root, styles)
+
+	quote.HighlightQuotes(root)
+
+	quote.HighlightText(root, strings.Fields(highlightTerms))
 
 	var buf bytes.Buffer
 	err = html.Render(&buf, root)
@@ -548,5 +614,6 @@ func (ctrl *Control) RenderContent(art *store.Article) string {
 		return ""
 	}
 
+	//fmt.Println(buf.String())
 	return buf.String()
 }
