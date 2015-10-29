@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"gopkg.in/qml.v1"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"semprini/steno/steno/quote"
@@ -157,7 +158,7 @@ func (ctrl *Control) setQuery(q string) {
 	if err != nil {
 		//TODO: show error
 		e := fmt.Sprintf("Search error: %s", err)
-		dbug.Println(e)
+		//dbug.Println(e)
 		ctrl.App.SetError(e)
 		return
 	}
@@ -584,36 +585,27 @@ func (ctrl *Control) RenderContent(art *store.Article, highlightTerms string) st
 	// strip images
 	stripImg(root)
 
-	// add styling
-	styles := `
-body {
-    background-color: #fff;
-    color: #222;
-    margin: 0px;
-    padding: 16px;
-}
-
-.hl {
-    color: #f80;
-}
-
-.quote {
-    color: #008;
-}
-`
-
-	addStyle(root, styles)
-
 	quote.HighlightQuotes(root)
 
 	quote.HighlightText(root, strings.Fields(highlightTerms))
+
+	// add styling
+	// TODO: cache styles (in App, maybe?)
+	// but for now handy to reload every time
+	uiPath := filepath.Join(ctrl.App.DataPath, "ui")
+	// load in the style
+	styleData, err := ioutil.ReadFile(filepath.Join(uiPath, "content.css"))
+	if err != nil {
+		return "missing ui/content.css"
+	}
+	addStyle(root, string(styleData))
 
 	var buf bytes.Buffer
 	err = html.Render(&buf, root)
 	if err != nil {
 		return ""
 	}
-
-	//fmt.Println(buf.String())
+	//	fmt.Println("==============================================")
+	//	fmt.Println(buf.String())
 	return buf.String()
 }

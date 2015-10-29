@@ -70,10 +70,15 @@ func (res *Results) setArts(arts store.ArtList) {
 func (res *Results) HighlightTerms() string {
 	// ultrashonky hack for now.
 	q := res.Query
+	stripBool := regexp.MustCompile(`OR|AND`)
+	stripTags := regexp.MustCompile(`tags:\s*[a-zA-Z]+`)
 	stripFields := regexp.MustCompile("[a-zA-Z]+:")
 	stripPunct := regexp.MustCompile("[^a-zA-Z0-9 ]+")
+	q = stripBool.ReplaceAllLiteralString(q, "")
+	q = stripTags.ReplaceAllLiteralString(q, "")
 	q = stripFields.ReplaceAllLiteralString(q, "")
 	q = stripPunct.ReplaceAllLiteralString(q, "")
+
 	return q
 }
 

@@ -96,7 +96,7 @@ func buildStringsMatcher(terms []string) *regexp.Regexp {
 
 	parts := make([]string, len(terms))
 	for i, term := range terms {
-		parts[i] = regexp.QuoteMeta(term)
+		parts[i] = "(?:" + regexp.QuoteMeta(term) + ")"
 	}
 	pat := "(?i)" + strings.Join(parts, "|")
 	return regexp.MustCompile(pat)
@@ -108,6 +108,8 @@ func HighlightText(n *html.Node, highlightTerms []string) {
 		return
 	}
 	pat := buildStringsMatcher(highlightTerms)
+
+	//	fmt.Println(pat)
 
 	quotes := []NodeSpans{}
 
@@ -140,6 +142,7 @@ func HighlightText(n *html.Node, highlightTerms []string) {
 	}
 }
 
+// Wrap spans of text within a text node
 func HighlightSpans(orig *html.Node, spans []int, wrapNode *html.Node) {
 	if len(spans) == 0 {
 		return
