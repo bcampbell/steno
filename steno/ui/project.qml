@@ -8,11 +8,9 @@ import QtQuick.Dialogs 1.2
 Item {
     anchors.fill: parent
 
-    SplitView {
-        anchors.fill: parent
-        orientation: Qt.Horizontal
 
         SplitView {
+        anchors.fill: parent
             Layout.fillHeight: true
             Layout.fillWidth: true
             orientation: Qt.Vertical
@@ -21,32 +19,11 @@ Item {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
             }
-            Item {
+            ArtInfo {
+                Layout.fillWidth: true
                 id: artInfo
-                Layout.minimumHeight: 100
-                function showArt(art,highlightTerms) {
-                   content.text = ctrl.renderContent(art,highlightTerms);
-                }
-                ScrollView {
-                    anchors.fill: parent
-                        //anchors.margins: 16
-                    contentItem: TextArea {
-                        id: content 
-                        anchors.centerIn: parent
-                        width: 600
-                        height: artInfo.height
-                       // width: 600
-                        text: ""
-                        readOnly: true
-
-                        wrapMode: Text.WordWrap
-                        textFormat: Text.RichText
-                    }
-                
-                }
             }
         }
-    }
 
 
     Dialog {

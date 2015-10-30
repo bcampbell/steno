@@ -1,0 +1,17 @@
+
+body {
+    background-color: #fff;
+    color: #000;
+    margin: 0px;
+    padding: 16px;
+}
+
+.hl {
+    color: #D20;
+    font-weight: bold;
+}
+
+.quote {
+    color: #006;
+    font-weight: bold;
+}
