@@ -17,7 +17,8 @@ cp -r steno/ui $OUT/
 cp steno/slurp_sources.csv $OUT/
 
 
-windeployqt --verbose=1 --compiler-runtime --debug --qmldir=$OUT $OUT/steno.exe
+#windeployqt --verbose=1 --compiler-runtime --debug --qmldir=$OUT $OUT/steno.exe
+windeployqt --verbose=1 --compiler-runtime --release --qmldir=$OUT $OUT/steno.exe
 
 # some stuff missed by windeployqt:
 cp /c/Qt/5.3/mingw482_32/bin/libwinpthread-1.dll $OUT/
