@@ -21,6 +21,7 @@ Item {
             }
             ArtInfo {
                 Layout.fillWidth: true
+		Layout.minimumHeight: 150
                 id: artInfo
             }
         }
