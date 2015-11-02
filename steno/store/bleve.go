@@ -209,14 +209,24 @@ func (idx *bleveIndex) search(queryString string, order string) (ArtList, error)
 }
 
 func (idx *bleveIndex) zap(theDoomed ...ArtID) error {
-	idx.dbug.Printf("bleve: delete %d articles\n", len(theDoomed))
-	batch := idx.idx.NewBatch()
-	for _, id := range theDoomed {
-		artIDStr := strconv.Itoa(int(id))
-		batch.Delete(artIDStr)
+
+	batchSize := 200
+	start := 0
+	for start < len(theDoomed) {
+		end := start + batchSize
+		if end > len(theDoomed) {
+			end = len(theDoomed)
+		}
+		idx.dbug.Printf("bleve: delete %d articles (%d...%d)\n", end-start, start, end)
+		batch := idx.idx.NewBatch()
+		for _, id := range theDoomed[start:end] {
+			artIDStr := strconv.Itoa(int(id))
+			batch.Delete(artIDStr)
+		}
+		idx.dbug.Printf("bleve: committing...\n")
+		idx.idx.Batch(batch)
+		start = end
 	}
-	idx.dbug.Printf("bleve: committing...\n")
-	idx.idx.Batch(batch)
 	idx.dbug.Printf("bleve: done deleting\n")
 	return nil
 }

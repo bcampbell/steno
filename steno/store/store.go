@@ -717,6 +717,12 @@ func (store *Store) removeTag(tx *sql.Tx, arts ArtList, tag string) (ArtList, er
 
 // delete articles
 func (store *Store) Delete(arts ArtList) error {
+	store.dbug.Printf("delete from index\n")
+	err := store.idx.zap(arts...)
+	if err != nil {
+		return err
+	}
+	store.dbug.Printf("delete from db\n")
 	tx, err := store.db.Begin()
 	if err != nil {
 		return err
@@ -738,6 +744,7 @@ func (store *Store) Delete(arts ArtList) error {
 }
 
 func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
+
 	var affected int64 = 0
 	// TODO: maybe use "on delete cascade" to let the db handle the details...
 	// (requires an sqlite pragma to enable foreign keys)
@@ -815,9 +822,6 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 		}
 		affected += foo
 	}
-
-	// now update the index
-	store.idx.zap(arts...)
 
 	return affected, nil
 }
