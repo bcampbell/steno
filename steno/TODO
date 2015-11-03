@@ -1,69 +1,41 @@
-STENO - OCTOBER
-=====================================
+STENO - TODOs
+==============
 
-w/c 5/10
+support range searches on published column
+  (proper date representation in steno)
 
-try and slim down win32 build
-  currently using big bloated debug versions of the GUI toolkit.
-  Should be possible to get it to use the (much smaller) release version
-  instead.
-
-better slurp interface (gui):
-  + slurp multiple days
-  + better filtering options (eg just grab dailymail)
-  + preview options (eg show article counts per day as you browse
-    calender, say)
-
-Send new build to GR and MM
-
----------
-
-w/c 12/10
-
-TESTING: GR & MM to test new build and feedback
-
-finish query language
-  - missing date/number ranges
-
-support column sorting for tags, keywords, bylines
-
-mac link-clicking bug
+fix mac link-clicking bug
 
 data export experiments
-  - just try out a few things and see if any good
 
-better display of dates
-
-----------
-
-w/c 19/10
-
-in-app documentation:
+client-side documentation:
   - general intro
   - query language syntax and examples
   - scripting
 
-speed up tagging/untagging
-  - the issue is that bleve requires full reindexing of modified documents
-    so adding/removing tags from a whole bunch at once can be slow.
-
-Send new build to GR and MM
-
-----------
-
-w/c 26/10
-
-TESTING: GR & MM to test new build and feedback
-
 figure out licensing/source release if any
 
-Documentation on server side
+Documentation for server side
   - how to set up a server
   - how to configure publications
 
+serverside diagnostics
+  - summary API (collate daily article counts by publication)
+  - summary GUI (using api)
 
-FURTHER OUT (ie November, in no particular order)
----------------------------------------------------
+article content view (the bottom pane)
+  - support clipboard copy
+  - clickable links
+
+mac build
+  - proper code signing (aka offical Apple blessing ritual)
+
+progress display during article delete
+
+
+
+FURTHER OUT
+-----------
 
 would be nice to have an icon/logo for it
 
@@ -80,6 +52,11 @@ server-side shortlink embiggening?
     an inexact process and requires a little hand-holding
 
 Assorted Server-side improvements
-  - better logging, notifications etc...
+  - graceful shutdown
+  - reload config (ie add new scrapers on the fly)
+
+Slurp GUI
+  - show article counts per day
+  - proper article count in progress display
 
 
