@@ -10,6 +10,7 @@ import (
 	"github.com/blevesearch/bleve/analysis/tokenizers/regexp_tokenizer"
 	"github.com/blevesearch/bleve/index/store/goleveldb"
 	"strconv"
+	"time"
 )
 
 // article data massasged for bleve indexing
@@ -19,10 +20,10 @@ type bleveArt struct {
 	Headline string   `json:"headline"`
 	Content  string   `json:"content"`
 	// TODO: this needs to be a time.Time!
-	Published string   `json:"published"`
-	Keywords  []string `json:"keywords"`
-	Section   string   `json:"section"`
-	Tags      []string `json:"tags"`
+	Published time.Time `json:"published"`
+	Keywords  []string  `json:"keywords"`
+	Section   string    `json:"section"`
+	Tags      []string  `json:"tags"`
 	// note: bleve only indexes float64 numeric fields
 	Retweets   float64  `json:"retweets"`
 	Favourites float64  `json:"favourites"`
@@ -149,13 +150,21 @@ func openBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 func (idx *bleveIndex) index(srcArts ...*Article) error {
 	idx.dbug.Printf("bleve: indexing %d articles\n", len(srcArts))
 	batch := idx.idx.NewBatch()
+
 	for _, src := range srcArts {
 		artID := strconv.Itoa(int(src.ID))
+
+		pubTime, err := time.ParseInLocation(time.RFC3339, src.Published, time.Local)
+		if err != nil {
+			idx.dbug.Printf("WARN: art %d: bad time '%s'\n", src.ID, src.Published)
+			pubTime = time.Time{}
+		}
+
 		art := bleveArt{
 			Urls:       src.URLs,
 			Headline:   src.Headline,
 			Content:    src.PlainTextContent(),
-			Published:  src.Published,
+			Published:  pubTime,
 			Keywords:   src.Keywords,
 			Section:    src.Section,
 			Tags:       src.Tags,
@@ -181,6 +190,7 @@ func (idx *bleveIndex) search(queryString string, order string) (ArtList, error)
 
 	parser := &qs.Parser{}
 	parser.DefaultOp = qs.AND
+	parser.Loc = time.Local
 
 	q, err := parser.Parse(queryString)
 	if err != nil {
