@@ -1,7 +1,7 @@
 STENO - TODOs
 ==============
 
-support range searches on published column
+[DONE] support range searches on published column
   (proper date representation in steno)
 
 fix mac link-clicking bug
@@ -31,7 +31,6 @@ mac build
   - proper code signing (aka offical Apple blessing ritual)
 
 progress display during article delete
-
 
 
 FURTHER OUT

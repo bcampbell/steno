@@ -43,6 +43,8 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 	bleve.Config.DefaultKVStore = goleveldb.Name
 
 	indexMapping := bleve.NewIndexMapping()
+	// need to do this for sensible handling of default fields ("_all" uses this)
+	indexMapping.DefaultAnalyzer = "en"
 
 	// add a custom tokenizer and analyzer for handling urls
 	var err error
