@@ -31,7 +31,30 @@ Item {
 
             wrapMode: Text.WordWrap
             textFormat: Text.RichText
+
+            // TODO: update to QtQuick.Controls 1.3 (QT5.5?) which has
+            // proper context-menu support in TextArea (see "menu" member)
+            Menu {
+                id: editMenu
+                title: "Edit"
+
+                MenuItem {
+                    text: "Copy"
+                    shortcut: "Ctrl+C"
+                    onTriggered: { content.copy(); }
+                }
+            }
         }
     }
+    // TODO: ditch MouseArea when possible! Stops hyperlinks working.
+    MouseArea {
+        acceptedButtons: Qt.RightButton
+        propagateComposedEvents: true
+        visible: true;
+        anchors.fill: parent
+            onClicked: { editMenu.popup(); }
+    }
+
+
 }
 
