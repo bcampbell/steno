@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"semprini/steno/steno/kludge"
+	"sort"
 	"time"
 	//	"strings"
 )
@@ -163,7 +164,6 @@ func (app *App) RefreshScripts() {
 
 	app.scripts = scripts
 	app.scriptCategories = []string{}
-
 	cats := map[string]struct{}{}
 
 	for _, s := range scripts {
@@ -173,6 +173,7 @@ func (app *App) RefreshScripts() {
 	for cat, _ := range cats {
 		app.scriptCategories = append(app.scriptCategories, cat)
 	}
+	sort.Strings(app.scriptCategories)
 
 	app.ScriptsLen = len(app.scripts)
 	qml.Changed(app, &app.ScriptsLen)

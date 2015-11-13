@@ -231,6 +231,8 @@ func loadScripts(dir string) ([]*script, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		//	dbug.Printf("SCRIPT: [%s] %s\n", s.Category, s.Name)
 		scripts = append(scripts, s)
 	}
 	return scripts, nil

@@ -532,7 +532,7 @@ func (store *Store) Search(queryString string) (ArtList, error) {
 		store.dbug.Printf("Search(%s) error: %s\n", queryString, err)
 		return nil, err
 	}
-	store.dbug.Printf("Search(%s): %d matches\n", queryString, len(out))
+	//store.dbug.Printf("Search(%s): %d matches\n", queryString, len(out))
 
 	return out, nil
 }

@@ -34,11 +34,9 @@ ApplicationWindow {
         nameFilters: [ "Steno database files (*.db)", "All files (*)" ]
         onAccepted: {
             var f = Helper.filePathFromURL(openDialog.fileUrl);
-            console.log("You chose: " + f)
             app.openProject(f)
         }
         onRejected: {
-            console.log("Canceled")
         }
         //Component.onCompleted: visible = true
     }
@@ -50,12 +48,10 @@ ApplicationWindow {
 
         onAccepted: {
             var f = Helper.filePathFromURL(newDialog.fileUrl);
-            console.log("You chose: " + f)
             app.openProject(f)
              
         }
         onRejected: {
-            console.log("Canceled")
         }
         //Component.onCompleted: visible = true
     }
@@ -71,7 +67,6 @@ ApplicationWindow {
             app.current().exportOveralls(f)
         }
         onRejected: {
-            console.log("Canceled")
         }
         //Component.onCompleted: visible = true
     }
@@ -87,7 +82,6 @@ ApplicationWindow {
             app.current().exportCSV(f)
         }
         onRejected: {
-            console.log("Canceled")
         }
         //Component.onCompleted: visible = true
     }
@@ -347,11 +341,11 @@ ApplicationWindow {
                                 Component.onCompleted:
                                 {
                                     var cat = app.getScriptCategory(index)
-
                                     for (var i = 0; i < app.scriptsLen; i++)
                                     {
                                         var s = app.getScript(i)
                                         if(s.category == cat) {
+
                                             append( { idx:i, name: s.name, desc: s.desc } )
                                         }
                                     }
@@ -372,7 +366,6 @@ ApplicationWindow {
                                 var idx = model.get(currentRow).idx;
                                 app.current().runScript(idx);
                                 pickScriptDlg.close();
-//                                console.log(idx);
                                 
                             }
                         }
