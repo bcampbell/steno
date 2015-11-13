@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Logger interface {
@@ -201,11 +202,27 @@ func (store *Store) createSchema() error {
 		return err
 	}
 
+	// TODO: just do it all like this?
+	indices := []string{
+		`CREATE INDEX article_tag_artid ON article_tag(article_id)`,
+		`CREATE INDEX article_url_artid ON article_url(article_id)`,
+		`CREATE INDEX article_author_artid ON article_author(article_id)`,
+		`CREATE INDEX article_keyword_artid ON article_keyword(article_id)`,
+		`CREATE INDEX article_link_artid ON article_link(article_id)`,
+	}
+	for _, stmt := range indices {
+		_, err = store.db.Exec(stmt)
+		if err != nil {
+			return err
+		}
+
+	}
+
 	_, err = store.db.Exec(`CREATE TABLE version (ver INTEGER NOT NULL)`)
 	if err != nil {
 		return err
 	}
-	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (4)`)
+	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (5)`)
 	if err != nil {
 		return err
 	}
@@ -286,6 +303,29 @@ func (store *Store) initDB() error {
 		}
 
 		_, err = store.db.Exec(`UPDATE version SET ver=4`)
+		if err != nil {
+			return err
+		}
+	}
+
+	if ver < 5 {
+		store.dbug.Printf("updating database to version 5\n")
+		indices := []string{
+			`CREATE INDEX article_tag_artid ON article_tag(article_id)`,
+			`CREATE INDEX article_url_artid ON article_url(article_id)`,
+			`CREATE INDEX article_author_artid ON article_author(article_id)`,
+			`CREATE INDEX article_keyword_artid ON article_keyword(article_id)`,
+			`CREATE INDEX article_link_artid ON article_link(article_id)`,
+		}
+		for _, stmt := range indices {
+			_, err = store.db.Exec(stmt)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		_, err = store.db.Exec(`UPDATE version SET ver=5`)
 		if err != nil {
 			return err
 		}
@@ -553,6 +593,8 @@ func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 	if store.db == nil {
 		return ArtList{}, nil
 	}
+
+	begun := time.Now()
 	// apply to db
 	tx, err := store.db.Begin()
 	if err != nil {
@@ -566,21 +608,26 @@ func (store *Store) AddTags(arts ArtList, tags []string) (ArtList, error) {
 			tx.Rollback()
 			return nil, err
 		}
-		store.dbug.Printf("added '%s' tag to %d articles\n", tag, len(newlyTagged))
 		affected = affected.Union(newlyTagged)
 	}
-
 	err = tx.Commit()
 	if err != nil {
 		return nil, err
 	}
 
+	elapsedDB := time.Now().Sub(begun)
+
+	begun = time.Now()
 	// now apply to belve index
 	// a bit cumbersome, but bleve has no way to update select fields?
 	err = store.reindex(affected)
 	if err != nil {
 		return nil, err
 	}
+	elapsedBleve := time.Now().Sub(begun)
+
+	store.dbug.Printf("add tags %q: affected %d articles (%s db, %s bleve)\n", tags, len(affected), elapsedDB, elapsedBleve)
+
 	return affected, nil
 }
 
@@ -717,12 +764,18 @@ func (store *Store) removeTag(tx *sql.Tx, arts ArtList, tag string) (ArtList, er
 
 // delete articles
 func (store *Store) Delete(arts ArtList) error {
+	// delete from bleve index
+	begun := time.Now()
 	store.dbug.Printf("delete from index\n")
 	err := store.idx.zap(arts...)
 	if err != nil {
 		return err
 	}
+	elapsedBleve := time.Now().Sub(begun)
+
+	// now delete from db
 	store.dbug.Printf("delete from db\n")
+	begun = time.Now()
 	tx, err := store.db.Begin()
 	if err != nil {
 		return err
@@ -739,7 +792,8 @@ func (store *Store) Delete(arts ArtList) error {
 	if err != nil {
 		return err
 	}
-	store.dbug.Printf("Deleted %d articles\n", affected)
+	elapsedDB := time.Now().Sub(begun)
+	store.dbug.Printf("Delete affected %d articles (%s in db, %s in bleve)\n", affected, elapsedDB, elapsedBleve)
 	return nil
 }
 
