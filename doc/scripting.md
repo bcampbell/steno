@@ -16,7 +16,8 @@ Commands are of the form:
 
 `<query> => <operation>`
 
-where `<operation>` is one of:
+where `<query>` is a standard query, and
+`<operation>` is one of:
 
   * `TAG <tag1> ... <tagN>`
 
@@ -47,7 +48,7 @@ for the script.
 
 ## Example script - `fruit.txt`
 
-    # identify important fruit-related new articles
+    # identify important fruit-related articles
 
     orange OR lemon OR grapefruit => tag fruit citrus
     raspberry OR strawberry => TAG fruit berry
@@ -56,27 +57,27 @@ for the script.
     #tomato => UNTAG fruit
 
 
-## Alternate script format (.csv)
+## Alternate script format (`.csv`)
 
-There is also a simpler script format, in the form of a .csv file.
+There is also a simpler script format, in the form of a `.csv` file.
 These are comma-separated-value files, a somewhat standardised file format
 which most spreadsheet applications can use.
 
 Steno will automatically determine the script type by the file extension
-(.txt or .csv).
+(`.txt` or `.csv`).
 
 In the alternate format, the first line determines the meaning of each column.
-On this line each cell is either the name of a field to search (eg "headline",
-"content" etc), or "TAG".
+On this line each cell is either the name of a field to search (eg `headline`,
+`content` etc), or `TAG`.
 
 Each subsequent line forms a single query. The contents of each cell are
-matched against their field, and any matching articles are tagged with any
-values found in "TAG" columns.
+matched against their field, and any matching articles are tagged with
+values found in any "TAG" columns.
 
-Complex queries are not supported: the search terms are just matched against
+Complex queries are not supported. The search terms are just matched against
 their fields and nothing else.
 
-The value in "TAG" columns is optional - so different lines can apply
+The value in `TAG` columns is optional, so different lines can apply
 different numbers of tags if desired.
 
 ## Example alternative script - `fruit.csv`

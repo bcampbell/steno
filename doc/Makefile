@@ -1,4 +1,4 @@
-SRCS := intro.md syntax.md scripting.md indexing.md
+SRCS := intro.md syntax.md indexing.md scripting.md 
 
 HTML = /tmp/steno.html
 PDF = /tmp/steno.pdf
