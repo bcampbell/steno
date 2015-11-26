@@ -1,0 +1,74 @@
+/* base styling */
+
+html {
+    /* our base size */
+    font-size: 16px;
+}
+
+body {
+    line-height: 1.5;
+    max-width: 60rem;
+    margin: auto;
+    color: #222;
+    font-family: sans;
+}
+
+
+h1,h2,h3,h4,h5,h6 {
+    color: #222;
+}
+
+h1 { font-size:244%;}
+h2 { font-size:195%;}
+h3 { font-size:156%;}
+h4 { font-size:125%;}
+h5 {font-size:100%; }
+h6 {font-size:80%; }
+
+small { font-size: 75%; }
+
+
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small { color: #888 }
+
+p {
+    margin-bottom: 0.75rem;
+}
+
+code {
+    color: #444;
+}
+
+/* code blocks */
+pre code {
+    display: block;
+    background-color: #eee;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+
+a {
+    text-decoration: none;
+    color: #00f;
+}
+
+a code {
+    color: #00f;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+
+
+section.level1 {
+    border-top: 1px solid #222;
+}
+
