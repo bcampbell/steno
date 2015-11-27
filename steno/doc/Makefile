@@ -1,5 +1,5 @@
 CSS = style.css
-SRCS := intro.md syntax.md indexing.md scripting.md
+SRCS := intro.md syntax.md indexing.md scripting.md appendix_a.md appendix_b.md
 
 HTML = steno.html
 PDF = steno.pdf
