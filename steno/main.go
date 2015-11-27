@@ -13,9 +13,9 @@ import (
 	//"github.com/bcampbell/arts/arts"
 	"gopkg.in/qml.v1"
 	"os"
-	"os/exec"
+	//	"os/exec"
 	//	"path"
-	"runtime"
+	//	"runtime"
 )
 
 func usage() {
@@ -54,26 +54,4 @@ func run() error {
 
 	app.Window.Wait()
 	return nil
-}
-
-func openURL(url string) {
-
-	dbug.Printf("open %s\n", url)
-
-	var params []string
-	switch runtime.GOOS {
-	case "windows":
-		params = []string{"cmd", "/c", "start"}
-	case "darwin":
-		params = []string{"open"}
-	default:
-		params = []string{"xdg-open"}
-	}
-	params = append(params, url)
-	cmd := exec.Command(params[0], params[1:]...)
-	err := cmd.Start()
-	if err != nil {
-
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-	}
 }

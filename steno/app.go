@@ -1,21 +1,18 @@
 package main
 
 import (
-	//"fmt"
 	"fmt"
+	"github.com/pkg/browser"
 	"gopkg.in/qml.v1"
 	"gopkg.in/xlab/clipboard.v2"
-	"io/ioutil"
 	"path/filepath"
 	"semprini/steno/steno/kludge"
 	"sort"
 	"time"
-	//	"strings"
 )
 
 type App struct {
 	Window        *qml.Window
-	HelpText      string
 	DataPath      string
 	Clipboard     *clipboard.Clipboard
 	projComponent qml.Object
@@ -67,12 +64,6 @@ func NewApp() (*App, error) {
 
 	// all the qml/js/html stuff is in the ui dir
 	uiPath := filepath.Join(app.DataPath, "ui")
-	buf, err := ioutil.ReadFile(filepath.Join(uiPath, "help.html"))
-	if err != nil {
-		return nil, err
-	}
-	app.HelpText = string(buf)
-	//	ctrl.HelpText = strings.Replace(ctrl.HelpText, "\n", "<br/>\n", -1)
 
 	app.ErrorMsg = "Hello"
 
@@ -214,4 +205,15 @@ func (app *App) CloseProject() {
 func (app *App) Quit() {
 	app.CloseProject()
 	app.Window.Hide()
+}
+
+// open link in a web browser
+func (app *App) BrowseURL(link string) {
+	go browser.OpenURL(link)
+}
+
+// open in a web browser
+func (app *App) OpenManual() {
+	helpFile := filepath.Join(app.DataPath, "doc", "steno.html")
+	go browser.OpenFile(helpFile)
 }

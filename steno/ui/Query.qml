@@ -232,7 +232,7 @@ Item {
                     elide: Text.ElideRight
                     text: Helper.markupLinks(ctrl.results.art(styleData.row).canonicalURL.toString())
                     //onLinkActivated: Qt.openUrlExternally(link)
-                    onLinkActivated: ctrl.openLink(link)
+                    onLinkActivated: app.browseURL(link)
                     MouseArea {
                         cursorShape: parent.hoveredLink=="" ? Qt.ArrorCursor : Qt.PointingHandCursor;
                         acceptedButtons: Qt.RightButton;
@@ -320,8 +320,7 @@ Item {
                     color: styleData.textColor
                     elide: Text.ElideRight
                     text: Helper.markupLinks(ctrl.results.art(styleData.row).linksString())
-                    //onLinkActivated: Qt.openUrlExternally(link)
-                    onLinkActivated: ctrl.openLink(link)
+                    onLinkActivated: app.browseURL(link)
                     MouseArea {
                         cursorShape: parent.hoveredLink=="" ? Qt.ArrorCursor : Qt.PointingHandCursor;
                         acceptedButtons: Qt.RightButton;

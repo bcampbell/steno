@@ -181,7 +181,7 @@ ApplicationWindow {
         //iconSource: "images/fileopen.png"
         text: "Help..."
         shortcut: StandardKey.HelpContents
-        onTriggered: helpWindow.visible = !helpWindow.visible
+        onTriggered: app.openManual()
     }
 
     ExclusiveGroup {
@@ -289,26 +289,6 @@ ApplicationWindow {
         }
     }
 
-
-    Window {
-        id: helpWindow
-        title: "Help"
-        width: 400
-        height: 500
-        ScrollView {
-            anchors.fill: parent
-            Text {
-                width: 400
-                //text: helpText
-                wrapMode: Text.Wrap
-                textFormat: Text.RichText
-                //width: parent.width
-                text: ""+ app.helpText
-                Layout.maximumWidth: 400
-            }
-        }
-
-    }
 
 
     SlurpDialog {

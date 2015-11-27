@@ -1,8 +1,8 @@
 CSS = style.css
 SRCS := intro.md syntax.md indexing.md scripting.md
 
-HTML = /tmp/steno.html
-PDF = /tmp/steno.pdf
+HTML = steno.html
+PDF = steno.pdf
 
 OUTPUTS = $(HTML) $(PDF)
 

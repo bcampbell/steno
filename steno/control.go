@@ -371,9 +371,11 @@ func (ctrl *Control) RunScript(scriptIdx int) {
 }
 
 // open link in a web browser
+/*
 func (ctrl *Control) OpenLink(link string) {
 	openURL(link)
 }
+*/
 
 func (ctrl *Control) EmbiggenShortlinks() {
 
