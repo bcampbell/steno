@@ -51,8 +51,7 @@ TODO: flesh out intro properly, screenshots etc
     Once selected, articles can be tagged by entering the name of the tag and
     pressing the "Add Tags" button.
 
-    Removing tags and deleting articles work upon selected articles in the
-    same way.
+    You can remove tags and delete articles in the same way.
 
 5. Bundle common tasks into scripts
 
