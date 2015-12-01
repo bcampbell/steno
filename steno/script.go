@@ -61,7 +61,7 @@ func (s *script) Run(store *store.Store, progress ProgressFunc) error {
 				return fmt.Errorf("untag error (during query '%s'): %s", line.query, err)
 			}
 		case "delete":
-			err := store.Delete(matching)
+			err := store.Delete(matching, nil)
 			if err != nil {
 				return fmt.Errorf("error deleting (during query '%s'): %s", line.query, err)
 			}

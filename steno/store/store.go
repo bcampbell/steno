@@ -17,6 +17,8 @@ type Logger interface {
 	Printf(format string, v ...interface{})
 }
 
+type ProgressFn func(expected int, completed int)
+
 //
 var defaultField string = "content"
 
@@ -762,8 +764,9 @@ func (store *Store) removeTag(tx *sql.Tx, arts ArtList, tag string) (ArtList, er
 	return got, nil
 }
 
-// delete articles
-func (store *Store) Delete(arts ArtList) error {
+// Delete articles from the store (and index)
+// if progress is non-nil, it'll be called at regularish intervals
+func (store *Store) Delete(arts ArtList, progress ProgressFn) error {
 	// delete from bleve index
 	begun := time.Now()
 	store.dbug.Printf("delete from index\n")
@@ -781,7 +784,7 @@ func (store *Store) Delete(arts ArtList) error {
 		return err
 	}
 
-	affected, err := store.doDelete(tx, arts)
+	affected, err := store.doDelete(tx, arts, progress)
 	if err != nil {
 		store.dbug.Printf("error, rolling back\n")
 		tx.Rollback()
@@ -797,7 +800,7 @@ func (store *Store) Delete(arts ArtList) error {
 	return nil
 }
 
-func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
+func (store *Store) doDelete(tx *sql.Tx, arts ArtList, progress ProgressFn) (int64, error) {
 
 	var affected int64 = 0
 	// TODO: maybe use "on delete cascade" to let the db handle the details...
@@ -838,7 +841,7 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 	}
 	defer delArtStmt.Close()
 
-	for _, artID := range arts {
+	for idx, artID := range arts {
 
 		_, err = delTagsStmt.Exec(artID)
 		if err != nil {
@@ -875,6 +878,10 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList) (int64, error) {
 			return 0, err
 		}
 		affected += foo
+
+		if progress != nil {
+			progress(len(arts), idx)
+		}
 	}
 
 	return affected, nil

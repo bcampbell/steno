@@ -173,15 +173,38 @@ func (ctrl *Control) DeleteArticles(artIndices []int) {
 	for _, artIdx := range artIndices {
 		arts = append(arts, ctrl.Results.arts[artIdx])
 	}
-	err := ctrl.store.Delete(arts)
-	if err != nil {
-		dbug.Printf("ERROR: delete failed: %s\n", err)
-		return
-	}
-	dbug.Printf("%d articles deleted\n", len(arts))
 
-	// rerun the current query
-	ctrl.setQuery(ctrl.Results.Query)
+	prog := &ctrl.Progress
+	prog.Reset()
+
+	go func() {
+		startTime := time.Now()
+		defer func() {
+			prog.InFlight = false
+			qml.Changed(ctrl, prog)
+		}()
+
+		prog.InFlight = true
+		prog.Title = "Delete"
+		prog.StatusMsg = "Deleting articles..."
+		qml.Changed(ctrl, prog)
+		progFunc := func(expected, completed int) {
+			prog.ExpectedCnt = expected
+			prog.CompletedCnt = completed
+			qml.Changed(ctrl, prog)
+		}
+
+		err := ctrl.store.Delete(arts, progFunc)
+		if err != nil {
+			prog.SetError(err)
+		}
+
+		// rerun the current query
+		ctrl.setQuery(ctrl.Results.Query)
+
+		elapsed := time.Since(startTime)
+		dbug.Printf("Delete finished (took %s)\n", elapsed)
+	}()
 }
 
 func (ctrl *Control) AddTags(artIndices []int, tags string) {
