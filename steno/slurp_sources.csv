@@ -1,3 +1,5 @@
+.UG articles,http://foo.scumways.com/ugarts
+.UG tweets,http://foo.scumways.com/ugtweets
 UK articles,http://foo.scumways.com/ukarts
-UK tweets,http://foo.scumways.com/uktweets
+UK tweets (no longer updating),http://foo.scumways.com/uktweets
 LocalDevTest,http://localhost:12345
