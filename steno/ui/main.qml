@@ -312,15 +312,15 @@ ApplicationWindow {
                 Repeater {
                     model: app.scriptCategoriesLen
                     Tab {
+                        id: tabby
                         title: app.getScriptCategory(index)
-
                         TableView {
                             id: scriptList
                             model: ListModel {
                                 // filter scripts by category
                                 Component.onCompleted:
                                 {
-                                    var cat = app.getScriptCategory(index)
+                                    var cat = tabby.title
                                     for (var i = 0; i < app.scriptsLen; i++)
                                     {
                                         var s = app.getScript(i)
