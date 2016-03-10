@@ -1,0 +1,16 @@
+data export experiments
+figure out licensing/source release if any
+article content view (the bottom pane) support clipboard copy and clickable links (qt5.5 required?)
+progress display during article delete
+add icon/logo
+manual article entry/editing
++server access tokens (api) - to govern and track other users of our servers
++server +doc how to set up a server
++server +doc how to configure publications
++server diagnostics summary API + GUI (collate daily article counts by publication)
+publicise it more!
++server add retweet flag during server-side tweet processing
++server reload config (ie add new scrapers on the fly)
+slurp GUI - show article counts per day
+slurp GUI - proper article count in progress display
+x fix mac link-clicking bug
