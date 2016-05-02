@@ -1,3 +1,4 @@
+check timezone usage in search() (maybe store should have a configurable timezone?)
 data export experiments
 figure out licensing/source release if any
 article content view (the bottom pane) support clipboard copy and clickable links (qt5.5 required?)

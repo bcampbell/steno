@@ -72,6 +72,18 @@ type Article struct {
 	Byline string
 }
 
+func (art *Article) PublishedTime() time.Time {
+	t, err := time.Parse(time.RFC3339, art.Published)
+	if err == nil {
+		return t
+	}
+	t, err = time.Parse("2006-01-02", art.Day())
+	if err == nil {
+		return t
+	}
+	return time.Time{}
+}
+
 func (art *Article) FormattedPubDate(fmt string) string {
 	t, err := time.Parse(time.RFC3339, art.Published)
 

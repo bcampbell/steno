@@ -81,7 +81,7 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 	ctrl := &Control{}
 	ctrl.App = app
 
-	newStore, err := store.New(storePath, dbug)
+	newStore, err := store.New(storePath, dbug, time.Local)
 	if err != nil {
 		return nil, err
 	}

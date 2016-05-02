@@ -37,7 +37,7 @@ type Store struct {
 	idx  indexer
 }
 
-func New(dbFile string, dbug Logger) (*Store, error) {
+func New(dbFile string, dbug Logger, loc *time.Location) (*Store, error) {
 	store := &Store{dbug: dbug}
 
 	var err error
@@ -63,7 +63,7 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 	if os.IsNotExist(err) {
 		store.dbug.Printf("Create new index from scratch\n")
 		// new indexer
-		store.idx, err = newBleveIndex(store.dbug, indexDir)
+		store.idx, err = newBleveIndex(store.dbug, indexDir, loc)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +84,7 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 		if !fi.IsDir() {
 			return nil, fmt.Errorf("expected %s to be a directory", indexDir)
 		}
-		store.idx, err = openBleveIndex(store.dbug, indexDir)
+		store.idx, err = openBleveIndex(store.dbug, indexDir, loc)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s", indexDir, err)
 		}
