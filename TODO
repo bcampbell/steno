@@ -15,3 +15,9 @@ publicise it more!
 slurp GUI - show article counts per day
 slurp GUI - proper article count in progress display
 x fix mac link-clicking bug
+(A) mac: make sure it can run from a non-writable dir (eg .dmg)
+(A) mac: investigate bug where first run fails
+(A) Use scripts from per-user directory (eg $HOME/.steno)
+(A) Use slurp sources from from per-user directory (eg $HOME/.steno)
+
+strip out badger indexing

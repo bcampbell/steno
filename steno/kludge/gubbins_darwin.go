@@ -33,19 +33,35 @@ const char* gimme()
 import "C"
 
 import (
-    "fmt"
-    "unsafe"
+	"fmt"
+	"unsafe"
 )
 
-
-func DataPath() (string,error) {
+func DataPath() (string, error) {
 	s := C.gimme()
-    if s==nil {
-        return "", fmt.Errorf("Poop. bundle path kludge thingy failed.\n")
-    }
-    defer C.free(unsafe.Pointer(s) )
+	if s == nil {
+		return "", fmt.Errorf("Poop. bundle path kludge thingy failed.\n")
+	}
+	defer C.free(unsafe.Pointer(s))
 
-    gs := C.GoString(s)
+	gs := C.GoString(s)
 
-    return gs,nil
+	return gs, nil
+}
+
+// get (or create) per-user directory (eg "$HOME/.steno")
+// TODO: use /System/Library/Steno or whatever it is instead of
+// generic unix version
+func PerUserPath() (string, error) {
+	home := os.GetEnv("HOME")
+	if home == "" {
+		return "", fmt.Errorf("$HOME not set")
+	}
+	dir := filepath.Join(home, ".steno")
+	// create dir if if doesn't already exist
+	err := os.MkDirAll(dir, 0755)
+	if err != nil {
+		return "", err
+	}
+	return dir, nil
 }
