@@ -6,11 +6,11 @@ package main
 
 import (
 	"bytes"
-	"encoding/csv"
+	//	"encoding/csv"
 	"fmt"
+	"github.com/limetext/qml-go"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
-	"gopkg.in/qml.v1"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -480,67 +480,72 @@ func (ctrl *Control) TagRetweets() {
 }
 
 func (ctrl *Control) CopyCells(artIndices []int, colName string) {
+	/*
+		bits := []string{}
 
-	bits := []string{}
+		for _, artIdx := range artIndices {
+			foo := ctrl.Results.Art(artIdx).FieldString(colName)
+			bits = append(bits, foo)
+		}
 
-	for _, artIdx := range artIndices {
-		foo := ctrl.Results.Art(artIdx).FieldString(colName)
-		bits = append(bits, foo)
-	}
+		val := strings.Join(bits, "\n")
 
-	val := strings.Join(bits, "\n")
-
-	err := ctrl.App.Clipboard.WriteAll(val)
-	if err != nil {
-		dbug.Printf("Copy failed: %s\n", err)
-	}
+		err := ctrl.App.Clipboard.WriteAll(val)
+		if err != nil {
+			dbug.Printf("Copy failed: %s\n", err)
+		}
+	*/
 }
 
 func (ctrl *Control) CopyRows(artIndices []int) {
-	fieldNames := []string{"headline", "published", "tags", "byline", "url", "retweets", "favourites", "keywords", "links"}
-	var out bytes.Buffer
-	w := csv.NewWriter(&out)
-	w.Comma = '\t'
-	for _, artIdx := range artIndices {
-		fieldVals := []string{}
-		art := ctrl.Results.Art(artIdx)
-		for _, fldName := range fieldNames {
-			fieldVals = append(fieldVals, art.FieldString(fldName))
+	/*
+		fieldNames := []string{"headline", "published", "tags", "byline", "url", "retweets", "favourites", "keywords", "links"}
+		var out bytes.Buffer
+		w := csv.NewWriter(&out)
+		w.Comma = '\t'
+		for _, artIdx := range artIndices {
+			fieldVals := []string{}
+			art := ctrl.Results.Art(artIdx)
+			for _, fldName := range fieldNames {
+				fieldVals = append(fieldVals, art.FieldString(fldName))
+			}
+			err := w.Write(fieldVals)
+			if err != nil {
+				dbug.Printf("Copy failed (csv write failed): %s\n", err)
+				return
+			}
 		}
-		err := w.Write(fieldVals)
+
+		w.Flush()
+
+		err := ctrl.App.Clipboard.WriteAll(out.String())
 		if err != nil {
-			dbug.Printf("Copy failed (csv write failed): %s\n", err)
-			return
+			dbug.Printf("Copy failed: %s\n", err)
 		}
-	}
-
-	w.Flush()
-
-	err := ctrl.App.Clipboard.WriteAll(out.String())
-	if err != nil {
-		dbug.Printf("Copy failed: %s\n", err)
-	}
+	*/
 }
 
 func (ctrl *Control) CopyArtSummaries(artIndices []int) {
-	var out bytes.Buffer
-	for _, artIdx := range artIndices {
-		art := ctrl.Results.Art(artIdx)
+	/*
+		var out bytes.Buffer
+		for _, artIdx := range artIndices {
+			art := ctrl.Results.Art(artIdx)
 
-		var pretty string
-		t, err := time.ParseInLocation(time.RFC3339, art.Published, time.Local)
-		if err == nil {
-			pretty = t.Format("2-Jan-2006")
-		} else {
-			pretty = art.Published
+			var pretty string
+			t, err := time.ParseInLocation(time.RFC3339, art.Published, time.Local)
+			if err == nil {
+				pretty = t.Format("2-Jan-2006")
+			} else {
+				pretty = art.Published
+			}
+			fmt.Fprintf(&out, "%s %s %s\n", pretty, art.Headline, art.URL())
 		}
-		fmt.Fprintf(&out, "%s %s %s\n", pretty, art.Headline, art.URL())
-	}
 
-	err := ctrl.App.Clipboard.WriteAll(out.String())
-	if err != nil {
-		dbug.Printf("Copy failed: %s\n", err)
-	}
+		err := ctrl.App.Clipboard.WriteAll(out.String())
+		if err != nil {
+			dbug.Printf("Copy failed: %s\n", err)
+		}
+	*/
 }
 
 func stripImg(n *html.Node) {

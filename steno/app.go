@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/limetext/qml-go"
 	"github.com/pkg/browser"
-	"gopkg.in/qml.v1"
-	"gopkg.in/xlab/clipboard.v2"
 	"path/filepath"
 	"semprini/steno/steno/kludge"
 	"sort"
@@ -12,9 +11,9 @@ import (
 )
 
 type App struct {
-	Window        *qml.Window
-	DataPath      string
-	Clipboard     *clipboard.Clipboard
+	Window   *qml.Window
+	DataPath string
+	//Clipboard     *clipboard.Clipboard
 	projComponent qml.Object
 	ctx           *qml.Context
 	project       *Control
@@ -60,7 +59,7 @@ func NewApp() (*App, error) {
 	app := &App{}
 	app.ctx = ctx
 	app.DataPath = dataPath
-	app.Clipboard = clipboard.New(engine)
+	//app.Clipboard = clipboard.New(engine)
 
 	// all the qml/js/html stuff is in the ui dir
 	uiPath := filepath.Join(app.DataPath, "ui")
