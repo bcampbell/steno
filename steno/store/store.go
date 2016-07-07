@@ -27,6 +27,7 @@ type indexer interface {
 	index(...*Article) error
 	zap(...ArtID) error
 	search(string, string) (ArtList, error)
+	Close() error
 }
 
 // Store is the core representation of our data set.
@@ -95,19 +96,20 @@ func New(dbFile string, dbug Logger, loc *time.Location) (*Store, error) {
 	return store, nil
 }
 
-func DummyStore() *Store {
-	store := &Store{}
-	store.idx = newBadgerIndex()
-	return store
-}
-
 func (store *Store) Close() {
 	if store.db != nil {
-		store.dbug.Printf("Close sqlite db\n")
+		//store.dbug.Printf("Close sqlite db\n")
 		store.db.Close()
 		store.db = nil
 	}
-	store.idx = newBadgerIndex()
+
+	if store.idx != nil {
+		err := store.idx.Close()
+		if err != nil {
+			store.dbug.Printf("ERROR closing index: %s\n", err)
+		}
+		store.idx = nil
+	}
 }
 
 func (store *Store) TotalArts() int {
@@ -886,26 +888,6 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList, progress ProgressFn) (int
 
 	return affected, nil
 }
-
-/*
-func getPublications() ([]string, error) {
-	var arts []*Article
-	coll.Find(badger.NewAllQuery(), &arts)
-	pubSet := make(map[string]struct{})
-	for _, art := range arts {
-		pubSet[art.Pub] = struct{}{}
-	}
-	var pubs []string
-	for pub, _ := range pubSet {
-		if pub != "" {
-			pubs = append(pubs, pub)
-		}
-	}
-	sort.Strings(pubs)
-
-	return pubs, nil
-}
-*/
 
 func (store *Store) FindArt(urls []string) (ArtID, error) {
 	placeholders := make([]string, len(urls))

@@ -125,15 +125,6 @@ func newBleveIndex(dbug Logger, idxName string, loc *time.Location) (*bleveIndex
 		dbug: dbug,
 		loc:  loc}
 
-	/*
-		idx.coll.SetWholeWordField("content")
-		idx.coll.SetWholeWordField("headline")
-		idx.coll.SetWholeWordField("tags")
-		idx.coll.SetWholeWordField("byline")
-		idx.coll.SetWholeWordField("pub")
-		idx.coll.SetWholeWordField("section")
-		idx.coll.SetWholeWordField("keywords")
-	*/
 	return idx, nil
 }
 
@@ -152,6 +143,10 @@ func openBleveIndex(dbug Logger, idxName string, loc *time.Location) (*bleveInde
 	}
 
 	return idx, nil
+}
+
+func (idx *bleveIndex) Close() error {
+	return idx.idx.Close()
 }
 
 var varPat = regexp.MustCompile(`[$][{][_A-Z]+[}]`)
