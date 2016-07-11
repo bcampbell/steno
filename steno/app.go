@@ -209,7 +209,15 @@ func (app *App) Quit() {
 
 // open link in a web browser
 func (app *App) BrowseURL(link string) {
-	go browser.OpenURL(link)
+
+    // some hoop-jumping, mainly to get it working on OSX.
+    // We want it to run in the GUI thread, but not immediately.
+    go func() {
+        fmt.Printf("Open URL %s\n",link)
+        qml.RunMain(func() {
+            browser.OpenURL(link)
+        })
+    }()
 }
 
 // open in a web browser
