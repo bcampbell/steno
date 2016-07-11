@@ -8,60 +8,81 @@ package kludge
 
 #include <stdio.h>
 
-const char* gimme()
+bool bundle_path(char* buf, size_t bufsize)
 {
-    char* buf = malloc(256);
-    if (buf==0) {
-        return buf;
-    }
-
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     bool result = false;
     NSBundle * bundle = [NSBundle mainBundle];
-    printf("bundle: %p\n",bundle);
+    //printf("bundle: %p\n",bundle);
     NSString * s = [bundle resourcePath];
-    printf("s: %p\n",s);
-    result = ( [s getFileSystemRepresentation: buf maxLength: 256] == YES );
-    printf("buf: '%s'\n",buf);
+    //printf("s: %p\n",s);
+    bool success = ( [s getFileSystemRepresentation: buf maxLength: bufsize] == YES );
+    //printf("buf: '%s'\n",buf);
     [pool drain];
-    if (!result) {
-        return 0;
-    }
-    return buf;
+    return success;
 }
+
+bool app_support_path( char * buf, size_t bufsize )
+{
+    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init] ;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory ,NSUserDomainMask, YES);
+    NSString *path = [paths objectAtIndex:0];
+    bool success = ( [path getFileSystemRepresentation:buf maxLength: bufsize] == YES );
+    [pool drain] ;
+    return success;
+}
+
 */
 import "C"
 
 import (
 	"fmt"
-	"unsafe"
+    "os"
+    "path/filepath"
 )
 
 func DataPath() (string, error) {
-	s := C.gimme()
-	if s == nil {
-		return "", fmt.Errorf("Poop. bundle path kludge thingy failed.\n")
+    bufsize := C.size_t(512)
+    buf := C.malloc(bufsize)
+    if buf == nil {
+        return "", fmt.Errorf("malloc failed")
+    }
+    defer C.free(buf)
+//	defer C.free(unsafe.Pointer(buf))
+
+    ok := C.bundle_path((*C.char)(buf), bufsize)
+	if !ok {
+		return "", fmt.Errorf("bundle_path() failed")
 	}
-	defer C.free(unsafe.Pointer(s))
 
-	gs := C.GoString(s)
-
-	return gs, nil
+    dir := C.GoString((*C.char)(buf))
+	return dir,nil
 }
 
-// get (or create) per-user directory (eg "$HOME/.steno")
-// TODO: use /System/Library/Steno or whatever it is instead of
-// generic unix version
+// get (or create) per-user directory (eg "~/Library/Application Support/Steno")
 func PerUserPath() (string, error) {
-	home := os.GetEnv("HOME")
-	if home == "" {
-		return "", fmt.Errorf("$HOME not set")
+    bufsize := C.size_t(512)
+    buf := C.malloc(bufsize)
+    if buf == nil {
+        return "", fmt.Errorf("malloc failed")
+    }
+    defer C.free(buf)
+//	defer C.free(unsafe.Pointer(buf))
+
+    ok := C.app_support_path((*C.char)(buf), bufsize)
+	if !ok {
+		return "", fmt.Errorf("app_support_path() failed")
 	}
-	dir := filepath.Join(home, ".steno")
+
+    dir := C.GoString((*C.char)(buf))
+
+	dir = filepath.Join(dir, "Steno")
 	// create dir if if doesn't already exist
-	err := os.MkDirAll(dir, 0755)
+	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		return "", err
 	}
+
 	return dir, nil
 }
+
