@@ -7,15 +7,12 @@ import "C"
 // the linker gets the right -L path passed in
 
 import (
-	//	"encoding/gob"
 	"flag"
 	"fmt"
-	//"github.com/bcampbell/arts/arts"
-	"gopkg.in/qml.v1"
+	"github.com/limetext/qml-go"
 	"os"
-	//	"os/exec"
-	//	"path"
-	//	"runtime"
+	"path/filepath"
+	"semprini/steno/steno/kludge"
 )
 
 func usage() {
@@ -34,11 +31,15 @@ func main() {
 }
 
 func run() error {
-	flag.Parse()
-	dbug = NewDbugLog()
-	defer dbug.Close()
-
 	var err error
+	flag.Parse()
+	perUserDir, err := kludge.PerUserPath()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	dbug = NewDbugLog(filepath.Join(perUserDir, "log.txt"))
+	defer dbug.Close()
 
 	// GUI startup
 	app, err := NewApp()

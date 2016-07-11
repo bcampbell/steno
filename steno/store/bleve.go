@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"github.com/bcampbell/qs"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzers/custom_analyzer"
@@ -9,17 +10,17 @@ import (
 	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
 	"github.com/blevesearch/bleve/analysis/tokenizers/regexp_tokenizer"
 	"github.com/blevesearch/bleve/index/store/goleveldb"
+	"regexp"
 	"strconv"
 	"time"
 )
 
 // article data massasged for bleve indexing
 type bleveArt struct {
-	ID       string   `json:"id"`
-	Urls     []string `json:"urls"`
-	Headline string   `json:"headline"`
-	Content  string   `json:"content"`
-	// TODO: this needs to be a time.Time!
+	ID        string    `json:"id"`
+	Urls      []string  `json:"urls"`
+	Headline  string    `json:"headline"`
+	Content   string    `json:"content"`
 	Published time.Time `json:"published"`
 	Keywords  []string  `json:"keywords"`
 	Section   string    `json:"section"`
@@ -37,9 +38,10 @@ type bleveArt struct {
 type bleveIndex struct {
 	idx  bleve.Index
 	dbug Logger
+	loc  *time.Location
 }
 
-func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
+func newBleveIndex(dbug Logger, idxName string, loc *time.Location) (*bleveIndex, error) {
 	bleve.Config.DefaultKVStore = goleveldb.Name
 
 	indexMapping := bleve.NewIndexMapping()
@@ -120,21 +122,13 @@ func newBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 
 	idx := &bleveIndex{
 		idx:  index,
-		dbug: dbug}
+		dbug: dbug,
+		loc:  loc}
 
-	/*
-		idx.coll.SetWholeWordField("content")
-		idx.coll.SetWholeWordField("headline")
-		idx.coll.SetWholeWordField("tags")
-		idx.coll.SetWholeWordField("byline")
-		idx.coll.SetWholeWordField("pub")
-		idx.coll.SetWholeWordField("section")
-		idx.coll.SetWholeWordField("keywords")
-	*/
 	return idx, nil
 }
 
-func openBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
+func openBleveIndex(dbug Logger, idxName string, loc *time.Location) (*bleveIndex, error) {
 	bleve.Config.DefaultKVStore = goleveldb.Name
 
 	index, err := bleve.Open(idxName)
@@ -144,9 +138,37 @@ func openBleveIndex(dbug Logger, idxName string) (*bleveIndex, error) {
 
 	idx := &bleveIndex{
 		idx:  index,
-		dbug: dbug}
+		dbug: dbug,
+		loc:  loc,
+	}
 
 	return idx, nil
+}
+
+func (idx *bleveIndex) Close() error {
+	return idx.idx.Close()
+}
+
+var varPat = regexp.MustCompile(`[$][{][_A-Z]+[}]`)
+
+func (idx *bleveIndex) expandQuery(q string) string {
+	now := time.Now().In(idx.loc)
+
+	const layout = "2006-01-02"
+
+	return varPat.ReplaceAllStringFunc(q, func(s string) string {
+		switch s {
+		case "${TODAY}":
+			return fmt.Sprintf(`[%s TO %s]`, now.Format(layout), now.Format(layout))
+		case "${PAST_WEEK}":
+			return fmt.Sprintf(`[%s TO %s]`, now.AddDate(0, 0, -6).Format(layout), now.Format(layout))
+		case "${PAST_MONTH}":
+			return fmt.Sprintf(`[%s TO %s]`, now.AddDate(0, -1, 0).Format(layout), now.Format(layout))
+		case "${PAST_YEAR}":
+			return fmt.Sprintf(`[%s TO %s]`, now.AddDate(-1, 0, 0).Format(layout), now.Format(layout))
+		}
+		return q
+	})
 }
 
 func (idx *bleveIndex) index(srcArts ...*Article) error {
@@ -156,7 +178,7 @@ func (idx *bleveIndex) index(srcArts ...*Article) error {
 	for _, src := range srcArts {
 		artID := strconv.Itoa(int(src.ID))
 
-		pubTime, err := time.ParseInLocation(time.RFC3339, src.Published, time.Local)
+		pubTime, err := time.ParseInLocation(time.RFC3339, src.Published, idx.loc)
 		if err != nil {
 			idx.dbug.Printf("WARN: art %d: bad time '%s'\n", src.ID, src.Published)
 			pubTime = time.Time{}
@@ -186,13 +208,17 @@ func (idx *bleveIndex) index(srcArts ...*Article) error {
 }
 
 func (idx *bleveIndex) search(queryString string, order string) (ArtList, error) {
+
 	if queryString == "" {
 		return ArtList{}, nil
 	}
 
+	queryString = idx.expandQuery(queryString)
+	fmt.Println(queryString)
+
 	parser := &qs.Parser{}
 	parser.DefaultOp = qs.AND
-	parser.Loc = time.Local
+	parser.Loc = idx.loc
 
 	q, err := parser.Parse(queryString)
 	if err != nil {

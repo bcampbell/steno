@@ -27,6 +27,7 @@ type indexer interface {
 	index(...*Article) error
 	zap(...ArtID) error
 	search(string, string) (ArtList, error)
+	Close() error
 }
 
 // Store is the core representation of our data set.
@@ -37,7 +38,7 @@ type Store struct {
 	idx  indexer
 }
 
-func New(dbFile string, dbug Logger) (*Store, error) {
+func New(dbFile string, dbug Logger, loc *time.Location) (*Store, error) {
 	store := &Store{dbug: dbug}
 
 	var err error
@@ -63,7 +64,7 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 	if os.IsNotExist(err) {
 		store.dbug.Printf("Create new index from scratch\n")
 		// new indexer
-		store.idx, err = newBleveIndex(store.dbug, indexDir)
+		store.idx, err = newBleveIndex(store.dbug, indexDir, loc)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +85,7 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 		if !fi.IsDir() {
 			return nil, fmt.Errorf("expected %s to be a directory", indexDir)
 		}
-		store.idx, err = openBleveIndex(store.dbug, indexDir)
+		store.idx, err = openBleveIndex(store.dbug, indexDir, loc)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %s", indexDir, err)
 		}
@@ -95,19 +96,20 @@ func New(dbFile string, dbug Logger) (*Store, error) {
 	return store, nil
 }
 
-func DummyStore() *Store {
-	store := &Store{}
-	store.idx = newBadgerIndex()
-	return store
-}
-
 func (store *Store) Close() {
 	if store.db != nil {
-		store.dbug.Printf("Close sqlite db\n")
+		//store.dbug.Printf("Close sqlite db\n")
 		store.db.Close()
 		store.db = nil
 	}
-	store.idx = newBadgerIndex()
+
+	if store.idx != nil {
+		err := store.idx.Close()
+		if err != nil {
+			store.dbug.Printf("ERROR closing index: %s\n", err)
+		}
+		store.idx = nil
+	}
 }
 
 func (store *Store) TotalArts() int {
@@ -886,26 +888,6 @@ func (store *Store) doDelete(tx *sql.Tx, arts ArtList, progress ProgressFn) (int
 
 	return affected, nil
 }
-
-/*
-func getPublications() ([]string, error) {
-	var arts []*Article
-	coll.Find(badger.NewAllQuery(), &arts)
-	pubSet := make(map[string]struct{})
-	for _, art := range arts {
-		pubSet[art.Pub] = struct{}{}
-	}
-	var pubs []string
-	for pub, _ := range pubSet {
-		if pub != "" {
-			pubs = append(pubs, pub)
-		}
-	}
-	sort.Strings(pubs)
-
-	return pubs, nil
-}
-*/
 
 func (store *Store) FindArt(urls []string) (ArtID, error) {
 	placeholders := make([]string, len(urls))

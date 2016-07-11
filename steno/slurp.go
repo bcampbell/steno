@@ -79,7 +79,7 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 
 			// handle errors
 			if msg.Error != "" {
-				cancel <- struct{}{} // TODO: this isn't enough.
+				//cancel <- struct{}{} // TODO: this isn't enough.
 				return fmt.Errorf("Slurp error from server: %s", msg.Error)
 			}
 			if msg.Article == nil {
