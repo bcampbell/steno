@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/limetext/qml-go"
 	"github.com/pkg/browser"
+	"os"
 	"path/filepath"
 	"semprini/steno/steno/kludge"
 	"sort"
@@ -11,8 +12,10 @@ import (
 )
 
 type App struct {
-	Window   *qml.Window
-	DataPath string
+	Window      *qml.Window
+	DataPath    string
+	PerUserPath string
+	ScriptPath  string
 	//Clipboard     *clipboard.Clipboard
 	projComponent qml.Object
 	ctx           *qml.Context
@@ -53,12 +56,18 @@ func NewApp() (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	perUserPath, err := kludge.PerUserPath()
+	if err != nil {
+		return nil, err
+	}
 
 	engine := qml.NewEngine()
 	ctx := engine.Context()
 	app := &App{}
 	app.ctx = ctx
 	app.DataPath = dataPath
+	app.PerUserPath = perUserPath
+	app.ScriptPath = filepath.Join(app.PerUserPath, "scripts")
 	//app.Clipboard = clipboard.New(engine)
 
 	// all the qml/js/html stuff is in the ui dir
@@ -136,11 +145,20 @@ func (app *App) NewProject(storePath string) {
 }
 
 func (app *App) RefreshScripts() {
-	scripts, err := loadScripts(filepath.Join(app.DataPath, "scripts"))
+
+	var scripts []*script
+	var err error
+
+	// create scripts dir if it doesn't exist
+	// (does nothing if already created)
+	err = os.MkdirAll(app.ScriptPath, 0755)
+	if err == nil {
+		scripts, err = loadScripts(app.ScriptPath)
+	}
+
 	if err != nil {
 		dbug.Printf("ERROR: %s\n", err)
 		app.SetError(err.Error())
-
 		return
 	}
 	/*
@@ -209,18 +227,24 @@ func (app *App) Quit() {
 // open link in a web browser
 func (app *App) BrowseURL(link string) {
 
-    // some hoop-jumping, mainly to get it working on OSX.
-    // We want it to run in the GUI thread, but not immediately.
-    go func() {
-        fmt.Printf("Open URL %s\n",link)
-        qml.RunMain(func() {
-            browser.OpenURL(link)
-        })
-    }()
+	// some hoop-jumping, mainly to get it working on OSX.
+	// We want it to run in the GUI thread, but not immediately.
+	go func() {
+		fmt.Printf("Open URL %s\n", link)
+		qml.RunMain(func() {
+			browser.OpenURL(link)
+		})
+	}()
 }
 
 // open in a web browser
 func (app *App) OpenManual() {
 	helpFile := filepath.Join(app.DataPath, "doc", "steno.html")
 	go browser.OpenFile(helpFile)
+}
+
+// open a directory in a file browser
+func (app *App) OpenFileBrowser(dir string) {
+	// an abuse of browse.OpenURL(), but should be fine for now...
+	app.BrowseURL(dir)
 }

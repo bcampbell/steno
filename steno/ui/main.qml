@@ -135,6 +135,13 @@ ApplicationWindow {
         enabled: app.hasCurrent
     }
     Action {
+        id: openScriptDirAction
+        text: "Open scripts dir..."
+        onTriggered: {
+                app.openFileBrowser(app.scriptPath)
+        }
+    }
+    Action {
         id: embiggenShortLinksAction
         text: "Embiggen shortlinks..."
         onTriggered: {
@@ -248,6 +255,7 @@ ApplicationWindow {
         Menu {
             title: "Tools"
             MenuItem { action: runScriptAction }
+            MenuItem { action: openScriptDirAction }
             //MenuItem { action: trainAction }
             //MenuItem { action: classifyAction }
             MenuItem { action: embiggenShortLinksAction }
