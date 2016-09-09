@@ -158,6 +158,16 @@ func (art *Article) URL() string {
 	return ""
 }
 
+// fudge to get around go-qml non-support of []string
+func (art *Article) NumURLs() int {
+	return len(art.URLs)
+}
+
+// fudge to get around go-qml non-support of []string
+func (art *Article) GetURL(n int) string {
+	return art.URLs[n]
+}
+
 func (art *Article) TagsString() string {
 	return strings.Join(art.Tags, " ")
 }
