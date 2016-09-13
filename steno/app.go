@@ -30,8 +30,9 @@ type App struct {
 	SlurpSources    []SlurpSource
 	SlurpSourcesLen int
 
-	Wibble   []string
-	ErrorMsg string
+	Wibble      []string
+	ErrorMsg    string
+	HoveredLink string
 }
 
 // return seconds offset as [+-]HH:MM

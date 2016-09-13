@@ -293,7 +293,7 @@ ApplicationWindow {
 
     statusBar: StatusBar {
         RowLayout {
-            Label { text: app.errorMsg }
+            Label { text: app.hoveredLink }
         }
     }
 

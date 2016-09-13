@@ -21,8 +21,11 @@ Item {
             }
             ArtInfo {
                 Layout.fillWidth: true
-		Layout.minimumHeight: 150
+        		Layout.minimumHeight: 150
                 id: artInfo
+                onHoveredLinkChanged: {
+                    app.hoveredLink = hoveredLink;
+                }
             }
         }
 
