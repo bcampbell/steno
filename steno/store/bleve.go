@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/bcampbell/qs"
 	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzers/custom_analyzer"
-	"github.com/blevesearch/bleve/analysis/analyzers/simple_analyzer"
-	"github.com/blevesearch/bleve/analysis/char_filters/zero_width_non_joiner"
-	"github.com/blevesearch/bleve/analysis/token_filters/lower_case_filter"
-	"github.com/blevesearch/bleve/analysis/tokenizers/regexp_tokenizer"
+	"github.com/blevesearch/bleve/analysis/analyzer/custom"
+	"github.com/blevesearch/bleve/analysis/analyzer/simple"
+	"github.com/blevesearch/bleve/analysis/char/zerowidthnonjoiner"
+	"github.com/blevesearch/bleve/analysis/token/lowercase"
+	regexp_tokenizer "github.com/blevesearch/bleve/analysis/tokenizer/regexp"
 	"github.com/blevesearch/bleve/index/store/goleveldb"
 	"regexp"
 	"strconv"
@@ -61,13 +61,13 @@ func newBleveIndex(dbug Logger, idxName string, loc *time.Location) (*bleveIndex
 
 	err = indexMapping.AddCustomAnalyzer("url",
 		map[string]interface{}{
-			"type": custom_analyzer.Name,
+			"type": custom.Name,
 			"char_filters": []interface{}{
-				zero_width_non_joiner.Name,
+				zerowidthnonjoiner.Name,
 			},
 			"tokenizer": `url_parts`,
 			"token_filters": []interface{}{
-				lower_case_filter.Name,
+				lowercase.Name,
 			},
 		})
 	if err != nil {
@@ -90,7 +90,7 @@ func newBleveIndex(dbug Logger, idxName string, loc *time.Location) (*bleveIndex
 
 	// simple field - split by whitespace and lowercase, no stemming or stopwords
 	simpleFld := bleve.NewTextFieldMapping()
-	simpleFld.Analyzer = simple_analyzer.Name
+	simpleFld.Analyzer = simple.Name
 	simpleFld.Store = false
 
 	numFld := bleve.NewNumericFieldMapping()
