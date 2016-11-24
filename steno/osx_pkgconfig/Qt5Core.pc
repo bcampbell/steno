@@ -1,0 +1,14 @@
+frm=QtCore.framework
+prefix=/Users/ben/Qt5.7.0/5.7/clang_64
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: Qt5 ${frm}
+Description: Qt ${frm} module
+Version: 5.7.0
+Libs: -F${libdir} -framework QtQml -framework QtWidgets -framework QtQuick -framework QtGui -framework QtCore -framework DiskArbitration -framework IOKit -framework QtWidgets -framework QtGui -framework QtCore -framework DiskArbitration -framework IOKit -framework OpenGL -framework AGL
+Cflags: -I${libdir} -I${libdir}/${frm}/Headers -I${libdir}/QtQml.framework/Headers -I${includedir} -F${libdir} -framework QtQml -framework QtWidgets -framework QtQuick -framework QtGui -framework QtCore -framework DiskArbitration -framework IOKit -framework QtWidgets -framework QtGui -framework QtCore -framework DiskArbitration -framework IOKit -framework OpenGL -framework AGL  
+
+Requires: Qt5Core Qt5Gui Qt5Widgets
+

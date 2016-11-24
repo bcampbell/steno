@@ -1,0 +1,16 @@
+using 'official' Qt install
+note: Qt5.7 doesn't seem to have proper pkg-config files... so I hacked my own up
+The Qt 'official' frameworks use relative, @rpath paths.
+The homebrew Qt libs don't.
+
+  export PKG_CONFIG_PATH=/Users/ben/crap/pkgconfig
+  export PATH=$PATH:/Users/ben/Qt5.7.0/5.7/clang_64/bin
+
+need to set the rpath in the exe so it'll find the frameworks when bundled:
+  go build -ldflags="-extldflags '-rpath @executable_path/../Frameworks'"
+
+
+TODO:
+
+tidy up .pc pkgconfig files (or just update limetext to use direct flags)
+should set rpath in steno rather than in Qt!
