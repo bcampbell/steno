@@ -12,6 +12,7 @@ import (
 	"github.com/limetext/qml-go"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"semprini/steno/steno/kludge"
 )
 
@@ -40,6 +41,14 @@ func run() error {
 	}
 	dbug = NewDbugLog(filepath.Join(perUserDir, "log.txt"))
 	defer dbug.Close()
+
+	// try to log any crashes in main goroutine
+	defer func() {
+		if v := recover(); v != nil {
+			dbug.Println("PANIC IN run():", v)
+			dbug.Println(debug.Stack())
+		}
+	}()
 
 	// GUI startup
 	app, err := NewApp()

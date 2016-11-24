@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"semprini/steno/steno/quote"
 	"semprini/steno/steno/store"
 	"strings"
@@ -179,6 +180,12 @@ func (ctrl *Control) DeleteArticles(artIndices []int) {
 	prog.Reset()
 
 	go func() {
+		defer func() {
+			if v := recover(); v != nil {
+				dbug.Println("PANIC IN delete goroutine:", v)
+				dbug.Println(debug.Stack())
+			}
+		}()
 		startTime := time.Now()
 		defer func() {
 			prog.InFlight = false
@@ -331,6 +338,13 @@ func (ctrl *Control) Slurp(slurpSourceName string, dayFrom, dayTo string) {
 	// -----
 
 	go func() {
+		// try to log any crashes in slurp goroutine
+		defer func() {
+			if v := recover(); v != nil {
+				dbug.Println("PANIC IN slurp goroutine:", v)
+				dbug.Println(debug.Stack())
+			}
+		}()
 		startTime := time.Now()
 		defer func() {
 			prog.InFlight = false
@@ -366,6 +380,13 @@ func (ctrl *Control) RunScript(scriptIdx int) {
 
 	// run as goroutine to avoid freezing gui
 	go func() {
+		defer func() {
+			if v := recover(); v != nil {
+				dbug.Println("PANIC IN script goroutine:", v)
+				dbug.Println(debug.Stack())
+			}
+		}()
+
 		prog := &ctrl.Progress
 		prog.Reset()
 

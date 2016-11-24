@@ -47,6 +47,7 @@ func (d *dbugLog) Printf(format string, v ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, v...)
 	if d.log != nil {
 		fmt.Fprintf(d.log, format, v...)
+		d.log.Sync()
 	}
 }
 
@@ -54,5 +55,6 @@ func (d *dbugLog) Println(v ...interface{}) {
 	fmt.Fprintln(os.Stderr, v...)
 	if d.log != nil {
 		fmt.Fprintln(d.log, v...)
+		d.log.Sync()
 	}
 }
