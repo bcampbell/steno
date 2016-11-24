@@ -32,13 +32,14 @@ Item {
 
     Dialog {
         id: progressDlg
-        width: 500
-        height: 100
+        //width: 500
+        //height: 150
         title: ctrl.progress.title
         visible: (ctrl.progress.inFlight || ctrl.progress.errorMsg != "")
-        contentItem: ColumnLayout {
+        standardButtons: ctrl.progress.errorMsg != "" ? StandardButton.Close : 0
+        ColumnLayout {
             anchors.fill: parent
-        anchors.margins: 12
+            anchors.margins: 12
             spacing: 4
             ProgressBar {
                 Layout.fillWidth: true;
@@ -58,7 +59,6 @@ Item {
             Text { text: ctrl.progress.statusMsg }
             //BusyIndicator { running: ctrl.progress.inFlight }
         }
-        standardButtons: StandardButton.Ok | StandardButton.Cancel
     }
 
 }
