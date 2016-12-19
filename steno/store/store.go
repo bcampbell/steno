@@ -1400,3 +1400,66 @@ func (s *artSorter) Swap(i, j int) {
 func (s *artSorter) Less(i, j int) bool {
 	return s.by(s.arts[i], s.arts[j])
 }
+
+type Iter struct {
+	store *Store
+	arts  ArtList
+	pos   int
+	cur   *Article
+	err   error
+}
+
+func (it *Iter) Next() bool {
+	if it.err != nil {
+		return false
+	}
+	if it.pos >= len(it.arts) {
+		return false // no more
+	}
+
+	var foo []*Article
+	foo, it.err = it.store.Fetch(it.arts[it.pos])
+	if it.err != nil {
+		return false
+	}
+	it.cur = foo[0]
+	it.pos++
+	return true
+}
+
+func (it *Iter) Err() error {
+	return it.err
+}
+
+func (it *Iter) Cur() *Article {
+	return it.cur
+}
+
+func (store *Store) FindTaggedArts() *Iter {
+	it := &Iter{
+		store: store,
+		arts:  ArtList{},
+	}
+
+	rows, err := store.db.Query(`SELECT DISTINCT article_id FROM article_tag`)
+	if err != nil {
+		it.err = err
+		return it
+	}
+
+	for rows.Next() {
+		var artID ArtID
+		err = rows.Scan(&artID)
+		if err != nil {
+			it.err = err
+			rows.Close()
+			break
+		}
+		it.arts = append(it.arts, artID)
+	}
+	err = rows.Err()
+	if err != nil {
+		it.err = err
+	}
+	return it
+}
