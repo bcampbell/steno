@@ -38,6 +38,11 @@ type Store struct {
 	idx  indexer
 }
 
+/* TEMP - cheesy access to db directly */
+func (store *Store) DB() *sql.DB {
+	return store.db
+}
+
 func New(dbFile string, dbug Logger, loc *time.Location) (*Store, error) {
 	store := &Store{dbug: dbug}
 
