@@ -14,6 +14,37 @@ var nullLogger = log.New(ioutil.Discard, "", 0)
 var dbug = log.New(os.Stderr, "", 0)
 
 func main() {
+	db, err := store.New("/tmp/eu2.db", dbug, time.UTC)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "poop.\n")
+		os.Exit(1)
+	}
+
+	err = apply(
+		db,
+		"/home/ben/proj/fastText/fasttext",
+		"/tmp/eu1.model.bin",
+		0.1)
+	if err != nil {
+		fmt.Println("ERROR:", err)
+	}
+
+}
+
+func OLD2main() {
+	err := trainem(
+		"/home/ben/proj/fastText/fasttext",
+		"../../fasttext/extract/eu1.dump",
+		"/tmp/eu1.model",
+		func(perc float64) {
+			fmt.Printf("Progress: %f\n", perc)
+		})
+	if err != nil {
+		fmt.Println("ERROR:", err)
+	}
+
+}
+func OLDmain() {
 	flag.Parse()
 
 	if flag.NArg() < 1 {

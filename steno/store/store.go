@@ -1435,7 +1435,16 @@ func (it *Iter) Cur() *Article {
 	return it.cur
 }
 
-func (store *Store) FindTaggedArts() *Iter {
+func (store *Store) IterateAllArts() *Iter {
+	all, err := store.AllArts()
+	return &Iter{
+		store: store,
+		arts:  all,
+		err:   err,
+	}
+}
+
+func (store *Store) IterateTaggedArts() *Iter {
 	it := &Iter{
 		store: store,
 		arts:  ArtList{},

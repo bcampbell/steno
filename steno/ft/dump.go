@@ -28,21 +28,25 @@ func tokenise(s string) []string {
 }
 
 func dumpTagged(db *store.Store, out io.Writer) error {
-	it := db.FindTaggedArts()
+	it := db.IterateTaggedArts()
 
 	for it.Next() {
 		art := it.Cur()
-		headline := strings.Join(tokenise(art.Headline), " ")
-
-		content := PlainText(art.Content)
-		content = strings.Join(tokenise(content), " ")
-
-		labels := make([]string, 0, len(art.Tags))
-		for _, tag := range art.Tags {
-			labels = append(labels, "__label__"+tag)
-		}
-
-		fmt.Fprintf(out, "%s %s\n", strings.Join(labels, " "), headline+" | "+content)
+		dumpArt(art, out)
 	}
 	return it.Err()
+}
+
+func dumpArt(art *store.Article, out io.Writer) {
+	headline := strings.Join(tokenise(art.Headline), " ")
+
+	content := PlainText(art.Content)
+	content = strings.Join(tokenise(content), " ")
+
+	labels := make([]string, 0, len(art.Tags))
+	for _, tag := range art.Tags {
+		labels = append(labels, "__label__"+tag)
+	}
+
+	fmt.Fprintf(out, "%s %s\n", strings.Join(labels, " "), headline+" | "+content)
 }
