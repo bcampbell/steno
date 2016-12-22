@@ -1,4 +1,4 @@
-package main
+package ft
 
 import (
 	"bufio"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func apply(db *store.Store, ftExe string, modelFilename string, threshold float64) error {
+func Predict(db *store.Store, ftExe string, modelFilename string, threshold float64, progress func(float64)) (map[string]store.ArtList, error) {
 
 	fmt.Printf("tag using %s\n", modelFilename)
 
@@ -17,16 +17,21 @@ func apply(db *store.Store, ftExe string, modelFilename string, threshold float6
 
 	in, err := cmd.StdinPipe()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	scanner := bufio.NewScanner(out)
 
 	tags := map[string]store.ArtList{}
+
+	totalArts := db.TotalArts()
+	if totalArts == 0 {
+		return nil, fmt.Errorf("No articles in db")
+	}
 
 	var scanErr error
 	artit := db.IterateAllArts()
@@ -34,10 +39,14 @@ func apply(db *store.Store, ftExe string, modelFilename string, threshold float6
 
 	err = cmd.Start()
 	if err != nil {
-		return err
+		return nil, err
 	}
-
+	n := 0
 	for artit.Next() {
+		if progress != nil {
+			perc := 100 * float64(n) / float64(totalArts)
+			progress(perc)
+		}
 		art := artit.Cur()
 
 		// pipe the article to fasttext
@@ -62,18 +71,32 @@ func apply(db *store.Store, ftExe string, modelFilename string, threshold float6
 	cmdErr := cmd.Wait()
 
 	if artit.Err() != nil {
-		return artit.Err()
+		return nil, artit.Err()
 	}
 
 	if cmdErr != nil {
-		return cmdErr
+		return nil, cmdErr
 	}
 	if scanErr != nil {
-		return scanErr
+		return nil, scanErr
 	}
 
-	fmt.Println("DONE: ", tags)
+	return tags, nil
+}
 
+func applyTags(db *store.Store, tags map[string]store.ArtList, progress func(float64)) error {
+
+	n := 0
+	for tag, arts := range tags {
+		if progress != nil {
+			perc := 100 * float64(n) / float64(len(tags))
+			progress(perc)
+		}
+		_, err := db.AddTags(arts, []string{tag})
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

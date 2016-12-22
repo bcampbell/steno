@@ -1,26 +1,57 @@
-package main
+package ft
 
 import (
 	"bufio"
 	//	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
+	"semprini/steno/steno/store"
 	"strconv"
 )
 
+type TrainingParams struct {
+	FasttextExe string
+	Epoch       int
+}
+
+func BuildModel(db *store.Store, modelFilename string, params *TrainingParams, progress func(float64)) error {
+
+	tmpfile, err := ioutil.TempFile("", "stenoft")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpfile.Name()) // clean up
+
+	// dump out tagged articles to tmpfile in fasttext format
+
+	err = dumpTagged(db, tmpfile)
+	if err != nil {
+		return err
+	}
+	tmpfile.Close()
+
+	// now run fasttext over them
+	err = train(tmpfile.Name(), modelFilename, params, progress)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // invoke fasttext to build a model using a training set
-func trainem(ftExe, inFileName, outFileName string, progress func(perc float64)) error {
+func train(inFileName, outFileName string, params *TrainingParams, progress func(perc float64)) error {
 	// eg ~/proj/fastText/fasttext supervised -input eu1.dump -output eu1.model -epoch 500 -wordNgrams 2
 	args := []string{
 		"supervised",
 		"-input", inFileName,
 		"-output", outFileName,
-		"-epoch", "20", //"500",
+		"-epoch", strconv.Itoa(params.Epoch),
 		"-wordNgrams", "2"}
 
-	cmd := exec.Command(ftExe, args...)
+	cmd := exec.Command(params.FasttextExe, args...)
 
 	// use a custom scanner to scan the output text for progress percentage
 	stdout, err := cmd.StdoutPipe()
