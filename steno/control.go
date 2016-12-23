@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"semprini/steno/steno/ft"
 	"semprini/steno/steno/quote"
 	"semprini/steno/steno/store"
 	"strings"
@@ -654,4 +655,51 @@ func (ctrl *Control) RenderContent(art *store.Article, highlightTerms string) st
 	//	fmt.Println("==============================================")
 	//	fmt.Println(buf.String())
 	return buf.String()
+}
+
+func (ctrl *Control) Train(modelFile string, epoch int) {
+
+	prog := &ctrl.Progress
+	prog.Reset()
+
+	go func() {
+		defer func() {
+			if v := recover(); v != nil {
+				dbug.Println("PANIC IN Train():", v)
+				dbug.Println(debug.Stack())
+			}
+		}()
+		startTime := time.Now()
+		defer func() {
+			prog.InFlight = false
+			qml.Changed(ctrl, prog)
+		}()
+
+		prog.InFlight = true
+		prog.Title = "Running fastText..."
+		prog.StatusMsg = "Training " + modelFile
+		qml.Changed(ctrl, prog)
+
+		progressFn := func(perc float64) {
+			prog.ExpectedCnt = 100
+			prog.CompletedCnt = int(perc)
+			qml.Changed(ctrl, prog)
+		}
+
+		params := &ft.TrainingParams{
+			FasttextExe: "/home/ben/proj/fastText/fasttext",
+			Epoch:       epoch,
+		}
+
+		err := ft.BuildModel(ctrl.store, modelFile, params, progressFn)
+		if err != nil {
+			prog.SetError(err)
+		}
+
+		// rerun the current query
+		ctrl.setQuery(ctrl.Results.Query)
+
+		elapsed := time.Since(startTime)
+		dbug.Printf("Training finished (took %s)\n", elapsed)
+	}()
 }

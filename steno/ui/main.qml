@@ -173,8 +173,8 @@ ApplicationWindow {
     }
     Action {
         id: trainAction
-        text: "Train"
-        onTriggered: app.current().train()
+        text: "Build fastText model..."
+        onTriggered: trainDlg.open()
         enabled: app.hasCurrent
     }
     Action {
@@ -256,7 +256,6 @@ ApplicationWindow {
             title: "Tools"
             MenuItem { action: runScriptAction }
             MenuItem { action: openScriptDirAction }
-            //MenuItem { action: trainAction }
             //MenuItem { action: classifyAction }
             MenuItem { action: embiggenShortLinksAction }
             MenuItem { action: tagRetweetsAction }
@@ -265,6 +264,8 @@ ApplicationWindow {
             MenuItem { action: exportOverallsAction }
             MenuSeparator { }
             MenuItem { action: slurpAction }
+            MenuSeparator { }
+            MenuItem { action: trainAction }
         }
         Menu {
             title: "View"
@@ -301,6 +302,10 @@ ApplicationWindow {
 
     SlurpDialog {
         id: slurpDlg;
+    }
+
+    TrainDialog {
+        id: trainDlg;
     }
 
 

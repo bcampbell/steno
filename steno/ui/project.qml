@@ -32,8 +32,8 @@ Item {
 
     Dialog {
         id: progressDlg
-        //width: 500
-        //height: 150
+        width: 500
+        height: 200
         title: ctrl.progress.title
         visible: (ctrl.progress.inFlight || ctrl.progress.errorMsg != "")
         standardButtons: ctrl.progress.errorMsg != "" ? StandardButton.Close : 0
