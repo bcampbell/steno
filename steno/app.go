@@ -247,3 +247,7 @@ func (app *App) OpenFileBrowser(dir string) {
 	// an abuse of browse.OpenURL(), but should be fine for now...
 	app.BrowseURL(dir)
 }
+
+func (app *App) GetFasttextExe() string {
+	return "/home/ben/proj/fastText/fasttext"
+}

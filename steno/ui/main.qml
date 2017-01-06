@@ -178,6 +178,12 @@ ApplicationWindow {
         enabled: app.hasCurrent
     }
     Action {
+        id: autotagAction
+        text: "Autotag using fastText model..."
+        onTriggered: autotagDlg.open()
+        enabled: app.hasCurrent
+    }
+    Action {
         id: classifyAction
         text: "Classify"
         onTriggered: app.current().classify()
@@ -266,6 +272,7 @@ ApplicationWindow {
             MenuItem { action: slurpAction }
             MenuSeparator { }
             MenuItem { action: trainAction }
+            MenuItem { action: autotagAction }
         }
         Menu {
             title: "View"
@@ -306,6 +313,10 @@ ApplicationWindow {
 
     TrainDialog {
         id: trainDlg;
+    }
+
+    AutotagDialog {
+        id: autotagDlg;
     }
 
 

@@ -687,7 +687,7 @@ func (ctrl *Control) Train(modelFile string, epoch int) {
 		}
 
 		params := &ft.TrainingParams{
-			FasttextExe: "/home/ben/proj/fastText/fasttext",
+			FasttextExe: ctrl.App.GetFasttextExe(),
 			Epoch:       epoch,
 		}
 
@@ -701,5 +701,62 @@ func (ctrl *Control) Train(modelFile string, epoch int) {
 
 		elapsed := time.Since(startTime)
 		dbug.Printf("Training finished (took %s)\n", elapsed)
+	}()
+}
+
+func (ctrl *Control) AutoTag(modelFile string, threshold float64) {
+
+	prog := &ctrl.Progress
+	prog.Reset()
+
+	go func() {
+		defer func() {
+			if v := recover(); v != nil {
+				dbug.Println("PANIC IN AutoTag():", v)
+				dbug.Println(debug.Stack())
+			}
+		}()
+		startTime := time.Now()
+		defer func() {
+			prog.InFlight = false
+			qml.Changed(ctrl, prog)
+		}()
+
+		prog.InFlight = true
+		prog.Title = "Running fastText..."
+		prog.StatusMsg = "autotag: predicting..."
+		qml.Changed(ctrl, prog)
+
+		progressFn := func(perc float64) {
+			prog.ExpectedCnt = 100
+			prog.CompletedCnt = int(perc)
+			qml.Changed(ctrl, prog)
+		}
+
+		predictedTags, err := ft.Predict(
+			ctrl.store,
+			ctrl.App.GetFasttextExe(),
+			modelFile,
+			threshold,
+			progressFn)
+		if err != nil {
+			prog.SetError(err)
+		}
+
+		if err == nil {
+			prog.StatusMsg = "autotag: applying tags..."
+			qml.Changed(ctrl, prog)
+
+			err = ft.ApplyTags(ctrl.store, predictedTags, progressFn)
+			if err != nil {
+				prog.SetError(err)
+			}
+		}
+
+		// rerun the current query
+		ctrl.setQuery(ctrl.Results.Query)
+
+		elapsed := time.Since(startTime)
+		dbug.Printf("autotagging finished (took %s)\n", elapsed)
 	}()
 }

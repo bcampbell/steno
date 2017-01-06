@@ -84,7 +84,7 @@ func Predict(db *store.Store, ftExe string, modelFilename string, threshold floa
 	return tags, nil
 }
 
-func applyTags(db *store.Store, tags map[string]store.ArtList, progress func(float64)) error {
+func ApplyTags(db *store.Store, tags map[string]store.ArtList, progress func(float64)) error {
 
 	n := 0
 	for tag, arts := range tags {
