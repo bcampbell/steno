@@ -17,8 +17,16 @@ func PerUserPath() (string, error) {
 		return "", err
 	}
 	defer CoTaskMemFree(path)
-	folder := syscall.UTF16ToString((*[1 << 16]uint16)(unsafe.Pointer(path))[:])
-	return folder, nil
+	dir := syscall.UTF16ToString((*[1 << 16]uint16)(unsafe.Pointer(path))[:])
+
+	dir = filepath.Join(dir, "Steno")
+	// create dir if if doesn't already exist
+	err := os.MkdirAll(dir, 0755)
+	if err != nil {
+		return "", err
+	}
+
+	return dir, nil
 }
 
 type GUID struct {
