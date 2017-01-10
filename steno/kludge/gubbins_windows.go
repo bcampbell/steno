@@ -29,6 +29,15 @@ func PerUserPath() (string, error) {
 	return dir, nil
 }
 
+// path to any external tool binaries (eg fasttext)
+func BinPath() (string, error) {
+	datPath, err := DataPath()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(datPath, "bin"), nil
+}
+
 type GUID struct {
 	Data1 uint32
 	Data2 uint16
@@ -59,13 +68,4 @@ func SHGetKnownFolderPath(rfid *GUID, dwFlags uint32, hToken syscall.Handle, psz
 func CoTaskMemFree(pv uintptr) {
 	syscall.Syscall(procCoTaskMemFree.Addr(), 1, uintptr(pv), 0, 0)
 	return
-}
-
-func main() {
-	folder, err := FontFolder()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("Font Folder:", folder)
 }

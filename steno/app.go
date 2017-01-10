@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/browser"
 	"os"
 	"path/filepath"
+	"runtime"
 	"semprini/steno/steno/kludge"
 	"sort"
 	"time"
@@ -14,6 +15,7 @@ import (
 type App struct {
 	Window        *qml.Window
 	DataPath      string
+	BinPath       string
 	PerUserPath   string
 	ScriptPath    string
 	projComponent qml.Object
@@ -60,12 +62,17 @@ func NewApp() (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	binPath, err := kludge.BinPath()
+	if err != nil {
+		return nil, err
+	}
 
 	engine := qml.NewEngine()
 	ctx := engine.Context()
 	app := &App{}
 	app.ctx = ctx
 	app.DataPath = dataPath
+	app.BinPath = binPath
 	app.PerUserPath = perUserPath
 	app.ScriptPath = filepath.Join(app.PerUserPath, "scripts")
 
@@ -249,5 +256,9 @@ func (app *App) OpenFileBrowser(dir string) {
 }
 
 func (app *App) GetFasttextExe() string {
-	return "/home/ben/proj/fastText/fasttext"
+	if runtime.GOOS == "windows" {
+		return filepath.Join(app.BinPath, "fasttext.exe")
+	} else {
+		return filepath.Join(app.BinPath, "fasttext")
+	}
 }

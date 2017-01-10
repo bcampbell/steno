@@ -24,3 +24,12 @@ func PerUserPath() (string, error) {
 	}
 	return dir, nil
 }
+
+// path to any external tool binaries (eg fasttext)
+func BinPath() (string, error) {
+	datPath, err := DataPath()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(datPath, "bin"), nil
+}
