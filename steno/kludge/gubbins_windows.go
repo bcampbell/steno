@@ -1,9 +1,10 @@
 package kludge
 
 import (
-	"fmt"
 	"syscall"
 	"unsafe"
+    "os"
+    "path/filepath"
 )
 
 func DataPath() (string, error) {
@@ -21,7 +22,7 @@ func PerUserPath() (string, error) {
 
 	dir = filepath.Join(dir, "Steno")
 	// create dir if if doesn't already exist
-	err := os.MkdirAll(dir, 0755)
+	err = os.MkdirAll(dir, 0755)
 	if err != nil {
 		return "", err
 	}
