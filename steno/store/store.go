@@ -644,7 +644,7 @@ func (store *Store) reindex(arts ArtList) error {
 
 	start := 0
 	for start < len(arts) {
-		n := 500
+		n := 200
 		end := start + n
 		if end > len(arts) {
 			end = len(arts)
