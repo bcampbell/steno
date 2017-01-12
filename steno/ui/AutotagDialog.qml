@@ -44,7 +44,7 @@ Dialog {
         selectExisting: true
         onAccepted: {
             var modelFile = Helper.filePathFromURL(fileDialog.fileUrl);
-            ctrl.autotag(modelFile,thresholdField.value);
+            ctrl.autoTag(modelFile,thresholdField.value);
         }
 
         onRejected: {
