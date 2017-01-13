@@ -29,13 +29,13 @@ Dialog {
                     id: epochField
                     minimumValue:1
                     maximumValue: 10000
-                    value: 5
+                    value: 100
                     //Layout.fillWidth: true;
                 }
             }
             Label {}
             Label {
-                text: "Higher values mean longer training.\nExperimentation required.\n(>200 seems good)"
+                text: "Higher values mean longer/better training.\nExperimentation required.\n(200 seems ok)"
                 font.italic: true
                 //wrapMode:wrap
                // lineHeight: 3
