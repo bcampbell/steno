@@ -36,6 +36,8 @@ type Store struct {
 	db   *sql.DB
 	dbug Logger
 	idx  indexer
+	// lang is default language used for indexing
+	lang string
 }
 
 /* TEMP - cheesy access to db directly */
@@ -43,8 +45,10 @@ func (store *Store) DB() *sql.DB {
 	return store.db
 }
 
-func New(dbFile string, dbug Logger, loc *time.Location) (*Store, error) {
-	store := &Store{dbug: dbug}
+// defaultLang is lang used when creating a new db (or updating an older version).
+// Otherwise Lang set from existing DB.
+func New(dbFile string, dbug Logger, defaultLang string, loc *time.Location) (*Store, error) {
+	store := &Store{dbug: dbug, lang: defaultLang}
 
 	var err error
 
@@ -69,7 +73,7 @@ func New(dbFile string, dbug Logger, loc *time.Location) (*Store, error) {
 	if os.IsNotExist(err) {
 		store.dbug.Printf("Create new index from scratch\n")
 		// new indexer
-		store.idx, err = newBleveIndex(store.dbug, indexDir, loc)
+		store.idx, err = newBleveIndex(store.dbug, indexDir, store.lang, loc)
 		if err != nil {
 			return nil, err
 		}
@@ -227,15 +231,23 @@ func (store *Store) createSchema() error {
 
 	}
 
-	_, err = store.db.Exec(`CREATE TABLE version (ver INTEGER NOT NULL)`)
+	_, err = store.db.Exec(`CREATE TABLE settings (n TEXT, v TEXT NOT NULL)`)
 	if err != nil {
 		return err
 	}
-	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (5)`)
+	_, err = store.db.Exec(`INSERT INTO settings (n,v) VALUES ('lang',?)`, store.lang)
 	if err != nil {
 		return err
 	}
 
+	_, err = store.db.Exec(`CREATE TABLE version (ver INTEGER NOT NULL)`)
+	if err != nil {
+		return err
+	}
+	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (6)`)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -339,6 +351,30 @@ func (store *Store) initDB() error {
 			return err
 		}
 	}
+
+	if ver < 6 {
+		store.dbug.Printf("updating database to version 6\n")
+		_, err = store.db.Exec(`CREATE TABLE settings (n TEXT, v TEXT NOT NULL)`)
+		if err != nil {
+			return err
+		}
+		_, err = store.db.Exec(`INSERT INTO settings (n,v) VALUES ('lang',?)`, store.lang)
+		if err != nil {
+			return err
+		}
+
+		_, err = store.db.Exec(`UPDATE version SET ver=6`)
+		if err != nil {
+			return err
+		}
+	}
+
+	// update the lang from the db itself.
+	err = store.db.QueryRow(`SELECT v FROM settings WHERE n='lang'`).Scan(&store.lang)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -1471,4 +1507,26 @@ func (store *Store) IterateTaggedArts() *Iter {
 		it.err = err
 	}
 	return it
+}
+
+func (store *Store) Lang() string {
+	return store.lang
+}
+
+// set the default indexing language for this store
+// NOTE: won't take effect unless index is deleted and rebuilt...
+func (store *Store) SetLang(lang string) error {
+
+	err := validateLang(lang)
+	if err != nil {
+		return err
+	}
+	_, err = store.db.Exec(`UPDATE settings SET v=? WHERE n='lang'`, lang)
+	if err != nil {
+		return err
+	}
+
+	store.lang = lang
+
+	return nil
 }

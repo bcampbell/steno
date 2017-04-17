@@ -84,7 +84,7 @@ func NewControl(app *App, storePath string, gui qml.Object) (*Control, error) {
 	ctrl := &Control{}
 	ctrl.App = app
 
-	newStore, err := store.New(storePath, dbug, time.Local)
+	newStore, err := store.New(storePath, dbug, "en", time.Local)
 	if err != nil {
 		return nil, err
 	}
@@ -759,4 +759,15 @@ func (ctrl *Control) AutoTag(modelFile string, threshold float64) {
 		elapsed := time.Since(startTime)
 		dbug.Printf("autotagging finished (took %s)\n", elapsed)
 	}()
+}
+
+func (ctrl *Control) GetIndexLang() string {
+	return ctrl.store.Lang()
+}
+
+func (ctrl *Control) SetIndexLang(lang string) {
+	err := ctrl.store.SetLang(lang)
+	if err != nil {
+		ctrl.App.SetError(err.Error())
+	}
 }

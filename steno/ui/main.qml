@@ -218,6 +218,26 @@ ApplicationWindow {
     }
 
     ExclusiveGroup {
+        id: indexLangGroup
+        Action {
+            id: indexLangEN
+            text: "English (en)"
+            checkable: true
+            checked: { app.hasCurrent && app.current().getIndexLang()=="en"; }
+            onToggled: { if(app.hasCurrent && checked) { app.current().setIndexLang("en") }; }
+            enabled: app.hasCurrent
+        }
+        Action {
+            id: indexLangES
+            text: "Spanish (es)"
+            checkable: true
+            checked: { app.hasCurrent && app.current().getIndexLang()=="es"; }
+            onToggled: { if(app.hasCurrent && checked) { app.current().setIndexLang("es") }; }
+            enabled: app.hasCurrent
+        }
+    }
+
+    ExclusiveGroup {
         id: dateFmtGroup
         Action {
             id: dateFmt1
@@ -280,6 +300,11 @@ ApplicationWindow {
                 title: "Mode"
                 MenuItem { action: tweetModeAction }
                 MenuItem { action: articleModeAction }
+            }
+            Menu {
+                title: "Index Language"
+                MenuItem { action: indexLangEN }
+                MenuItem { action: indexLangES }
             }
             Menu {
                 title: "Date format"

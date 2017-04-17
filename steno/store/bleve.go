@@ -7,9 +7,11 @@ import (
 	"github.com/blevesearch/bleve/analysis/analyzer/custom"
 	"github.com/blevesearch/bleve/analysis/analyzer/simple"
 	"github.com/blevesearch/bleve/analysis/char/zerowidthnonjoiner"
+	"github.com/blevesearch/bleve/analysis/lang/en"
 	"github.com/blevesearch/bleve/analysis/token/lowercase"
 	regexp_tokenizer "github.com/blevesearch/bleve/analysis/tokenizer/regexp"
 	"github.com/blevesearch/bleve/index/store/goleveldb"
+	"github.com/blevesearch/blevex/lang/es"
 	"regexp"
 	"strconv"
 	"time"
@@ -41,15 +43,29 @@ type bleveIndex struct {
 	loc  *time.Location
 }
 
-func newBleveIndex(dbug Logger, idxName string, loc *time.Location) (*bleveIndex, error) {
+// check lang, return non-nil if it's not a supported language
+func validateLang(lang string) error {
+	if lang != en.AnalyzerName && lang != es.AnalyzerName {
+		return fmt.Errorf("unsupported language: %s", lang)
+	}
+	return nil
+}
+
+func newBleveIndex(dbug Logger, idxName string, lang string, loc *time.Location) (*bleveIndex, error) {
+
+	var err error
+	err = validateLang(lang)
+	if err != nil {
+		return nil, err
+	}
+
 	bleve.Config.DefaultKVStore = goleveldb.Name
 
 	indexMapping := bleve.NewIndexMapping()
 	// need to do this for sensible handling of default fields ("_all" uses this)
-	indexMapping.DefaultAnalyzer = "en"
+	indexMapping.DefaultAnalyzer = lang
 
 	// add a custom tokenizer and analyzer for handling urls
-	var err error
 	err = indexMapping.AddCustomTokenizer("url_parts",
 		map[string]interface{}{
 			"regexp": `(\p{L}+)|([\d]+)|[\S]`,
@@ -78,7 +94,7 @@ func newBleveIndex(dbug Logger, idxName string, loc *time.Location) (*bleveIndex
 
 	// english text - stemming, remove stopwords etc...
 	textFld := bleve.NewTextFieldMapping()
-	textFld.Analyzer = "en"
+	textFld.Analyzer = lang
 	textFld.Store = false
 
 	// urls - split into words or one-char tokens
