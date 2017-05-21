@@ -37,7 +37,9 @@ type Store struct {
 	dbug Logger
 	idx  indexer
 	// lang is default language used for indexing
-	lang string
+	lang   string
+	loc    *time.Location
+	dbFile string
 }
 
 /* TEMP - cheesy access to db directly */
@@ -48,7 +50,7 @@ func (store *Store) DB() *sql.DB {
 // defaultLang is lang used when creating a new db (or updating an older version).
 // Otherwise Lang set from existing DB.
 func New(dbFile string, dbug Logger, defaultLang string, loc *time.Location) (*Store, error) {
-	store := &Store{dbug: dbug, lang: defaultLang}
+	store := &Store{dbug: dbug, lang: defaultLang, loc: loc, dbFile: dbFile}
 
 	var err error
 
@@ -1525,8 +1527,34 @@ func (store *Store) SetLang(lang string) error {
 	if err != nil {
 		return err
 	}
-
 	store.lang = lang
+
+	// close, delete and rebuild index
+	store.idx.Close()
+	store.idx = nil
+	indexDir := store.dbFile + ".bleve"
+	store.dbug.Printf("Deleting %s\n", indexDir)
+	err = os.RemoveAll(indexDir)
+	if err != nil {
+		return err
+	}
+
+	store.dbug.Printf("Recreate index\n")
+	// new indexer
+	store.idx, err = newBleveIndex(store.dbug, indexDir, store.lang, store.loc)
+	if err != nil {
+		return err
+	}
+
+	// index all articles
+	allArts, err := store.AllArts()
+	if err != nil {
+		return err
+	}
+	err = store.reindex(allArts)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

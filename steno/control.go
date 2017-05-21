@@ -766,8 +766,28 @@ func (ctrl *Control) GetIndexLang() string {
 }
 
 func (ctrl *Control) SetIndexLang(lang string) {
-	err := ctrl.store.SetLang(lang)
-	if err != nil {
-		ctrl.App.SetError(err.Error())
+	if lang == ctrl.store.Lang() {
+		dbug.Printf("ignore redundant SetIndexLang(%s) (old %s)\n",
+			lang, ctrl.store.Lang())
+		return
 	}
+
+	prog := &ctrl.Progress
+	prog.Reset()
+
+	go func() {
+		defer func() {
+			prog.InFlight = false
+			qml.Changed(ctrl, prog)
+		}()
+
+		prog.InFlight = true
+		prog.Title = "Changing language"
+		prog.StatusMsg = "reindexing articles as '" + lang + "'..."
+		qml.Changed(ctrl, prog)
+		err := ctrl.store.SetLang(lang)
+		if err != nil {
+			prog.SetError(err)
+		}
+	}()
 }
