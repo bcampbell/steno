@@ -1,8 +1,7 @@
-package main
+package steno
 
 import (
 	"fmt"
-	"github.com/limetext/qml-go"
 	"github.com/pkg/browser"
 	"os"
 	"path/filepath"
@@ -13,29 +12,51 @@ import (
 )
 
 type App struct {
-	Window        *qml.Window
-	DataPath      string
-	BinPath       string
-	PerUserPath   string
-	ScriptPath    string
-	projComponent qml.Object
-	ctx           *qml.Context
-	project       *Control
-	HasCurrent    bool
+	DataPath    string
+	BinPath     string
+	PerUserPath string
+	ScriptPath  string
+	HasCurrent  bool
 
-	scriptCategories    []string
-	ScriptCategoriesLen int
-
-	scripts    []*script
-	ScriptsLen int
-
-	SlurpSources    []SlurpSource
-	SlurpSourcesLen int
+	scriptCategories []string
+	scripts          []*script
+	SlurpSources     []SlurpSource
 
 	Wibble      []string
 	ErrorMsg    string
 	HoveredLink string
 }
+
+// TODO: where to?
+type Progress struct {
+	InFlight     bool
+	Title        string
+	ExpectedCnt  int // 0=unknown
+	CompletedCnt int
+	StatusMsg    string
+	ErrorMsg     string
+}
+
+func (p *Progress) SetError(err error) {
+	p.ErrorMsg = err.Error()
+	//	qml.Changed(p.ctrl, p)
+}
+
+func (p *Progress) SetStatus(msg string) {
+	p.StatusMsg = msg
+	//	qml.Changed(p.ctrl, p)
+}
+
+func (p *Progress) Reset() {
+	p.InFlight = false
+	p.Title = ""
+	p.ExpectedCnt = 0
+	p.CompletedCnt = 0
+	p.StatusMsg = ""
+	p.ErrorMsg = ""
+}
+
+var dbug = dbugLog{log: os.Stdout}
 
 // return seconds offset as [+-]HH:MM
 func formatZone(offset int) string {
@@ -67,52 +88,17 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
-	engine := qml.NewEngine()
-	ctx := engine.Context()
 	app := &App{}
-	app.ctx = ctx
+
 	app.DataPath = dataPath
 	app.BinPath = binPath
 	app.PerUserPath = perUserPath
 	app.ScriptPath = filepath.Join(app.PerUserPath, "scripts")
 
-	// all the qml/js/html stuff is in the ui dir
-	uiPath := filepath.Join(app.DataPath, "ui")
-
 	app.ErrorMsg = "Hello"
-
-	// expose us to the qml side
-	ctx.SetVar("app", app)
-
-	component, err := engine.LoadFile(filepath.Join(uiPath, "main.qml"))
-	if err != nil {
-		return nil, err
-	}
-	proj, err := engine.LoadFile(filepath.Join(uiPath, "project.qml"))
-	app.projComponent = proj
-	if err != nil {
-		return nil, err
-	}
-
-	// instantiate the gui
-	app.Window = component.CreateWindow(nil)
-	app.Window.Show()
-
-	/*
-		obj := window.Root().ObjectByName("query")
-		obj.Set("text", "")
-		fmt.Printf("%v\n", obj)
-	*/
-
 	app.RefreshScripts()
-
 	app.initSlurpSources()
-
 	return app, nil
-}
-
-func (app *App) Current() *Control {
-	return app.project
 }
 
 func (app *App) GetScript(idx int) *script {
@@ -121,33 +107,7 @@ func (app *App) GetScript(idx int) *script {
 
 func (app *App) SetError(msg string) {
 	app.ErrorMsg = msg
-	qml.Changed(app, &app.ErrorMsg)
-}
-
-func (app *App) OpenProject(storePath string) {
-	//dbug.Printf("open %s\n", storePath)
-
-	proj, err := NewControl(app, storePath, app.projComponent)
-	if err != nil {
-		dbug.Printf("ERROR: %s\n", err)
-		return
-	}
-	app.project = proj
-	app.HasCurrent = true
-	qml.Changed(app, &app.HasCurrent)
-}
-
-func (app *App) NewProject(storePath string) {
-	//dbug.Printf("new %s\n", storePath)
-
-	proj, err := NewControl(app, storePath, app.projComponent)
-	if err != nil {
-		dbug.Printf("ERROR: %s\n", err)
-		return
-	}
-	app.project = proj
-	app.HasCurrent = true
-	qml.Changed(app, &app.HasCurrent)
+	//	qml.Changed(app, &app.ErrorMsg)
 }
 
 func (app *App) RefreshScripts() {
@@ -188,12 +148,6 @@ func (app *App) RefreshScripts() {
 		app.scriptCategories = append(app.scriptCategories, cat)
 	}
 	sort.Strings(app.scriptCategories)
-
-	app.ScriptsLen = len(app.scripts)
-	qml.Changed(app, &app.ScriptsLen)
-
-	app.ScriptCategoriesLen = len(app.scriptCategories)
-	qml.Changed(app, &app.ScriptCategoriesLen)
 }
 
 func (app *App) initSlurpSources() {
@@ -204,8 +158,6 @@ func (app *App) initSlurpSources() {
 		return
 	}
 	app.SlurpSources = srcs
-	app.SlurpSourcesLen = len(srcs)
-	qml.Changed(app, &app.SlurpSourcesLen)
 }
 
 func (app *App) GetScriptCategory(idx int) string {
@@ -216,31 +168,19 @@ func (app *App) GetSlurpSourceName(idx int) string {
 	return app.SlurpSources[idx].Name
 }
 
-func (app *App) CloseProject() {
-	//dbug.Printf("close\n")
-	if app.project != nil {
-		app.project.Close()
-		app.project = nil
-		app.HasCurrent = false
-		qml.Changed(app, &app.HasCurrent)
-	}
-}
-func (app *App) Quit() {
-	app.CloseProject()
-	app.Window.Hide()
-}
-
 // open link in a web browser
 func (app *App) BrowseURL(link string) {
 
 	// some hoop-jumping, mainly to get it working on OSX.
 	// We want it to run in the GUI thread, but not immediately.
-	go func() {
-		fmt.Printf("Open URL %s\n", link)
-		qml.RunMain(func() {
-			browser.OpenURL(link)
-		})
-	}()
+	/*
+		go func() {
+			fmt.Printf("Open URL %s\n", link)
+			qml.RunMain(func() {
+				browser.OpenURL(link)
+			})
+		}()
+	*/
 }
 
 // open in a web browser

@@ -1,4 +1,4 @@
-package main
+package steno
 
 import (
 	"fmt"
@@ -6,6 +6,11 @@ import (
 	"semprini/steno/steno/store"
 	"strings"
 )
+
+type Facet struct {
+	Txt string
+	Cnt int
+}
 
 type Results struct {
 	Query string
