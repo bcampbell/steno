@@ -22,6 +22,7 @@ type Proj struct {
 }
 
 // TableModelHandler support
+// TODO: should be wrapper around Results?
 
 func (proj *Proj) NumColumns(m *ui.TableModel) int {
 	return 4
@@ -69,9 +70,14 @@ func NewProj(storePath string) (*Proj, error) {
 		return nil, err
 	}
 
+	qbox := ui.NewHorizontalBox()
 	proj.c.query = ui.NewEntry()
 	button := ui.NewButton("Search")
+	button.OnClicked(func(but *ui.Button) { proj.SetQuery(proj.c.query.Text()) })
+	qbox.Append(proj.c.query, true)
+	qbox.Append(button, false)
 
+	//
 	proj.c.model = ui.NewTableModel(proj)
 	proj.c.table = ui.NewTable(proj.c.model, ui.TableStyleMultiSelect)
 	proj.c.table.AppendTextColumn("URL", 0)
@@ -80,29 +86,13 @@ func NewProj(storePath string) (*Proj, error) {
 	proj.c.table.AppendTextColumn("Pub", 3)
 
 	box := ui.NewVerticalBox()
-	box.Append(proj.c.query, false)
-	box.Append(button, false)
+	box.Append(qbox, false)
 	box.Append(ui.NewLabel("Results"), false)
 	box.Append(proj.c.table, true)
 
 	window := ui.NewWindow("Steno", 700, 400, false)
 	window.SetMargined(true)
 	window.SetChild(box)
-	button.OnClicked(func(*ui.Button) {
-		q := proj.c.query.Text()
-		res, err := steno.NewResults(proj.store, q)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "ERR: %s", err)
-			//TODO: show error
-			//e := fmt.Sprintf("Search error: %s", err)
-			//dbug.Println(e)
-			//ctrl.App.SetError(e)
-			return
-		}
-
-		proj.results = res
-		fmt.Printf("%d hits\n", res.Len)
-	})
 
 	window.OnClosing(func(*ui.Window) bool {
 		ui.Quit()
@@ -111,4 +101,27 @@ func NewProj(storePath string) (*Proj, error) {
 	window.Show()
 
 	return proj, err
+}
+
+func (proj *Proj) SetQuery(q string) {
+	res, err := steno.NewResults(proj.store, q)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERR: %s", err)
+		//TODO: show error
+		//e := fmt.Sprintf("Search error: %s", err)
+		//dbug.Println(e)
+		//ctrl.App.SetError(e)
+		return
+	}
+
+	// cheesy-as-hell
+	for i := proj.results.Len - 1; i >= 0; i-- {
+		proj.c.model.RowDeleted(i)
+	}
+
+	proj.results = res
+	for i := 0; i < proj.results.Len; i++ {
+		proj.c.model.RowInserted(i)
+	}
+	fmt.Printf("%d hits\n", res.Len)
 }
