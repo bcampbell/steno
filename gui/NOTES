@@ -1,0 +1,5 @@
+libui:
+- uiEntry: no event for when user presses enter (OnChange fires on every key)
+- uiTable: no way to change entire data set
+- uiTable: gtk autosizing causes horizontal scrollbar on wide columns
+
