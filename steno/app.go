@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// TODO: split all this guff up into separate parts
 type App struct {
 	DataPath    string
 	BinPath     string

@@ -5,9 +5,8 @@ import "C"
 import (
 	"flag"
 	"fmt"
-	"github.com/bcampbell/ui"
 	"os"
-	"semprini/steno/steno"
+	"semprini/steno/gui"
 )
 
 type FOO struct{}
@@ -22,29 +21,21 @@ func main() {
 	var err error
 	flag.Parse()
 
-	app, err := steno.NewApp()
+	app, err := gui.NewApp()
 	if err != nil {
 		dbug.Printf("Error starting App: %s\n", err)
 		os.Exit(1)
 	}
-	_ = app
+
 	dbFilename := ""
 	if flag.NArg() > 0 {
 		dbFilename = flag.Arg(0)
-	} else {
-		dbug.Printf("Missing db file\n")
-		os.Exit(1)
-
 	}
 
-	err = ui.Main(func() {
-		_, _ = NewProj(dbFilename)
-	})
+	err = app.Run(dbFilename)
+
 	if err != nil {
-		dbug.Printf("Error starting GUI: %s\n", err)
+		dbug.Printf("ERROR: %s\n", err)
 		os.Exit(1)
 	}
-}
-
-func guiMain(initialDB string) {
 }

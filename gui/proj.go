@@ -1,4 +1,4 @@
-package main
+package gui
 
 import (
 	"fmt"
@@ -20,6 +20,14 @@ type Proj struct {
 		model *ui.TableModel
 	}
 }
+
+type FOO struct{}
+
+func (f *FOO) Printf(format string, v ...interface{}) {
+	fmt.Printf(format, v...)
+}
+
+var dbug = &FOO{}
 
 // TableModelHandler support
 // TODO: should be wrapper around Results?
@@ -90,7 +98,7 @@ func NewProj(storePath string) (*Proj, error) {
 	box.Append(ui.NewLabel("Results"), false)
 	box.Append(proj.c.table, true)
 
-	window := ui.NewWindow("Steno", 700, 400, false)
+	window := ui.NewWindow("Steno", 700, 400, true)
 	window.SetMargined(true)
 	window.SetChild(box)
 
@@ -99,7 +107,20 @@ func NewProj(storePath string) (*Proj, error) {
 		return true
 	})
 	window.Show()
+	/*
+		box.Disable()
 
+		pw := ui.NewWindow("Progress", 500, 200, false)
+		pw.SetMargined(true)
+		prog := ui.NewProgressBar()
+		pw.SetChild(prog)
+
+		pw.OnClosing(func(*ui.Window) bool {
+			box.Enable()
+			return true
+		})
+		pw.Show()
+	*/
 	return proj, err
 }
 
