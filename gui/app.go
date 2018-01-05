@@ -17,8 +17,7 @@ func (f *FOO) Printf(format string, v ...interface{}) {
 var dbug = &FOO{}
 
 type App struct {
-	app *steno.App
-
+	App  *steno.App
 	proj *Project
 	//	Projects []*Proj
 }
@@ -26,7 +25,7 @@ type App struct {
 func NewApp() (*App, error) {
 	var err error
 	app := &App{}
-	app.app, err = steno.NewApp()
+	app.App, err = steno.NewApp()
 	return app, err
 }
 

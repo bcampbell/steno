@@ -168,10 +168,8 @@ func (v *ProjView) SlurpTool() {
 	// TODO: window disable doesn't work
 	v.c.window.Disable()
 	slurpDialog(
-		func(s string, day time.Time, nDays int) {
-			src := &steno.SlurpSource{}
-			src.Name = "foo"
-			src.Loc = "http://foo.scumways.com/ukarts"
+		v.Proj.App.App.SlurpSources,
+		func(src steno.SlurpSource, day time.Time, nDays int) {
 
 			progress := NewProgressWindow("Slurping...")
 			go func() {
@@ -179,9 +177,9 @@ func (v *ProjView) SlurpTool() {
 					fmt.Printf("progress: %s\n", msg)
 					ui.QueueMain(func() { progress.SetStatus(msg) })
 				}
-				dayTo := day.AddDate(0, 0, 1)
+				dayTo := day.AddDate(0, 0, nDays)
 				fmt.Printf("slurp %v,%v to %v,%d\n", src, day, dayTo, nDays)
-				err := steno.Slurp(v.Proj.Store, src, day, dayTo, progFn)
+				err := steno.Slurp(v.Proj.Store, &src, day, dayTo, progFn)
 				fmt.Printf("slurp done (err=%v)\n", err)
 				if err != nil {
 					fmt.Printf("slurp ERROR: %s\n", err)
