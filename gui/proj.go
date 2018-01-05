@@ -6,11 +6,45 @@ import (
 	"os"
 	"semprini/steno/steno"
 	"semprini/steno/steno/store"
-	"time"
 )
 
-type Proj struct {
-	store   *store.Store
+type Project struct {
+	App   *App
+	Store *store.Store
+	Views map[*ProjView]struct{}
+}
+
+func NewProject(db *store.Store, app *App) (*Project, error) {
+	proj := &Project{}
+	proj.App = app
+	proj.Store = db
+	proj.Views = make(map[*ProjView]struct{})
+
+	var err error
+	_, err = NewProjView(proj)
+	_, err = NewProjView(proj)
+	_, err = NewProjView(proj)
+	if err != nil {
+		return nil, err
+	}
+	return proj, err
+}
+
+func (proj *Project) attachView(v *ProjView) {
+	proj.Views[v] = struct{}{}
+}
+
+func (proj *Project) detachView(v *ProjView) {
+	delete(proj.Views, v)
+
+	if len(proj.Views) == 0 {
+		ui.Quit()
+	}
+}
+
+// view onto an open store
+type ProjView struct {
+	Proj    *Project
 	results *steno.Results
 
 	// controls
@@ -21,31 +55,23 @@ type Proj struct {
 	}
 }
 
-type FOO struct{}
-
-func (f *FOO) Printf(format string, v ...interface{}) {
-	fmt.Printf(format, v...)
-}
-
-var dbug = &FOO{}
-
 // TableModelHandler support
 // TODO: should be wrapper around Results?
 
-func (proj *Proj) NumColumns(m *ui.TableModel) int {
+func (v *ProjView) NumColumns(m *ui.TableModel) int {
 	return 4
 }
 
-func (proj *Proj) ColumnType(m *ui.TableModel, col int) ui.TableModelColumnType {
+func (v *ProjView) ColumnType(m *ui.TableModel, col int) ui.TableModelColumnType {
 	return ui.StringColumn
 }
 
-func (proj *Proj) NumRows(m *ui.TableModel) int {
-	return proj.results.Len
+func (v *ProjView) NumRows(m *ui.TableModel) int {
+	return v.results.Len
 }
 
-func (proj *Proj) CellValue(m *ui.TableModel, row int, col int) interface{} {
-	art := proj.results.Art(row)
+func (v *ProjView) CellValue(m *ui.TableModel, row int, col int) interface{} {
+	art := v.results.Art(row)
 	switch col {
 	case 0:
 		return art.CanonicalURL
@@ -59,51 +85,46 @@ func (proj *Proj) CellValue(m *ui.TableModel, row int, col int) interface{} {
 	return ""
 }
 
-func (proj *Proj) SetCellValue(m *ui.TableModel, row int, col int, value interface{}) {
+func (v *ProjView) SetCellValue(m *ui.TableModel, row int, col int, value interface{}) {
 }
 
 //
-func NewProj(storePath string) (*Proj, error) {
+func NewProjView(proj *Project) (*ProjView, error) {
 
-	proj := &Proj{}
-
-	newStore, err := store.New(storePath, dbug, "en", time.Local)
-	if err != nil {
-		return nil, err
-	}
-	proj.store = newStore
-
-	proj.results, err = steno.NewResults(proj.store, "")
+	v := &ProjView{}
+	v.Proj = proj
+	var err error
+	v.results, err = steno.NewResults(v.Proj.Store, "")
 	if err != nil {
 		return nil, err
 	}
 
 	qbox := ui.NewHorizontalBox()
-	proj.c.query = ui.NewEntry()
+	v.c.query = ui.NewEntry()
 	button := ui.NewButton("Search")
-	button.OnClicked(func(but *ui.Button) { proj.SetQuery(proj.c.query.Text()) })
-	qbox.Append(proj.c.query, true)
+	button.OnClicked(func(but *ui.Button) { v.SetQuery(v.c.query.Text()) })
+	qbox.Append(v.c.query, true)
 	qbox.Append(button, false)
 
 	//
-	proj.c.model = ui.NewTableModel(proj)
-	proj.c.table = ui.NewTable(proj.c.model, ui.TableStyleMultiSelect)
-	proj.c.table.AppendTextColumn("URL", 0)
-	proj.c.table.AppendTextColumn("Headline", 1)
-	proj.c.table.AppendTextColumn("Published", 2)
-	proj.c.table.AppendTextColumn("Pub", 3)
+	v.c.model = ui.NewTableModel(v)
+	v.c.table = ui.NewTable(v.c.model, ui.TableStyleMultiSelect)
+	v.c.table.AppendTextColumn("URL", 0)
+	v.c.table.AppendTextColumn("Headline", 1)
+	v.c.table.AppendTextColumn("Published", 2)
+	v.c.table.AppendTextColumn("Pub", 3)
 
 	box := ui.NewVerticalBox()
 	box.Append(qbox, false)
 	box.Append(ui.NewLabel("Results"), false)
-	box.Append(proj.c.table, true)
+	box.Append(v.c.table, true)
 
 	window := ui.NewWindow("Steno", 700, 400, true)
 	window.SetMargined(true)
 	window.SetChild(box)
 
 	window.OnClosing(func(*ui.Window) bool {
-		ui.Quit()
+		v.Proj.detachView(v)
 		return true
 	})
 	window.Show()
@@ -121,11 +142,14 @@ func NewProj(storePath string) (*Proj, error) {
 		})
 		pw.Show()
 	*/
-	return proj, err
+
+	v.Proj.attachView(v)
+
+	return v, err
 }
 
-func (proj *Proj) SetQuery(q string) {
-	res, err := steno.NewResults(proj.store, q)
+func (v *ProjView) SetQuery(q string) {
+	res, err := steno.NewResults(v.Proj.Store, q)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERR: %s", err)
 		//TODO: show error
@@ -136,13 +160,13 @@ func (proj *Proj) SetQuery(q string) {
 	}
 
 	// cheesy-as-hell
-	for i := proj.results.Len - 1; i >= 0; i-- {
-		proj.c.model.RowDeleted(i)
+	for i := v.results.Len - 1; i >= 0; i-- {
+		v.c.model.RowDeleted(i)
 	}
 
-	proj.results = res
-	for i := 0; i < proj.results.Len; i++ {
-		proj.c.model.RowInserted(i)
+	v.results = res
+	for i := 0; i < v.results.Len; i++ {
+		v.c.model.RowInserted(i)
 	}
 	fmt.Printf("%d hits\n", res.Len)
 }
