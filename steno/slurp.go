@@ -52,7 +52,7 @@ func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
 	return srcs, nil
 }
 
-func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, progress *Progress) error {
+func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, progressFn func(string)) error {
 
 	slurper := slurp.NewSlurper(server.Loc)
 
@@ -123,7 +123,7 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 		//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
 		// TODO: not right, but hey
 		newCnt += len(newArts)
-		progress.SetStatus(fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt))
+		progressFn(fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt))
 	}
 	return nil
 }

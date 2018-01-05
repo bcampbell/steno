@@ -6,6 +6,7 @@ import (
 	"os"
 	"semprini/steno/steno"
 	"semprini/steno/steno/store"
+	"time"
 )
 
 type Project struct {
@@ -22,11 +23,10 @@ func NewProject(db *store.Store, app *App) (*Project, error) {
 
 	var err error
 	_, err = NewProjView(proj)
-	_, err = NewProjView(proj)
-	_, err = NewProjView(proj)
 	if err != nil {
 		return nil, err
 	}
+
 	return proj, err
 }
 
@@ -49,9 +49,10 @@ type ProjView struct {
 
 	// controls
 	c struct {
-		query *ui.Entry
-		table *ui.Table
-		model *ui.TableModel
+		window *ui.Window
+		query  *ui.Entry
+		table  *ui.Table
+		model  *ui.TableModel
 	}
 }
 
@@ -115,6 +116,9 @@ func NewProjView(proj *Project) (*ProjView, error) {
 	v.c.table.AppendTextColumn("Pub", 3)
 
 	box := ui.NewVerticalBox()
+
+	box.Append(v.buildToolbar(), false)
+
 	box.Append(qbox, false)
 	box.Append(ui.NewLabel("Results"), false)
 	box.Append(v.c.table, true)
@@ -128,6 +132,8 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		return true
 	})
 	window.Show()
+
+	v.c.window = window
 	/*
 		box.Disable()
 
@@ -146,6 +152,50 @@ func NewProjView(proj *Project) (*ProjView, error) {
 	v.Proj.attachView(v)
 
 	return v, err
+}
+
+func (v *ProjView) buildToolbar() *ui.Box {
+	toolbar := ui.NewHorizontalBox()
+
+	slurpButton := ui.NewButton("Slurp...")
+	slurpButton.OnClicked(func(b *ui.Button) { v.SlurpTool() })
+	toolbar.Append(slurpButton, false)
+
+	return toolbar
+}
+
+func (v *ProjView) SlurpTool() {
+	// TODO: window disable doesn't work
+	v.c.window.Disable()
+	slurpDialog(
+		func(s string, day time.Time, nDays int) {
+			src := &steno.SlurpSource{}
+			src.Name = "foo"
+			src.Loc = "http://foo.scumways.com/ukarts"
+
+			progress := NewProgressWindow("Slurping...")
+			go func() {
+				progFn := func(msg string) {
+					fmt.Printf("progress: %s\n", msg)
+					ui.QueueMain(func() { progress.SetStatus(msg) })
+				}
+				dayTo := day.AddDate(0, 0, 1)
+				fmt.Printf("slurp %v,%v to %v,%d\n", src, day, dayTo, nDays)
+				err := steno.Slurp(v.Proj.Store, src, day, dayTo, progFn)
+				fmt.Printf("slurp done (err=%v)\n", err)
+				if err != nil {
+					fmt.Printf("slurp ERROR: %s\n", err)
+				}
+				ui.QueueMain(func() {
+					progress.Close()
+					v.c.window.Enable()
+				})
+			}()
+		},
+		func() {
+			fmt.Printf("no slurp\n")
+			v.c.window.Enable()
+		})
 }
 
 func (v *ProjView) SetQuery(q string) {
