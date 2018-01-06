@@ -137,6 +137,15 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		hbox.Append(v.c.showArt, false)
 		v.rethinkSelectionSummary(0)
 
+		v.c.showArt.OnClicked(func(b *ui.Button) {
+			sel := v.c.table.GetSelection()
+			if len(sel) > 0 {
+				// TODO: make db access explict! + proper error handling
+				art := v.results.Art(sel[0])
+				NewArtView(v.Proj, art)
+			}
+		})
+
 		box.Append(hbox, false)
 	}
 

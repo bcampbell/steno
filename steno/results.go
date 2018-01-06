@@ -126,6 +126,7 @@ func (res *Results) FindReverse(artIdx int, needle string) int {
 	return -1
 }
 
+// TODO: make db access explict! + proper error handling
 func (res *Results) Art(idx int) *store.Article {
 	if idx < 0 || idx >= len(res.arts) {
 		// sometimes get here... seems to be tableview doing one last refresh on
