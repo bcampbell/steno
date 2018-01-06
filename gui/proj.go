@@ -49,10 +49,13 @@ type ProjView struct {
 
 	// controls
 	c struct {
-		window *ui.Window
-		query  *ui.Entry
-		table  *ui.Table
-		model  *ui.TableModel
+		window        *ui.Window
+		query         *ui.Entry
+		table         *ui.Table
+		model         *ui.TableModel
+		resultSummary *ui.Label
+		selSummary    *ui.Label
+		showArt       *ui.Button
 	}
 }
 
@@ -100,28 +103,66 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		return nil, err
 	}
 
-	qbox := ui.NewHorizontalBox()
-	v.c.query = ui.NewEntry()
-	button := ui.NewButton("Search")
-	button.OnClicked(func(but *ui.Button) { v.SetQuery(v.c.query.Text()) })
-	qbox.Append(v.c.query, true)
-	qbox.Append(button, false)
-
-	//
-	v.c.model = ui.NewTableModel(v)
-	v.c.table = ui.NewTable(v.c.model, ui.TableStyleMultiSelect)
-	v.c.table.AppendTextColumn("URL", 0)
-	v.c.table.AppendTextColumn("Headline", 1)
-	v.c.table.AppendTextColumn("Published", 2)
-	v.c.table.AppendTextColumn("Pub", 3)
-
 	box := ui.NewVerticalBox()
 
+	// stand-in menu
 	box.Append(v.buildToolbar(), false)
 
-	box.Append(qbox, false)
-	box.Append(ui.NewLabel("Results"), false)
-	box.Append(v.c.table, true)
+	// query entry
+	{
+		qbox := ui.NewHorizontalBox()
+		v.c.query = ui.NewEntry()
+		button := ui.NewButton("Search")
+		button.OnClicked(func(but *ui.Button) { v.SetQuery(v.c.query.Text()) })
+		qbox.Append(v.c.query, true)
+		qbox.Append(button, false)
+		box.Append(qbox, false)
+	}
+
+	// result summary
+	{
+		v.c.resultSummary = ui.NewLabel("")
+		hbox := ui.NewHorizontalBox()
+		hbox.Append(v.c.resultSummary, false)
+		v.rethinkResultSummary()
+
+		box.Append(hbox, false)
+	}
+	// selection summary
+	{
+		v.c.selSummary = ui.NewLabel("")
+		v.c.showArt = ui.NewButton("Show")
+		hbox := ui.NewHorizontalBox()
+		hbox.Append(v.c.selSummary, false)
+		hbox.Append(v.c.showArt, false)
+		v.rethinkSelectionSummary(0)
+
+		box.Append(hbox, false)
+	}
+
+	// set up resuts table
+	{
+		v.c.model = ui.NewTableModel(v)
+		v.c.table = ui.NewTable(v.c.model, ui.TableStyleMultiSelect)
+		v.c.table.AppendTextColumn("URL", 0)
+		v.c.table.AppendTextColumn("Headline", 1)
+		v.c.table.AppendTextColumn("Published", 2)
+		v.c.table.AppendTextColumn("Pub", 3)
+
+		v.c.table.OnSelectionChanged(func(t *ui.Table) {
+			sel := v.c.table.GetSelection()
+			v.rethinkSelectionSummary(len(sel))
+			if len(sel) == 1 {
+				v.c.showArt.Enable()
+			} else {
+				v.c.showArt.Disable()
+			}
+		})
+
+		box.Append(v.c.table, true)
+	}
+
+	//
 
 	window := ui.NewWindow("Steno", 700, 400, true)
 	window.SetMargined(true)
@@ -164,6 +205,7 @@ func (v *ProjView) buildToolbar() *ui.Box {
 	return toolbar
 }
 
+// run the user through the slurping process
 func (v *ProjView) SlurpTool() {
 	// TODO: window disable doesn't work
 	v.c.window.Disable()
@@ -196,6 +238,14 @@ func (v *ProjView) SlurpTool() {
 		})
 }
 
+func (v *ProjView) rethinkResultSummary() {
+	v.c.resultSummary.SetText(fmt.Sprintf("%d matching", v.results.Len))
+}
+
+func (v *ProjView) rethinkSelectionSummary(nSelected int) {
+	v.c.selSummary.SetText(fmt.Sprintf("%d selected", nSelected))
+}
+
 func (v *ProjView) SetQuery(q string) {
 	res, err := steno.NewResults(v.Proj.Store, q)
 	if err != nil {
@@ -216,5 +266,6 @@ func (v *ProjView) SetQuery(q string) {
 	for i := 0; i < v.results.Len; i++ {
 		v.c.model.RowInserted(i)
 	}
+	v.rethinkResultSummary()
 	fmt.Printf("%d hits\n", res.Len)
 }
