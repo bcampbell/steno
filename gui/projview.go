@@ -5,6 +5,7 @@ import (
 	"github.com/bcampbell/ui"
 	"os"
 	"semprini/steno/steno"
+	"semprini/steno/steno/store"
 	"time"
 )
 
@@ -23,6 +24,19 @@ type ProjView struct {
 		selSummary    *ui.Label
 		showArt       *ui.Button
 	}
+}
+
+// View implementation
+func (v *ProjView) OnArtsModified(store.ArtList) {
+	v.SetQuery(v.results.Query) // re-run current query
+}
+
+func (v *ProjView) OnArtsAdded(store.ArtList) {
+	v.SetQuery(v.results.Query)
+}
+
+func (v *ProjView) OnArtsDeleted(store.ArtList) {
+	v.SetQuery(v.results.Query)
 }
 
 // TableModelHandler support
@@ -177,6 +191,12 @@ func (v *ProjView) buildToolbar() *ui.Box {
 	slurpButton.OnClicked(func(b *ui.Button) { v.SlurpTool() })
 	toolbar.Append(slurpButton, false)
 
+	newViewButton := ui.NewButton("New window...")
+	newViewButton.OnClicked(func(b *ui.Button) {
+		NewProjView(v.Proj)
+	})
+	toolbar.Append(newViewButton, false)
+
 	return toolbar
 }
 
@@ -196,14 +216,16 @@ func (v *ProjView) SlurpTool() {
 				}
 				dayTo := day.AddDate(0, 0, nDays)
 				fmt.Printf("slurp %v,%v to %v,%d\n", src, day, dayTo, nDays)
-				err := steno.Slurp(v.Proj.Store, &src, day, dayTo, progFn)
-				fmt.Printf("slurp done (err=%v)\n", err)
+				newArts, err := steno.Slurp(v.Proj.Store, &src, day, dayTo, progFn)
 				if err != nil {
 					fmt.Printf("slurp ERROR: %s\n", err)
 				}
 				ui.QueueMain(func() {
 					progress.Close()
 					v.c.window.Enable()
+					if len(newArts) > 0 {
+						v.Proj.ArtsAdded(newArts) // newArts valid even for failed slurp
+					}
 				})
 			}()
 		},

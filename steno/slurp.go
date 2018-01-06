@@ -52,7 +52,8 @@ func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
 	return srcs, nil
 }
 
-func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, progressFn func(string)) error {
+// returns IDs of sucessfully-added articles
+func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, progressFn func(string)) (store.ArtList, error) {
 
 	slurper := slurp.NewSlurper(server.Loc)
 
@@ -67,6 +68,7 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 
 	newCnt := 0
 	receivedCnt := 0
+	newlySlurped := store.ArtList{}
 	for {
 		// read a batch of articles in from the wire...
 		arts := []*store.Article{}
@@ -80,7 +82,7 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 			// handle errors
 			if msg.Error != "" {
 				//cancel <- struct{}{} // TODO: this isn't enough.
-				return fmt.Errorf("Slurp error from server: %s", msg.Error)
+				return nil, fmt.Errorf("Slurp error from server: %s", msg.Error)
 			}
 			if msg.Article == nil {
 				dbug.Printf("Slurp WARN: missing article\n")
@@ -103,7 +105,7 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 			got, err := db.FindArt(art.URLs)
 			if err != nil {
 				cancel <- struct{}{} // TODO: this isn't enough.
-				return fmt.Errorf("FindArt() failed: %s", err)
+				return newlySlurped, fmt.Errorf("FindArt() failed: %s", err)
 			}
 			if got > 0 {
 				// already got it.
@@ -117,15 +119,20 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 			err := db.Stash(newArts)
 			if err != nil {
 				cancel <- struct{}{} // TODO: this isn't enough.
-				return fmt.Errorf("Stash failed: %s", err)
+				return newlySlurped, fmt.Errorf("Stash failed: %s", err)
 			}
+			// Stash will have assigned article IDs
+			for _, a := range newArts {
+				newlySlurped = append(newlySlurped, a.ID)
+			}
+
 		}
 		//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
 		// TODO: not right, but hey
 		newCnt += len(newArts)
 		progressFn(fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt))
 	}
-	return nil
+	return newlySlurped, nil
 }
 
 // convert the wire-format article into our local form
