@@ -6,6 +6,7 @@ import (
 	"os"
 	"semprini/steno/steno"
 	"semprini/steno/steno/store"
+	"strings"
 	"time"
 )
 
@@ -13,6 +14,8 @@ import (
 type ProjView struct {
 	Proj    *Project
 	results *steno.Results
+
+	selected []int
 
 	// controls
 	c struct {
@@ -23,6 +26,10 @@ type ProjView struct {
 		resultSummary *ui.Label
 		selSummary    *ui.Label
 		showArt       *ui.Button
+
+		tagEntry        *ui.Entry
+		addTagButton    *ui.Button
+		removeTagButton *ui.Button
 	}
 }
 
@@ -43,7 +50,7 @@ func (v *ProjView) OnArtsDeleted(store.ArtList) {
 // TODO: should be wrapper around Results?
 
 func (v *ProjView) NumColumns(m *ui.TableModel) int {
-	return 4
+	return 5
 }
 
 func (v *ProjView) ColumnType(m *ui.TableModel, col int) ui.TableModelColumnType {
@@ -65,6 +72,8 @@ func (v *ProjView) CellValue(m *ui.TableModel, row int, col int) interface{} {
 		return art.Published
 	case 3:
 		return art.Pub
+	case 4:
+		return strings.Join(art.Tags, " ")
 	}
 	return ""
 }
@@ -104,18 +113,32 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		v.c.resultSummary = ui.NewLabel("")
 		hbox := ui.NewHorizontalBox()
 		hbox.Append(v.c.resultSummary, false)
-		v.rethinkResultSummary()
 
 		box.Append(hbox, false)
 	}
-	// selection summary
+	// selection summary & tagging
 	{
 		v.c.selSummary = ui.NewLabel("")
 		v.c.showArt = ui.NewButton("Show")
 		hbox := ui.NewHorizontalBox()
 		hbox.Append(v.c.selSummary, false)
 		hbox.Append(v.c.showArt, false)
-		v.rethinkSelectionSummary(0)
+
+		// tagging
+		v.c.tagEntry = ui.NewEntry()
+		v.c.tagEntry.OnChanged(func(e *ui.Entry) { v.rethinkSelectionSummary() })
+		v.c.addTagButton = ui.NewButton("Add Tag")
+		v.c.addTagButton.OnClicked(func(b *ui.Button) {
+			v.DoAddTags(v.results.Arts, v.c.tagEntry.Text())
+		})
+		v.c.removeTagButton = ui.NewButton("Remove Tag")
+		v.c.removeTagButton.OnClicked(func(b *ui.Button) {
+			v.DoRemoveTags(v.results.Arts, v.c.tagEntry.Text())
+		})
+
+		hbox.Append(v.c.tagEntry, false)
+		hbox.Append(v.c.addTagButton, false)
+		hbox.Append(v.c.removeTagButton, false)
 
 		v.c.showArt.OnClicked(func(b *ui.Button) {
 			sel := v.c.table.GetSelection()
@@ -129,23 +152,19 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		box.Append(hbox, false)
 	}
 
-	// set up resuts table
+	// set up results table
 	{
 		v.c.model = ui.NewTableModel(v)
 		v.c.table = ui.NewTable(v.c.model, ui.TableStyleMultiSelect)
+		v.c.table.AppendTextColumn("tags", 4)
 		v.c.table.AppendTextColumn("URL", 0)
-		v.c.table.AppendTextColumn("Headline", 1)
-		v.c.table.AppendTextColumn("Published", 2)
-		v.c.table.AppendTextColumn("Pub", 3)
+		v.c.table.AppendTextColumn("headline", 1)
+		v.c.table.AppendTextColumn("published", 2)
+		v.c.table.AppendTextColumn("pub", 3)
 
 		v.c.table.OnSelectionChanged(func(t *ui.Table) {
-			sel := v.c.table.GetSelection()
-			v.rethinkSelectionSummary(len(sel))
-			if len(sel) == 1 {
-				v.c.showArt.Enable()
-			} else {
-				v.c.showArt.Disable()
-			}
+			v.selected = v.c.table.GetSelection()
+			v.rethinkSelectionSummary()
 		})
 
 		box.Append(v.c.table, true)
@@ -161,6 +180,10 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		v.Proj.detachView(v)
 		return true
 	})
+
+	v.rethinkResultSummary()
+	v.rethinkSelectionSummary()
+
 	window.Show()
 
 	v.c.window = window
@@ -239,8 +262,24 @@ func (v *ProjView) rethinkResultSummary() {
 	v.c.resultSummary.SetText(fmt.Sprintf("%d matching", v.results.Len))
 }
 
-func (v *ProjView) rethinkSelectionSummary(nSelected int) {
-	v.c.selSummary.SetText(fmt.Sprintf("%d selected", nSelected))
+func (v *ProjView) rethinkSelectionSummary() {
+	v.c.selSummary.SetText(fmt.Sprintf("%d selected", len(v.selected)))
+
+	tagtxt := v.c.tagEntry.Text()
+	if tagtxt != "" && len(v.selected) > 0 {
+		v.c.addTagButton.Enable()
+		v.c.removeTagButton.Enable()
+	} else {
+		v.c.addTagButton.Disable()
+		v.c.removeTagButton.Disable()
+	}
+
+	if len(v.selected) == 1 {
+		v.c.showArt.Enable()
+	} else {
+		v.c.showArt.Disable()
+	}
+
 }
 
 func (v *ProjView) SetQuery(q string) {
@@ -265,4 +304,28 @@ func (v *ProjView) SetQuery(q string) {
 	}
 	v.rethinkResultSummary()
 	fmt.Printf("%d hits\n", res.Len)
+}
+
+func (v *ProjView) DoAddTags(artIDs store.ArtList, tags string) {
+	tagList := strings.Fields(tags)
+	affected, err := v.Proj.Store.AddTags(artIDs, tagList)
+	if err != nil {
+		dbug.Printf("AddTags(%q): ERROR: %s\n", tagList, err)
+	} else {
+		dbug.Printf("AddTags(%q): %d affected\n", tagList, len(affected))
+	}
+
+	v.Proj.ArtsModified(affected)
+}
+
+func (v *ProjView) DoRemoveTags(artIDs store.ArtList, tags string) {
+	tagList := strings.Fields(tags)
+	affected, err := v.Proj.Store.RemoveTags(artIDs, tagList)
+	if err != nil {
+		dbug.Printf("RemoveTags(%q): ERROR: %s\n", tagList, err)
+	} else {
+		dbug.Printf("RemoveTags(%q): %d affected\n", tagList, len(affected))
+	}
+
+	v.Proj.ArtsModified(affected)
 }
