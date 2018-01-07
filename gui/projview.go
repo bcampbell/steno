@@ -93,6 +93,7 @@ func NewProjView(proj *Project) (*ProjView, error) {
 	}
 
 	box := ui.NewVerticalBox()
+	box.SetPadded(true)
 
 	// stand-in menu
 	box.Append(v.buildToolbar(), false)
@@ -100,6 +101,7 @@ func NewProjView(proj *Project) (*ProjView, error) {
 	// query entry
 	{
 		qbox := ui.NewHorizontalBox()
+		qbox.SetPadded(true)
 		v.c.query = ui.NewEntry()
 		button := ui.NewButton("Search")
 		button.OnClicked(func(but *ui.Button) { v.SetQuery(v.c.query.Text()) })
@@ -112,6 +114,7 @@ func NewProjView(proj *Project) (*ProjView, error) {
 	{
 		v.c.resultSummary = ui.NewLabel("")
 		hbox := ui.NewHorizontalBox()
+		hbox.SetPadded(true)
 		hbox.Append(v.c.resultSummary, false)
 
 		box.Append(hbox, false)
@@ -121,6 +124,7 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		v.c.selSummary = ui.NewLabel("")
 		v.c.showArt = ui.NewButton("Show")
 		hbox := ui.NewHorizontalBox()
+		hbox.SetPadded(true)
 		hbox.Append(v.c.selSummary, false)
 		hbox.Append(v.c.showArt, false)
 
