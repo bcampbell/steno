@@ -11,4 +11,5 @@ ui:
 - no attrstr support
    - how to handle cut&paste and hyperlinks?
 - no multiline text entry
-
+- radiobutton - no way to get selected (or callback fn)
+- file dialogs - no way to set title, location or extension filters
