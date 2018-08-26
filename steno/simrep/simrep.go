@@ -15,6 +15,7 @@ type Opts struct {
 	NGramSize      int
 	MatchThreshold float64
 	IgnoreSameID   bool
+	Lang           string
 	//
 	Dbug store.Logger
 }
@@ -84,7 +85,7 @@ func tidy(s string) string {
 }
 
 func buildIndex(db *store.Store, opts *Opts) (*sim.Index, error) {
-	idx, err := sim.NewIndex(opts.NGramSize)
+	idx, err := sim.NewIndex(opts.NGramSize, opts.Lang)
 	if err != nil {
 		return nil, err
 	}

@@ -28,6 +28,7 @@ func main() {
 	flag.IntVar(&opts.NGramSize, "n", 3, "ngram size")
 	flag.IntVar(&opts.MinWords, "s", 100, "ignore articles shorter than this this number of words")
 	flag.Float64Var(&opts.MatchThreshold, "m", 0.4, "match threshold (0=no matching, 1=all ngrams matched)")
+	flag.StringVar(&opts.Lang, "l", "en", "language rules to use for text tokenising  (en,es,ru)")
 	flag.Parse()
 	if flag.NArg() < 2 {
 		fmt.Fprintf(os.Stderr, "ERR: missing args\n")
