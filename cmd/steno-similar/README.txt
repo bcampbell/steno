@@ -11,7 +11,8 @@ Options:
   -s int
     	ignore articles shorter than this this number of words (default 100)
   -v	verbose output
-
+  -l string
+	language (en/ru/es)
 eg:
 
   $ steno-similar -m 0.5 -v poop1.db poop2.db
