@@ -49,36 +49,38 @@ func (v *ProjView) OnArtsDeleted(store.ArtList) {
 // TableModelHandler support
 // TODO: should be wrapper around Results?
 
-func (v *ProjView) NumColumns(m *ui.TableModel) int {
-	return 5
-}
-
-func (v *ProjView) ColumnType(m *ui.TableModel, col int) ui.TableModelColumnType {
-	return ui.StringColumn
+func (v *ProjView) ColumnTypes(m *ui.TableModel) []ui.TableValue {
+	return []ui.TableValue{
+		ui.TableString(""),
+		ui.TableString(""),
+		ui.TableString(""),
+		ui.TableString(""),
+		ui.TableString(""),
+	}
 }
 
 func (v *ProjView) NumRows(m *ui.TableModel) int {
 	return v.results.Len
 }
 
-func (v *ProjView) CellValue(m *ui.TableModel, row int, col int) interface{} {
+func (v *ProjView) CellValue(m *ui.TableModel, row int, col int) ui.TableValue {
 	art := v.results.Art(row)
 	switch col {
 	case 0:
-		return art.CanonicalURL
+		return ui.TableString(art.CanonicalURL)
 	case 1:
-		return art.Headline
+		return ui.TableString(art.Headline)
 	case 2:
-		return art.Published
+		return ui.TableString(art.Published)
 	case 3:
-		return art.Pub
+		return ui.TableString(art.Pub)
 	case 4:
-		return strings.Join(art.Tags, " ")
+		return ui.TableString(strings.Join(art.Tags, " "))
 	}
-	return ""
+	panic("unreachable")
 }
 
-func (v *ProjView) SetCellValue(m *ui.TableModel, row int, col int, value interface{}) {
+func (v *ProjView) SetCellValue(m *ui.TableModel, row int, col int, value ui.TableValue) {
 }
 
 //
@@ -145,7 +147,7 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		hbox.Append(v.c.removeTagButton, false)
 
 		v.c.showArt.OnClicked(func(b *ui.Button) {
-			sel := v.c.table.GetSelection()
+			sel := v.c.table.CurrentSelection()
 			if len(sel) > 0 {
 				// TODO: make db access explict! + proper error handling
 				art := v.results.Art(sel[0])
@@ -159,15 +161,20 @@ func NewProjView(proj *Project) (*ProjView, error) {
 	// set up results table
 	{
 		v.c.model = ui.NewTableModel(v)
-		v.c.table = ui.NewTable(v.c.model, ui.TableStyleMultiSelect)
-		v.c.table.AppendTextColumn("tags", 4)
-		v.c.table.AppendTextColumn("URL", 0)
-		v.c.table.AppendTextColumn("headline", 1)
-		v.c.table.AppendTextColumn("published", 2)
-		v.c.table.AppendTextColumn("pub", 3)
+		v.c.table = ui.NewTable(&ui.TableParams{
+			Model: v.c.model,
+			RowBackgroundColorModelColumn: -1,
+			MultiSelect:                   true,
+		})
+
+		v.c.table.AppendTextColumn("URL", 0, ui.TableModelColumnNeverEditable, nil)
+		v.c.table.AppendTextColumn("headline", 1, ui.TableModelColumnNeverEditable, nil)
+		v.c.table.AppendTextColumn("published", 2, ui.TableModelColumnNeverEditable, nil)
+		v.c.table.AppendTextColumn("pub", 3, ui.TableModelColumnNeverEditable, nil)
+		v.c.table.AppendTextColumn("tags", 4, ui.TableModelColumnNeverEditable, nil)
 
 		v.c.table.OnSelectionChanged(func(t *ui.Table) {
-			v.selected = v.c.table.GetSelection()
+			v.selected = v.c.table.CurrentSelection()
 			v.rethinkSelectionSummary()
 		})
 
