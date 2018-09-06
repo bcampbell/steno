@@ -26,7 +26,7 @@ func Run(db1 *store.Store, db2 *store.Store, opts *Opts) error {
 
 	// index the first store
 	dbug.Printf("building similarity index...\n")
-	idx, err := BuildIndex(db1, opts)
+	idx, err := BuildIndex(db1, opts, nil)
 	if err != nil {
 		return err
 	}
@@ -84,11 +84,13 @@ func tidy(s string) string {
 	return strings.Join(out, "\n")
 }
 
-func BuildIndex(db *store.Store, opts *Opts) (*sim.Index, error) {
+func BuildIndex(db *store.Store, opts *Opts, progFunc func(int, int)) (*sim.Index, error) {
 	idx, err := sim.NewIndex(opts.NGramSize, opts.Lang)
 	if err != nil {
 		return nil, err
 	}
+	cnt := 0
+	tot := db.TotalArts()
 	it := db.IterateAllArts()
 	for it.Next() {
 		art := it.Cur()
@@ -99,6 +101,10 @@ func BuildIndex(db *store.Store, opts *Opts) (*sim.Index, error) {
 			continue
 		}
 		idx.AddDoc(sim.DocID(art.ID), txt)
+		cnt++
+		if progFunc != nil {
+			progFunc(cnt, tot)
+		}
 	}
 	if it.Err() != nil {
 		return nil, it.Err()
