@@ -135,11 +135,21 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		v.c.tagEntry.OnChanged(func(e *ui.Entry) { v.rethinkSelectionSummary() })
 		v.c.addTagButton = ui.NewButton("Add Tag")
 		v.c.addTagButton.OnClicked(func(b *ui.Button) {
-			v.DoAddTags(v.results.Arts, v.c.tagEntry.Text())
+			sel := v.c.table.CurrentSelection()
+			artIDs := make(store.ArtList, len(sel))
+			for i, idx := range sel {
+				artIDs[i] = v.results.Arts[idx]
+			}
+			v.DoAddTags(artIDs, v.c.tagEntry.Text())
 		})
 		v.c.removeTagButton = ui.NewButton("Remove Tag")
 		v.c.removeTagButton.OnClicked(func(b *ui.Button) {
-			v.DoRemoveTags(v.results.Arts, v.c.tagEntry.Text())
+			sel := v.c.table.CurrentSelection()
+			artIDs := make(store.ArtList, len(sel))
+			for i, idx := range sel {
+				artIDs[i] = v.results.Arts[idx]
+			}
+			v.DoRemoveTags(artIDs, v.c.tagEntry.Text())
 		})
 
 		hbox.Append(v.c.tagEntry, false)
