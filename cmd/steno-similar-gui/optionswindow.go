@@ -14,6 +14,17 @@ func doOptionsWindow(opts *simrep.Opts, filename string) {
 		return true
 	})
 
+	var okBtn *ui.Button
+
+	// fn to enable the button when the opts are valid
+	rethinkUI := func() {
+		if filename == "" {
+			okBtn.Disable()
+		} else {
+			okBtn.Enable()
+		}
+	}
+
 	vbox := ui.NewVerticalBox()
 	vbox.SetPadded(true)
 	form := ui.NewForm()
@@ -34,6 +45,7 @@ func doOptionsWindow(opts *simrep.Opts, filename string) {
 			if f != "" {
 				filename = f
 				fileEntry.SetText(f)
+				rethinkUI()
 			}
 		})
 		box.Append(fileEntry, true)
@@ -47,6 +59,7 @@ func doOptionsWindow(opts *simrep.Opts, filename string) {
 		spin.SetValue(opts.NGramSize)
 		spin.OnChanged(func(*ui.Spinbox) {
 			opts.NGramSize = spin.Value()
+			rethinkUI()
 		})
 		form.Append("ngram size", spin, false)
 	}
@@ -57,6 +70,7 @@ func doOptionsWindow(opts *simrep.Opts, filename string) {
 		s.SetValue(opts.MinWords)
 		s.OnChanged(func(*ui.Spinbox) {
 			opts.MinWords = s.Value()
+			rethinkUI()
 		})
 		form.Append("Min Words", s, false)
 	}
@@ -67,6 +81,7 @@ func doOptionsWindow(opts *simrep.Opts, filename string) {
 		s.SetValue(int(100 * opts.MatchThreshold))
 		s.OnChanged(func(*ui.Slider) {
 			opts.MatchThreshold = float64(s.Value()) / 100.0
+			rethinkUI()
 		})
 		form.Append("Match Threshold %", s, false)
 	}
@@ -92,6 +107,7 @@ func doOptionsWindow(opts *simrep.Opts, filename string) {
 			} else {
 				opts.Lang = langCodes[i]
 			}
+			rethinkUI()
 		})
 		form.Append("Language for indexing", langPicker, false)
 	}
@@ -107,13 +123,20 @@ func doOptionsWindow(opts *simrep.Opts, filename string) {
 
 	vbox.Append(form, false)
 
-	indexBtn := ui.NewButton("Index")
-	indexBtn.OnClicked(func(*ui.Button) {
+	{
+		sep := ui.NewHorizontalSeparator()
+		vbox.Append(sep, false)
+	}
+
+	okBtn = ui.NewButton("OK")
+	okBtn.OnClicked(func(*ui.Button) {
 		fmt.Printf("<%s>  %v\n", filename, opts)
 		//fenster.Destroy()
 		//		ui.Quit()
 	})
-	vbox.Append(indexBtn, false)
+	vbox.Append(okBtn, false)
+
+	rethinkUI()
 
 	fenster.SetChild(vbox)
 	fenster.SetMargined(true)

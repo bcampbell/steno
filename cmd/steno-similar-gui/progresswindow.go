@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+	//	"fmt"
 	"github.com/andlabs/ui"
-	"semprini/steno/steno/simrep"
+	//	"semprini/steno/steno/simrep"
 )
 
 //
@@ -19,7 +19,7 @@ func NewProgressWindow(title, msg string) *ProgressWindow {
 
 	prog.w = ui.NewWindow(title, 640, 480, true)
 	prog.w.OnClosing(func(*ui.Window) bool {
-		if prog.OnCancel {
+		if prog.OnCancel != nil {
 			prog.OnCancel()
 		}
 		return false
@@ -36,7 +36,7 @@ func NewProgressWindow(title, msg string) *ProgressWindow {
 
 	cancel := ui.NewButton("Cancel")
 	cancel.OnClicked(func(*ui.Button) {
-		if prog.OnCancel {
+		if prog.OnCancel != nil {
 			prog.OnCancel()
 		}
 	})
@@ -51,7 +51,7 @@ func (prog *ProgressWindow) Close() {
 	ui.QueueMain(prog.w.Destroy)
 }
 
-func (prog *ProgressWindow) SetProgress(int i) {
+func (prog *ProgressWindow) SetProgress(i int) {
 	ui.QueueMain(func() {
 		prog.bar.SetValue(i)
 	})

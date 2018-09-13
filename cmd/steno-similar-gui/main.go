@@ -10,8 +10,8 @@ import (
 	"os"
 	//"semprini/sim"
 	"semprini/steno/steno/simrep"
-	"semprini/steno/steno/store"
-	"time"
+	//	"semprini/steno/steno/store"
+	//	"time"
 )
 
 func usage() {
@@ -57,6 +57,7 @@ func main() {
 	ui.Main(gogogo)
 }
 
+/*
 func buildIndex(dbFile1 string, opts *simrep.Opts) (sim.Index, error) {
 
 	// Open the store
@@ -81,3 +82,4 @@ func buildIndex(dbFile1 string, opts *simrep.Opts) (sim.Index, error) {
 
 	return simrep.Run(db1, db2, opts)
 }
+*/
