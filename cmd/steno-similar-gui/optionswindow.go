@@ -75,15 +75,17 @@ func doOptionsWindow(opts *simrep.Opts, filename string, okFn func(*simrep.Opts,
 	}
 
 	// match Threshold %
-	{
-		s := ui.NewSlider(0, 100)
-		s.SetValue(int(100 * opts.MatchThreshold))
-		s.OnChanged(func(*ui.Slider) {
-			opts.MatchThreshold = float64(s.Value()) / 100.0
-			rethinkUI()
-		})
-		form.Append("Match Threshold %", s, false)
-	}
+	/*
+		{
+			s := ui.NewSlider(0, 100)
+			s.SetValue(int(100 * opts.MatchThreshold))
+			s.OnChanged(func(*ui.Slider) {
+				opts.MatchThreshold = float64(s.Value()) / 100.0
+				rethinkUI()
+			})
+			form.Append("Match Threshold %", s, false)
+		}
+	*/
 
 	// language
 	{
@@ -127,7 +129,7 @@ func doOptionsWindow(opts *simrep.Opts, filename string, okFn func(*simrep.Opts,
 		vbox.Append(sep, false)
 	}
 
-	okBtn = ui.NewButton("OK")
+	okBtn = ui.NewButton("Build Index")
 	okBtn.OnClicked(func(*ui.Button) {
 		fenster.Destroy()
 		okFn(opts, filename)
