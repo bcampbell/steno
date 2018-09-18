@@ -11,6 +11,7 @@ import (
 type ProgressWindow struct {
 	w        *ui.Window
 	bar      *ui.ProgressBar
+	msgLabel *ui.Label
 	OnCancel func()
 }
 
@@ -28,8 +29,8 @@ func NewProgressWindow(title, msg string) *ProgressWindow {
 	vbox := ui.NewVerticalBox()
 	vbox.SetPadded(true)
 
-	msgLabel := ui.NewLabel(msg)
-	vbox.Append(msgLabel, false)
+	prog.msgLabel = ui.NewLabel(msg)
+	vbox.Append(prog.msgLabel, false)
 
 	prog.bar = ui.NewProgressBar()
 	vbox.Append(prog.bar, false)
@@ -47,12 +48,22 @@ func NewProgressWindow(title, msg string) *ProgressWindow {
 	return prog
 }
 
+// safe to call from any goroutine
 func (prog *ProgressWindow) Close() {
 	ui.QueueMain(prog.w.Destroy)
 }
 
+// set progress 0..100 (or -1 for indefinite)
+// safe to call from any goroutine
 func (prog *ProgressWindow) SetProgress(i int) {
 	ui.QueueMain(func() {
 		prog.bar.SetValue(i)
 	})
+}
+
+func (prog *ProgressWindow) SetMessage(msg string) {
+	ui.QueueMain(func() {
+		prog.msgLabel.SetText(msg)
+	})
+
 }

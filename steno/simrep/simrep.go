@@ -33,7 +33,7 @@ func Run(db1 *store.Store, db2 *store.Store, opts *Opts) error {
 
 	dbug.Printf("matching against index...\n")
 
-	matches, err := findMatches(idx, db2, opts)
+	matches, err := FindMatches(idx, db2, opts)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func Run(db1 *store.Store, db2 *store.Store, opts *Opts) error {
 	// output report
 
 	dbug.Printf("output report...\n")
-	emitHeader(os.Stdout, opts)
+	EmitHeader(os.Stdout, opts)
 	// for each article...
 	for art2ID, m := range matches {
 		// fetch the article
@@ -63,11 +63,11 @@ func Run(db1 *store.Store, db2 *store.Store, opts *Opts) error {
 			return err
 		}
 
-		emitMatches(os.Stdout, art, matchingArts, metrics)
+		EmitMatches(os.Stdout, art, matchingArts, metrics)
 
 	}
 
-	emitFooter(os.Stdout)
+	EmitFooter(os.Stdout)
 	return nil
 }
 
@@ -113,7 +113,7 @@ func BuildIndex(db *store.Store, opts *Opts, progFunc func(int, int)) (*sim.Inde
 	return idx, nil
 }
 
-func findMatches(idx *sim.Index, db *store.Store, opts *Opts) (map[store.ArtID][]sim.DocMatch, error) {
+func FindMatches(idx *sim.Index, db *store.Store, opts *Opts) (map[store.ArtID][]sim.DocMatch, error) {
 	matches := map[store.ArtID][]sim.DocMatch{}
 
 	it := db.IterateAllArts()

@@ -1,17 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"github.com/andlabs/ui"
 	"semprini/steno/steno/simrep"
 )
 
 // show a window to pick db file and options and kick off the indexing...
-func doOptionsWindow(opts *simrep.Opts, filename string) {
+func doOptionsWindow(opts *simrep.Opts, filename string, okFn func(*simrep.Opts, string), cancelFn func()) {
 	fenster := ui.NewWindow("steno-similar", 640, 480, true)
 	fenster.OnClosing(func(*ui.Window) bool {
-		ui.Quit()
-		return true
+		cancelFn()
+		return true // destroy the window
 	})
 
 	var okBtn *ui.Button
@@ -30,7 +29,7 @@ func doOptionsWindow(opts *simrep.Opts, filename string) {
 	form := ui.NewForm()
 	form.SetPadded(true)
 
-	// filename input
+	// input db filename
 	{
 		box := ui.NewHorizontalBox()
 		fileEntry := ui.NewEntry()
@@ -130,9 +129,8 @@ func doOptionsWindow(opts *simrep.Opts, filename string) {
 
 	okBtn = ui.NewButton("OK")
 	okBtn.OnClicked(func(*ui.Button) {
-		fmt.Printf("<%s>  %v\n", filename, opts)
-		//fenster.Destroy()
-		//		ui.Quit()
+		fenster.Destroy()
+		okFn(opts, filename)
 	})
 	vbox.Append(okBtn, false)
 

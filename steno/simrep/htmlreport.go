@@ -7,7 +7,7 @@ import (
 	"semprini/steno/steno/store"
 )
 
-func emitHeader(w io.Writer, opts *Opts) {
+func EmitHeader(w io.Writer, opts *Opts) {
 
 	raw := `<!DOCTYPE html>
 <html>
@@ -32,14 +32,14 @@ body { /* max-width: 80rem; margin: auto; */ }
 		opts.NGramSize, opts.MinWords, opts.MatchThreshold)
 }
 
-func emitFooter(w io.Writer) {
+func EmitFooter(w io.Writer) {
 	raw := `</body>
 </html>
 `
 	io.WriteString(w, raw)
 }
 
-func emitMatches(w io.Writer, art *store.Article, matching []*store.Article, metrics []float64) {
+func EmitMatches(w io.Writer, art *store.Article, matching []*store.Article, metrics []float64) {
 
 	//
 	txt2 := tidy(art.PlainTextContent())

@@ -8,10 +8,7 @@ import (
 	"github.com/andlabs/ui"
 	"log"
 	"os"
-	//"semprini/sim"
 	"semprini/steno/steno/simrep"
-	//	"semprini/steno/steno/store"
-	//	"time"
 )
 
 func usage() {
@@ -23,6 +20,7 @@ Options:
 }
 
 func gogogo() {
+
 	var opts simrep.Opts
 	flag.Usage = usage
 
@@ -43,7 +41,12 @@ func gogogo() {
 		infile = flag.Arg(0)
 	}
 
-	doOptionsWindow(&opts, infile)
+	// hmm. Appears we're now writing javascript...
+	doOptionsWindow(&opts, infile, openProject, func() {
+		// Cancelled
+		fmt.Printf("Cancelled.\n")
+		ui.Quit()
+	})
 
 	ui.OnShouldQuit(func() bool {
 		fmt.Printf("OnShouldQuit\n")
@@ -53,33 +56,36 @@ func gogogo() {
 	})
 }
 
+func openProject(opts *simrep.Opts, filename string) {
+
+	title := fmt.Sprintf("opening %s", filename)
+	pw := NewProgressWindow(title, "indexing...")
+	go func() {
+		defer pw.Close()
+		proj, err := NewProject(opts, filename, func(n int, tot int) {
+			if tot == 0 {
+				pw.SetProgress(-1)
+			} else {
+				pw.SetProgress((n * 100) / tot)
+			}
+		})
+
+		if err != nil {
+			ui.QueueMain(func() {
+				errMsg := fmt.Sprintf("ERROR: %s", err)
+				ui.MsgBoxError(pw.w, "steno-similar error", errMsg)
+				ui.Quit()
+			})
+			return
+		}
+
+		ui.QueueMain(func() {
+			projectWindow(proj)
+		})
+	}()
+
+}
+
 func main() {
 	ui.Main(gogogo)
 }
-
-/*
-func buildIndex(dbFile1 string, opts *simrep.Opts) (sim.Index, error) {
-
-	// Open the store
-	loc, err := time.LoadLocation("UTC")
-	if err != nil {
-		return err
-	}
-	db1, err := store.New(dbFile1, dbug, "en", loc)
-	if err != nil {
-		return err
-	}
-
-	prog := NewProgressWindow("Indexing", "Indexing...")
-
-	dbug := opts.Dbug
-
-	go func() {
-
-		defer db1.Close()
-
-	}()
-
-	return simrep.Run(db1, db2, opts)
-}
-*/
