@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	//	"github.com/blevesearch/bleve/analysis"
 	"github.com/andlabs/ui"
+	_ "github.com/andlabs/ui/winmanifest"
 	"log"
 	"os"
 	"semprini/steno/steno/simrep"
