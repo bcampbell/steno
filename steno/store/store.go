@@ -22,6 +22,7 @@ type ProgressFn func(expected int, completed int)
 //
 var defaultField string = "content"
 
+// indexer is the interface for maintaining a fulltext index on the database
 type indexer interface {
 	// add or update articles
 	index(...*Article) error
@@ -50,6 +51,15 @@ func (store *Store) DB() *sql.DB {
 // defaultLang is lang used when creating a new db (or updating an older version).
 // Otherwise Lang set from existing DB.
 func New(dbFile string, dbug Logger, defaultLang string, loc *time.Location) (*Store, error) {
+	return internalNew(dbFile, dbug, defaultLang, loc, true)
+}
+
+// NewWithoutIndex opens a store without a fulltext interface
+func NewWithoutIndex(dbFile string, dbug Logger, defaultLang string, loc *time.Location) (*Store, error) {
+	return internalNew(dbFile, dbug, defaultLang, loc, false)
+}
+
+func internalNew(dbFile string, dbug Logger, defaultLang string, loc *time.Location, useBleve bool) (*Store, error) {
 	store := &Store{dbug: dbug, lang: defaultLang, loc: loc, dbFile: dbFile}
 
 	var err error
@@ -70,38 +80,41 @@ func New(dbFile string, dbug Logger, defaultLang string, loc *time.Location) (*S
 		return nil, err
 	}
 
-	indexDir := dbFile + ".bleve"
-	fi, err := os.Stat(indexDir)
-	if os.IsNotExist(err) {
-		store.dbug.Printf("Create new index from scratch\n")
-		// new indexer
-		store.idx, err = newBleveIndex(store.dbug, indexDir, store.lang, loc)
-		if err != nil {
-			return nil, err
-		}
+	if useBleve {
+		indexDir := dbFile + ".bleve"
+		fi, err := os.Stat(indexDir)
+		if os.IsNotExist(err) {
+			store.dbug.Printf("Create new index from scratch\n")
+			// new indexer
+			store.idx, err = newBleveIndex(store.dbug, indexDir, store.lang, loc)
+			if err != nil {
+				return nil, err
+			}
 
-		// index all articles
-		allArts, err := store.AllArts()
-		if err != nil {
-			return nil, err
-		}
-		err = store.reindex(allArts)
-		if err != nil {
-			return nil, err
-		}
+			// index all articles
+			allArts, err := store.AllArts()
+			if err != nil {
+				return nil, err
+			}
+			err = store.reindex(allArts)
+			if err != nil {
+				return nil, err
+			}
 
+		} else {
+			store.dbug.Printf("Open existing index %s\n", indexDir)
+			// open existing indexer
+			if !fi.IsDir() {
+				return nil, fmt.Errorf("expected %s to be a directory", indexDir)
+			}
+			store.idx, err = openBleveIndex(store.dbug, indexDir, loc)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %s", indexDir, err)
+			}
+		}
 	} else {
-		store.dbug.Printf("Open existing index %s\n", indexDir)
-		// open existing indexer
-		if !fi.IsDir() {
-			return nil, fmt.Errorf("expected %s to be a directory", indexDir)
-		}
-		store.idx, err = openBleveIndex(store.dbug, indexDir, loc)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %s", indexDir, err)
-		}
+		store.idx = &dummyIndex{}
 	}
-
 	//
 
 	return store, nil

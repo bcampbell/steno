@@ -31,7 +31,7 @@ func NewProject(opts *simrep.Opts, dbFile string, progFn func(int, int)) (*Proj,
 	if err != nil {
 		return nil, err
 	}
-	proj.DB, err = store.New(dbFile, opts.Dbug, "en", loc)
+	proj.DB, err = store.NewWithoutIndex(dbFile, opts.Dbug, "en", loc)
 	if err != nil {
 		return nil, err
 	}
