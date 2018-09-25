@@ -21,7 +21,7 @@ body { /* max-width: 80rem; margin: auto; */ }
 .art1 { margin-left: 2rem; margin-bottom: 2rem; border-top: 1px solid black; }
 .diff { display: none; }
 .showdiffs:checked + .diff { display:block; }
-.content { background: #ffe; padding: 1rem; }
+.content { background: #ffe; padding: 1rem; max-width: 65rem; white-space: pre-wrap; }
 </style>
 </head>
 <body>
@@ -66,12 +66,12 @@ func EmitMatches(w io.Writer, art *store.Article, matching []*store.Article, met
 		fmt.Fprintf(w, "Pub: %s\n", art1.Publication.Code)
 		fmt.Fprintf(w, "</pre>\n")
 		fmt.Fprintln(w, `<label>show diff</label><input class="showdiffs" type="checkbox" />`)
-		fmt.Fprintln(w, `<div class="diff content"><pre>`)
+		fmt.Fprintln(w, `<pre class="diff content">`)
 		dmp := diffmatchpatch.New()
 		diffs := dmp.DiffMain(txt1, txt2, false)
 		diffs = dmp.DiffCleanupSemantic(diffs)
 		fmt.Fprintln(w, dmp.DiffPrettyHtml(diffs))
-		fmt.Fprintln(w, `</pre></div>`)
+		fmt.Fprintln(w, `</pre>`)
 		fmt.Fprintf(w, "</div>\n")
 	}
 	fmt.Fprintf(w, "</div> <!-- end .grp -->\n")
