@@ -3,8 +3,8 @@ package ft
 import (
 	"bufio"
 	"fmt"
+	"github.com/bcampbell/steno/steno/store"
 	"os/exec"
-	"semprini/steno/steno/store"
 	"strconv"
 	"strings"
 )

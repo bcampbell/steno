@@ -3,7 +3,7 @@ package main
 import (
 	//	"fmt"
 	"github.com/andlabs/ui"
-	//	"semprini/steno/steno/simrep"
+	//	"github.com/bcampbell/steno/steno/simrep"
 )
 
 //

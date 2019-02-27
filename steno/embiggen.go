@@ -8,7 +8,7 @@ import (
 	"net/http"
 	//	"net/url"
 	//	"os"
-	"semprini/steno/steno/store"
+	"github.com/bcampbell/steno/steno/store"
 	//	"strings"
 	"sync"
 	"sync/atomic"

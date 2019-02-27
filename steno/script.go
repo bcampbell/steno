@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
+	"github.com/bcampbell/steno/steno/store"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
-	"semprini/steno/steno/store"
 	"strings"
 )
 

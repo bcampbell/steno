@@ -2,9 +2,9 @@ package simrep
 
 import (
 	"fmt"
+	"github.com/bcampbell/steno/steno/store"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"io"
-	"semprini/steno/steno/store"
 )
 
 func EmitHeader(w io.Writer, opts *Opts) {

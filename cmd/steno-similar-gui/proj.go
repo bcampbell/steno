@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/andlabs/ui"
+	"github.com/bcampbell/sim"
+	"github.com/bcampbell/steno/steno/simrep"
+	"github.com/bcampbell/steno/steno/store"
 	"github.com/pkg/browser"
 	"io"
 	"os"
-	"semprini/sim"
-	"semprini/steno/steno/simrep"
-	"semprini/steno/steno/store"
 	"time"
 )
 

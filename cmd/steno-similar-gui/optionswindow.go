@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/andlabs/ui"
-	"semprini/steno/steno/simrep"
+	"github.com/bcampbell/steno/steno/simrep"
 )
 
 // show a window to pick db file and options and kick off the indexing...

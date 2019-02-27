@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	//	"github.com/bcampbell/htmlutil"
+	"github.com/bcampbell/steno/steno/quote"
 	"golang.org/x/net/html"
 	"os"
-	"semprini/steno/steno/quote"
 	"strconv"
 )
 

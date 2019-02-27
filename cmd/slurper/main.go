@@ -4,11 +4,11 @@ import (
 	"flag"
 	"fmt"
 	//	"io/ioutil"
+	"github.com/bcampbell/autosteno/slurploader"
+	"github.com/bcampbell/scrapeomat/slurp"
+	"github.com/bcampbell/steno/steno/store"
 	"log"
 	"os"
-	"semprini/autosteno/slurploader"
-	"semprini/scrapeomat/slurp"
-	"semprini/steno/steno/store"
 	"time"
 )
 

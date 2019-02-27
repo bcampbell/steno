@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	//	"github.com/blevesearch/bleve/analysis"
+	"github.com/bcampbell/steno/steno/simrep"
+	"github.com/bcampbell/steno/steno/store"
 	"log"
 	"os"
-	"semprini/steno/steno/simrep"
-	"semprini/steno/steno/store"
 	"time"
 )
 

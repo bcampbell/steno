@@ -9,11 +9,11 @@ import "C"
 import (
 	"flag"
 	"fmt"
+	"github.com/bcampbell/steno/steno/kludge"
 	"github.com/limetext/qml-go"
 	"os"
 	"path/filepath"
 	"runtime/debug"
-	"semprini/steno/steno/kludge"
 )
 
 func usage() {

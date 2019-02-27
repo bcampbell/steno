@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/bcampbell/steno/steno/store"
 	"regexp"
-	"semprini/steno/steno/store"
 	"strings"
 )
 

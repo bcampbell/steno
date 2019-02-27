@@ -3,8 +3,8 @@ package main
 import (
 	//	"encoding/csv"
 	//	"fmt"
+	"github.com/bcampbell/steno/steno/store"
 	"io"
-	"semprini/steno/steno/store"
 )
 
 func exportOverallsCSV(arts []*store.Article, out io.Writer) error {

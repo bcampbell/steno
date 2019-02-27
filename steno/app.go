@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/bcampbell/steno/steno/kludge"
 	"github.com/limetext/qml-go"
 	"github.com/pkg/browser"
 	"os"
 	"path/filepath"
 	"runtime"
-	"semprini/steno/steno/kludge"
 	"sort"
 	"time"
 )
