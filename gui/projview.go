@@ -2,10 +2,10 @@ package gui
 
 import (
 	"fmt"
+	"github.com/bcampbell/steno/steno"
+	"github.com/bcampbell/steno/steno/store"
 	"github.com/bcampbell/ui"
 	"os"
-	"semprini/steno/steno"
-	"semprini/steno/steno/store"
 	"strings"
 	"time"
 )

@@ -2,8 +2,8 @@ package gui
 
 import (
 	"fmt"
+	"github.com/bcampbell/steno/steno"
 	"github.com/bcampbell/ui"
-	"semprini/steno/steno"
 	"strconv"
 	"time"
 )

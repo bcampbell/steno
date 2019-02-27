@@ -5,8 +5,8 @@ import "C"
 import (
 	"flag"
 	"fmt"
+	"github.com/bcampbell/steno/gui"
 	"os"
-	"semprini/steno/gui"
 )
 
 type FOO struct{}
