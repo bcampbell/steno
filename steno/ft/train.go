@@ -4,11 +4,11 @@ import (
 	"bufio"
 	//	"bytes"
 	"fmt"
+	"github.com/bcampbell/steno/steno/store"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
-	"semprini/steno/steno/store"
 	"strconv"
 )
 

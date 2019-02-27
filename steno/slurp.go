@@ -3,9 +3,9 @@ package steno
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/bcampbell/scrapeomat/slurp"
+	"github.com/bcampbell/steno/steno/store"
 	"os"
-	"semprini/scrapeomat/slurp"
-	"semprini/steno/steno/store"
 	"time"
 )
 

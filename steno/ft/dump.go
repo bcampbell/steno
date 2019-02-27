@@ -3,10 +3,10 @@ package ft
 import (
 	"fmt"
 	"github.com/bcampbell/htmlutil"
+	"github.com/bcampbell/steno/steno/store"
 	"golang.org/x/net/html"
 	"io"
 	"regexp"
-	"semprini/steno/steno/store"
 	"strings"
 )
 

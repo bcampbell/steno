@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"semprini/steno/steno/kludge"
 	"sort"
 	"time"
 )
