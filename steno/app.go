@@ -2,6 +2,7 @@ package steno
 
 import (
 	"fmt"
+	"github.com/bcampbell/steno/steno/kludge"
 	"github.com/pkg/browser"
 	"os"
 	"path/filepath"
