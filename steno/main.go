@@ -10,7 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/bcampbell/steno/steno/kludge"
-	"github.com/limetext/qml-go"
+	"github.com/jamalsa/qml"
 	"os"
 	"path/filepath"
 	"runtime/debug"

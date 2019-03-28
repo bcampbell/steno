@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bcampbell/steno/steno/kludge"
-	"github.com/limetext/qml-go"
+	"github.com/jamalsa/qml"
 	"github.com/pkg/browser"
 	"os"
 	"path/filepath"

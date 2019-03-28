@@ -12,7 +12,7 @@ import (
 	"github.com/bcampbell/steno/steno/ft"
 	"github.com/bcampbell/steno/steno/quote"
 	"github.com/bcampbell/steno/steno/store"
-	"github.com/limetext/qml-go"
+	"github.com/jamalsa/qml"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"io/ioutil"
