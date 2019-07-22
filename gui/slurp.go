@@ -2,8 +2,8 @@ package gui
 
 import (
 	"fmt"
+	"github.com/andlabs/ui"
 	"github.com/bcampbell/steno/steno"
-	"github.com/bcampbell/ui"
 	"strconv"
 	"time"
 )

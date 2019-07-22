@@ -1,7 +1,7 @@
 package gui
 
 import (
-	"github.com/bcampbell/ui"
+	"github.com/andlabs/ui"
 )
 
 type ProgressWindow struct {

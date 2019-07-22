@@ -1,8 +1,8 @@
 package gui
 
 import (
+	"github.com/andlabs/ui"
 	"github.com/bcampbell/steno/steno/store"
-	"github.com/bcampbell/ui"
 )
 
 type Project struct {

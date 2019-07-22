@@ -2,9 +2,9 @@ package gui
 
 import (
 	"fmt"
+	"github.com/andlabs/ui"
 	"github.com/bcampbell/steno/steno"
 	"github.com/bcampbell/steno/steno/store"
-	"github.com/bcampbell/ui"
 	"os"
 	"strings"
 	"time"
@@ -15,7 +15,7 @@ type ProjView struct {
 	Proj    *Project
 	results *steno.Results
 
-	selected []int
+	selected map[int]struct{}
 
 	// controls
 	c struct {
@@ -51,6 +51,7 @@ func (v *ProjView) OnArtsDeleted(store.ArtList) {
 
 func (v *ProjView) ColumnTypes(m *ui.TableModel) []ui.TableValue {
 	return []ui.TableValue{
+		ui.TableInt(0),
 		ui.TableString(""),
 		ui.TableString(""),
 		ui.TableString(""),
@@ -67,26 +68,44 @@ func (v *ProjView) CellValue(m *ui.TableModel, row int, col int) ui.TableValue {
 	art := v.results.Art(row)
 	switch col {
 	case 0:
-		return ui.TableString(art.CanonicalURL)
+		_, present := v.selected[row]
+		if present {
+			return ui.TableInt(1)
+		} else {
+			return ui.TableInt(0)
+		}
 	case 1:
-		return ui.TableString(art.Headline)
+		return ui.TableString(art.CanonicalURL)
 	case 2:
-		return ui.TableString(art.Published)
+		return ui.TableString(art.Headline)
 	case 3:
-		return ui.TableString(art.Pub)
+		return ui.TableString(art.Published)
 	case 4:
+		return ui.TableString(art.Pub)
+	case 5:
 		return ui.TableString(strings.Join(art.Tags, " "))
 	}
 	panic("unreachable")
 }
 
 func (v *ProjView) SetCellValue(m *ui.TableModel, row int, col int, value ui.TableValue) {
+	if col == 0 {
+		sel := value.(ui.TableInt)
+		if sel == ui.TableFalse {
+			// remove.
+			delete(v.selected, row)
+		} else {
+			v.selected[row] = struct{}{}
+		}
+		v.rethinkSelectionSummary()
+	}
 }
 
 //
 func NewProjView(proj *Project) (*ProjView, error) {
 
 	v := &ProjView{}
+	v.selected = make(map[int]struct{})
 	v.Proj = proj
 	var err error
 	v.results, err = steno.NewResults(v.Proj.Store, "")
@@ -135,19 +154,17 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		v.c.tagEntry.OnChanged(func(e *ui.Entry) { v.rethinkSelectionSummary() })
 		v.c.addTagButton = ui.NewButton("Add Tag")
 		v.c.addTagButton.OnClicked(func(b *ui.Button) {
-			sel := v.c.table.CurrentSelection()
-			artIDs := make(store.ArtList, len(sel))
-			for i, idx := range sel {
-				artIDs[i] = v.results.Arts[idx]
+			artIDs := make(store.ArtList, 0, len(v.selected))
+			for row, _ := range v.selected {
+				artIDs = append(artIDs, v.results.Arts[row])
 			}
 			v.DoAddTags(artIDs, v.c.tagEntry.Text())
 		})
 		v.c.removeTagButton = ui.NewButton("Remove Tag")
 		v.c.removeTagButton.OnClicked(func(b *ui.Button) {
-			sel := v.c.table.CurrentSelection()
-			artIDs := make(store.ArtList, len(sel))
-			for i, idx := range sel {
-				artIDs[i] = v.results.Arts[idx]
+			artIDs := make(store.ArtList, 0, len(v.selected))
+			for row, _ := range v.selected {
+				artIDs = append(artIDs, v.results.Arts[row])
 			}
 			v.DoRemoveTags(artIDs, v.c.tagEntry.Text())
 		})
@@ -157,11 +174,14 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		hbox.Append(v.c.removeTagButton, false)
 
 		v.c.showArt.OnClicked(func(b *ui.Button) {
-			sel := v.c.table.CurrentSelection()
-			if len(sel) > 0 {
+			if len(v.selected) > 0 {
+				for row, _ := range v.selected {
+					art := v.results.Art(row)
+					NewArtView(v.Proj, art)
+					break
+				}
+
 				// TODO: make db access explict! + proper error handling
-				art := v.results.Art(sel[0])
-				NewArtView(v.Proj, art)
 			}
 		})
 
@@ -174,19 +194,20 @@ func NewProjView(proj *Project) (*ProjView, error) {
 		v.c.table = ui.NewTable(&ui.TableParams{
 			Model: v.c.model,
 			RowBackgroundColorModelColumn: -1,
-			MultiSelect:                   true,
 		})
 
-		v.c.table.AppendTextColumn("URL", 0, ui.TableModelColumnNeverEditable, nil)
-		v.c.table.AppendTextColumn("headline", 1, ui.TableModelColumnNeverEditable, nil)
-		v.c.table.AppendTextColumn("published", 2, ui.TableModelColumnNeverEditable, nil)
-		v.c.table.AppendTextColumn("pub", 3, ui.TableModelColumnNeverEditable, nil)
-		v.c.table.AppendTextColumn("tags", 4, ui.TableModelColumnNeverEditable, nil)
-
-		v.c.table.OnSelectionChanged(func(t *ui.Table) {
-			v.selected = v.c.table.CurrentSelection()
-			v.rethinkSelectionSummary()
-		})
+		v.c.table.AppendCheckboxColumn("sel", 0, ui.TableModelColumnAlwaysEditable)
+		v.c.table.AppendTextColumn("URL", 1, ui.TableModelColumnNeverEditable, nil)
+		v.c.table.AppendTextColumn("headline", 2, ui.TableModelColumnNeverEditable, nil)
+		v.c.table.AppendTextColumn("published", 3, ui.TableModelColumnNeverEditable, nil)
+		v.c.table.AppendTextColumn("pub", 4, ui.TableModelColumnNeverEditable, nil)
+		v.c.table.AppendTextColumn("tags", 5, ui.TableModelColumnNeverEditable, nil)
+		/*
+			v.c.table.OnSelectionChanged(func(t *ui.Table) {
+				v.selected = v.c.table.CurrentSelection()
+				v.rethinkSelectionSummary()
+			})
+		*/
 
 		box.Append(v.c.table, true)
 	}
