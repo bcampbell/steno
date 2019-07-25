@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"fmt"
 	"github.com/andlabs/ui"
 	"github.com/bcampbell/steno/steno/store"
 )
@@ -30,14 +31,22 @@ func NewArtView(proj *Project, art *store.Article) *ArtView {
 
 	box.Append(ui.NewLabel("Headline:"), false)
 	box.Append(ro(art.Headline), false)
+	box.Append(ui.NewLabel("Pub:"), false)
+	box.Append(ro(art.Pub), false)
 	box.Append(ui.NewLabel("Published:"), false)
 	box.Append(ro(art.Published), false)
+	box.Append(ui.NewLabel("Byline:"), false)
+	box.Append(ro(art.Byline), false)
 	box.Append(ui.NewLabel("CanonicalURL:"), false)
 	box.Append(ro(art.CanonicalURL), false)
 	box.Append(ui.NewLabel("Content:"), false)
-	box.Append(ro(art.PlainTextContent()), false)
 
-	window := ui.NewWindow("Article", 700, 400, true)
+	content := ui.NewMultilineEntry()
+	content.SetReadOnly(true)
+	content.SetText(art.PlainTextContent())
+	box.Append(content, true)
+
+	window := ui.NewWindow(fmt.Sprintf(`Article: "%s"`, art.Headline), 800, 500, true)
 	window.SetMargined(true)
 	window.SetChild(box)
 
