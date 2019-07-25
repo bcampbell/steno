@@ -123,7 +123,13 @@ func NewProjView(proj *Project) (*ProjView, error) {
 	{
 		qbox := ui.NewHorizontalBox()
 		qbox.SetPadded(true)
-		v.c.query = ui.NewEntry()
+		v.c.query = ui.NewSearchEntry()
+		/*
+			v.c.query.OnChanged(func(e *ui.Entry) {
+				fmt.Printf("changed.\n")
+				v.SetQuery(v.c.query.Text())
+			})
+		*/
 		button := ui.NewButton("Search")
 		button.OnClicked(func(but *ui.Button) { v.SetQuery(v.c.query.Text()) })
 		qbox.Append(v.c.query, true)
