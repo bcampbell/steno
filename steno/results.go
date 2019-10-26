@@ -143,7 +143,7 @@ func (res *Results) Art(idx int) *store.Article {
 	}
 	// not in cache - fetch it!
 
-	dbug.Printf("fetch art %d\n", artID)
+	//dbug.Printf("fetch art %d\n", artID)
 	fetchedArts, err := res.db.Fetch(artID)
 	if err != nil {
 		return &store.Article{Headline: fmt.Sprintf("<BAD> %d", idx)}
