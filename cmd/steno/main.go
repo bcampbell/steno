@@ -5,8 +5,12 @@ import "C"
 import (
 	"flag"
 	"fmt"
-	"github.com/bcampbell/steno/gui"
 	"os"
+	"time"
+
+	//	"github.com/bcampbell/steno/steno"
+	"github.com/bcampbell/steno/steno/store"
+	"github.com/therecipe/qt/widgets"
 )
 
 type FOO struct{}
@@ -18,24 +22,35 @@ func (f *FOO) Printf(format string, v ...interface{}) {
 var dbug = &FOO{}
 
 func main() {
-	var err error
 	flag.Parse()
-
-	app, err := gui.NewApp()
+	err := Run()
 	if err != nil {
-		dbug.Printf("Error starting App: %s\n", err)
+		dbug.Printf("ERROR: %s\n", err)
 		os.Exit(1)
 	}
+}
 
+func Run() error {
 	dbFilename := ""
 	if flag.NArg() > 0 {
 		dbFilename = flag.Arg(0)
 	}
 
-	err = app.Run(dbFilename)
+	qtapp := widgets.NewQApplication(len(os.Args), os.Args)
 
-	if err != nil {
-		dbug.Printf("ERROR: %s\n", err)
-		os.Exit(1)
+	win := NewProjWindow(nil, 0)
+	if dbFilename != "" {
+		db, err := store.New(dbFilename, dbug, "en", time.Local)
+		if err != nil {
+			return err
+		}
+		proj, err := NewProject(db)
+		if err != nil {
+			return err
+		}
+		win.SetProject(proj)
 	}
+
+	qtapp.Exec()
+	return nil
 }

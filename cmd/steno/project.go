@@ -1,12 +1,11 @@
-package gui
+package main
 
 import (
-	"github.com/andlabs/ui"
 	"github.com/bcampbell/steno/steno/store"
 )
 
 type Project struct {
-	App   *App
+	//App   *App
 	Store *store.Store
 	Views map[View]struct{}
 }
@@ -17,19 +16,13 @@ type View interface {
 	OnArtsDeleted(store.ArtList)
 }
 
-func NewProject(db *store.Store, app *App) (*Project, error) {
+func NewProject(db *store.Store) (*Project, error) {
 	proj := &Project{}
-	proj.App = app
+	//proj.App = app
 	proj.Store = db
 	proj.Views = make(map[View]struct{})
 
-	var err error
-	_, err = NewProjView(proj)
-	if err != nil {
-		return nil, err
-	}
-
-	return proj, err
+	return proj, nil
 }
 
 func (proj *Project) attachView(v View) {
@@ -40,7 +33,8 @@ func (proj *Project) detachView(v View) {
 	delete(proj.Views, v)
 
 	if len(proj.Views) == 0 {
-		ui.Quit()
+		// XYZZY QUIT!
+		//		ui.Quit()
 	}
 }
 
