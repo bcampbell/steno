@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bcampbell/scrapeomat/slurp"
 	"github.com/bcampbell/steno/steno/store"
+	"io"
 	"os"
 	"time"
 )
@@ -14,6 +15,7 @@ type SlurpSource struct {
 	Loc  string
 }
 
+/*
 // article format we expect down the wire from the slurp API
 type wireFmtArt struct {
 	slurp.Article
@@ -31,6 +33,7 @@ type Msg struct {
 	Article *store.Article
 	Error   string
 }
+*/
 
 func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
 	srcs := []SlurpSource{}
@@ -62,41 +65,36 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 		PubTo:   timeTo,
 	}
 
-	stream, cancel := slurper.Slurp(filt)
+	stream := slurper.Slurp2(filt)
+	defer stream.Close()
 
 	batchSize := 200
 
 	newCnt := 0
 	receivedCnt := 0
 	newlySlurped := store.ArtList{}
+	done := false
 	for {
+		// all done?
+		if done {
+			break
+		}
 		// read a batch of articles in from the wire...
 		arts := []*store.Article{}
 		for i := 0; i < batchSize; i++ {
-			msg, ok := <-stream
-
-			if !ok {
-				break
+			wireArt, err := stream.Next()
+			if err != nil {
+				if err == io.EOF {
+					done = true
+					break
+				} else {
+					// uhoh.
+					return newlySlurped, err
+				}
 			}
-
-			// handle errors
-			if msg.Error != "" {
-				//cancel <- struct{}{} // TODO: this isn't enough.
-				return nil, fmt.Errorf("Slurp error from server: %s", msg.Error)
-			}
-			if msg.Article == nil {
-				dbug.Printf("Slurp WARN: missing article\n")
-				continue
-			}
-
-			art := convertArt(msg.Article)
+			art := convertArt(wireArt)
 			arts = append(arts, art)
 			receivedCnt += 1
-		}
-
-		// empty batch? all done?
-		if len(arts) == 0 {
-			break
 		}
 
 		// check which articles are new
@@ -104,7 +102,6 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 		for _, art := range arts {
 			got, err := db.FindArt(art.URLs)
 			if err != nil {
-				cancel <- struct{}{} // TODO: this isn't enough.
 				return newlySlurped, fmt.Errorf("FindArt() failed: %s", err)
 			}
 			if got > 0 {
@@ -118,7 +115,6 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 		if len(newArts) > 0 {
 			err := db.Stash(newArts)
 			if err != nil {
-				cancel <- struct{}{} // TODO: this isn't enough.
 				return newlySlurped, fmt.Errorf("Stash failed: %s", err)
 			}
 			// Stash will have assigned article IDs

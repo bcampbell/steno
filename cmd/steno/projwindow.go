@@ -47,6 +47,7 @@ type ProjWindow struct {
 		close      *widgets.QAction
 		newProject *widgets.QAction
 		newWindow  *widgets.QAction
+		slurp      *widgets.QAction
 	}
 }
 
@@ -86,6 +87,9 @@ func (v *ProjWindow) init() {
 	v.actions.newWindow = m.AddAction("New Window")
 	m.AddSeparator()
 	v.actions.close = m.AddAction("Close")
+
+	m = v.MenuBar().AddMenu2("&Tools")
+	v.actions.slurp = m.AddAction("Slurp...")
 
 	widget := widgets.NewQWidget(nil, 0)
 	vbox := widgets.NewQVBoxLayout()
@@ -217,6 +221,25 @@ func (v *ProjWindow) init() {
 			win.SetProject(v.Proj)
 		})
 
+		v.actions.slurp.ConnectTriggered(func(checked bool) {
+			srcs, err := steno.LoadSlurpSources("slurp_sources.csv")
+			if err != nil {
+				// TODO: show error!!!
+				return
+			}
+			dlg := NewSlurpDialog(nil, 0)
+			dlg.SetSources(srcs)
+			if dlg.Exec() != int(widgets.QDialog__Accepted) {
+				return
+			}
+			from, to := dlg.DateRange()
+			sel := dlg.SourceIndex()
+			if sel < 0 || sel >= len(srcs) {
+				// TODO: show error?
+			}
+			v.doSlurp(&srcs[sel], from, to)
+		})
+
 		v.actions.close.ConnectTriggered(func(checked bool) {
 			v.Close()
 		})
@@ -278,45 +301,38 @@ func (v *ProjWindow) buildToolbar() *ui.Box {
 	return toolbar
 }
 
-// run the user through the slurping process
-func (v *ProjWindow) SlurpTool() {
-	// TODO: window disable doesn't work
-	v.c.window.Disable()
-	slurpDialog(
-		v.Proj.App.App.SlurpSources,
-		func(src steno.SlurpSource, day time.Time, nDays int) {
-
-			progress := NewProgressWindow("Slurping...")
-			go func() {
-				progFn := func(msg string) {
-					fmt.Printf("progress: %s\n", msg)
-					ui.QueueMain(func() { progress.SetStatus(msg) })
-				}
-				dayTo := day.AddDate(0, 0, nDays)
-				fmt.Printf("slurp %v,%v to %v,%d\n", src, day, dayTo, nDays)
-				newArts, err := steno.Slurp(v.Proj.Store, &src, day, dayTo, progFn)
-				if err != nil {
-					fmt.Printf("slurp ERROR: %s\n", err)
-				}
-				ui.QueueMain(func() {
-					progress.Close()
-					v.c.window.Enable()
-					if len(newArts) > 0 {
-						v.Proj.ArtsAdded(newArts) // newArts valid even for failed slurp
-					}
-				})
-			}()
-		},
-		func() {
-			fmt.Printf("no slurp\n")
-			v.c.window.Enable()
-		})
-}
-
-func (v *ProjWindow) rethinkResultSummary() {
-	v.c.resultSummary.SetText(fmt.Sprintf("%d matching", v.results.Len))
-}
 */
+
+// This could be moved into project?
+func (v *ProjWindow) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo time.Time) {
+	//progress := NewProgressWindow("Slurping...")
+	go func() {
+		progFn := func(msg string) {
+			fmt.Printf("progress: %s\n", msg)
+			//ui.QueueMain(func() { progress.SetStatus(msg) })
+		}
+		dayTo := dayTo.AddDate(0, 0, 1)
+		fmt.Printf("slurp %v,%v to %v\n", src, dayFrom, dayTo)
+		newArts, err := steno.Slurp(v.Proj.Store, src, dayFrom, dayTo, progFn)
+		if err != nil {
+			fmt.Printf("slurp ERROR: %s\n", err)
+		}
+		fmt.Printf("%v %v\n", newArts, err)
+		/*
+			ui.QueueMain(func() {
+				progress.Close()
+				v.c.window.Enable()
+				if len(newArts) > 0 {
+					v.Proj.ArtsAdded(newArts) // newArts valid even for failed slurp
+				}
+			})
+		*/
+		if len(newArts) > 0 {
+			v.Proj.ArtsAdded(newArts) // newArts valid even for failed slurp
+		}
+	}()
+}
+
 func (v *ProjWindow) rethinkSelectionSummary() {
 	sel := v.c.resultView.SelectionModel().SelectedRows(0)
 	v.c.selSummary.SetText(fmt.Sprintf("%d selected", len(sel)))
