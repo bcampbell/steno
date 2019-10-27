@@ -56,7 +56,8 @@ func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
 }
 
 // returns IDs of sucessfully-added articles
-func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, progressFn func(string)) (store.ArtList, error) {
+func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, progressFn func(fetchedCnt int, expectedCnt int, newCnt int, msg string)) (store.ArtList, error) {
+	newlySlurped := store.ArtList{}
 
 	slurper := slurp.NewSlurper(server.Loc)
 
@@ -65,6 +66,13 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 		PubTo:   timeTo,
 	}
 
+	progressFn(0, 0, 0, "Fetching count...")
+	totalCnt, err := slurper.FetchCount(filt)
+	if err != nil {
+		return newlySlurped, err
+	}
+
+	progressFn(0, totalCnt, 0, "Slurping...")
 	stream := slurper.Slurp2(filt)
 	defer stream.Close()
 
@@ -72,7 +80,6 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 
 	newCnt := 0
 	receivedCnt := 0
-	newlySlurped := store.ArtList{}
 	done := false
 	for {
 		// all done?
@@ -126,7 +133,8 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 		//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
 		// TODO: not right, but hey
 		newCnt += len(newArts)
-		progressFn(fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt))
+		//		progressFn(fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt))
+		progressFn(receivedCnt, totalCnt, newCnt, "Slurping...")
 	}
 	return newlySlurped, nil
 }

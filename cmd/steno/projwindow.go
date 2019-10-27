@@ -28,9 +28,9 @@ type ProjWindow struct {
 
 	// controls we want to keep track of
 	c struct {
+		query         *widgets.QLineEdit
 		resultView    *widgets.QTableView
 		resultSummary *widgets.QLabel
-
 		//
 		selSummary *widgets.QLabel
 
@@ -53,15 +53,27 @@ type ProjWindow struct {
 
 // View implementation
 func (v *ProjWindow) OnArtsModified(store.ArtList) {
-	//	v.SetQuery(v.results.Query) // re-run current query
+	v.rerun()
 }
 
 func (v *ProjWindow) OnArtsAdded(store.ArtList) {
-	//	v.SetQuery(v.results.Query)
+	v.rerun()
 }
 
 func (v *ProjWindow) OnArtsDeleted(store.ArtList) {
-	//	v.SetQuery(v.results.Query)
+	v.rerun()
+}
+
+func (v *ProjWindow) rerun() {
+	results, err := steno.NewResults(v.Proj.Store, v.c.query.Text())
+	if err == nil {
+		v.model.setResults(results)
+		v.rethinkResultSummary()
+		v.rethinkSelectionSummary()
+	} else {
+		// TODO XYZZY - show bad query message
+		fmt.Printf("Error: %s\n", err)
+	}
 }
 
 func (v *ProjWindow) init() {
@@ -103,22 +115,14 @@ func (v *ProjWindow) init() {
 		query.SetClearButtonEnabled(true)
 		//	query.addAction(":/resources/search.ico", QLineEdit::LeadingPosition);
 		query.SetPlaceholderText("Search...")
+		v.c.query = query
 		query.ConnectEditingFinished(func() {
 			if v.Proj == nil {
 				// TODO: complain!
 				return
 			}
 			fmt.Printf("new query: %s\n", query.Text())
-			results, err := steno.NewResults(v.Proj.Store, query.Text())
-			if err == nil {
-				v.model.setResults(results)
-				v.rethinkResultSummary()
-				v.rethinkSelectionSummary()
-			} else {
-				// TODO XYZZY - show bad query message
-				fmt.Printf("Error: %s\n", err)
-			}
-			//	model.Edit("bob", "omb")
+			v.rerun()
 		})
 
 		resultSummary := widgets.NewQLabel(nil, 0)
@@ -306,10 +310,20 @@ func (v *ProjWindow) buildToolbar() *ui.Box {
 // This could be moved into project?
 func (v *ProjWindow) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo time.Time) {
 	//progress := NewProgressWindow("Slurping...")
+	progressDlg := widgets.NewQProgressDialog(v, core.Qt__Widget)
+	progressDlg.SetModal(true)
+	progressDlg.SetMinimumDuration(0)
+	progressDlg.SetWindowModality(core.Qt__WindowModal)
+	progressDlg.SetWindowTitle("Slurp from " + src.Name)
+
 	go func() {
-		progFn := func(msg string) {
-			fmt.Printf("progress: %s\n", msg)
-			//ui.QueueMain(func() { progress.SetStatus(msg) })
+		progFn := func(fetchedCnt int, expectedCnt int, newCnt int, msg string) {
+			progressDlg.SetRange(0, expectedCnt)
+			progressDlg.SetValue(fetchedCnt)
+
+			txt := fmt.Sprintf("%s\nreceived %d/%d articles (%d new)", msg, fetchedCnt, expectedCnt, newCnt)
+			progressDlg.SetLabelText(txt)
+
 		}
 		dayTo := dayTo.AddDate(0, 0, 1)
 		fmt.Printf("slurp %v,%v to %v\n", src, dayFrom, dayTo)
