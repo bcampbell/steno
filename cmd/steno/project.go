@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/bcampbell/steno/steno"
@@ -93,29 +94,26 @@ func (proj *Project) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo ti
 	}()
 }
 
-/*
-
-func (v *ProjWindow) DoAddTags(artIDs store.ArtList, tags string) {
+func (proj *Project) DoAddTags(artIDs store.ArtList, tags string) {
 	tagList := strings.Fields(tags)
-	affected, err := v.Proj.Store.AddTags(artIDs, tagList)
+	affected, err := proj.Store.AddTags(artIDs, tagList)
 	if err != nil {
 		dbug.Printf("AddTags(%q): ERROR: %s\n", tagList, err)
 	} else {
 		dbug.Printf("AddTags(%q): %d affected\n", tagList, len(affected))
 	}
 
-	v.Proj.ArtsModified(affected)
+	proj.ArtsModified(affected)
 }
 
-func (v *ProjWindow) DoRemoveTags(artIDs store.ArtList, tags string) {
+func (proj *Project) DoRemoveTags(artIDs store.ArtList, tags string) {
 	tagList := strings.Fields(tags)
-	affected, err := v.Proj.Store.RemoveTags(artIDs, tagList)
+	affected, err := proj.Store.RemoveTags(artIDs, tagList)
 	if err != nil {
 		dbug.Printf("RemoveTags(%q): ERROR: %s\n", tagList, err)
 	} else {
 		dbug.Printf("RemoveTags(%q): %d affected\n", tagList, len(affected))
 	}
 
-	v.Proj.ArtsModified(affected)
+	proj.ArtsModified(affected)
 }
-*/

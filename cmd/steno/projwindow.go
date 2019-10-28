@@ -36,18 +36,21 @@ type ProjWindow struct {
 
 		//
 		tagEntry        *widgets.QLineEdit
-		addTagButton    *widgets.QPushButton
-		removeTagButton *widgets.QPushButton
-		deleteButton    *widgets.QPushButton
+		addTagButton    *widgets.QToolButton
+		removeTagButton *widgets.QToolButton
+		deleteButton    *widgets.QToolButton
 	}
 
 	// actions
-	actions struct {
+	action struct {
 		open       *widgets.QAction
 		close      *widgets.QAction
 		newProject *widgets.QAction
 		newWindow  *widgets.QAction
 		slurp      *widgets.QAction
+		tagArts    *widgets.QAction
+		untagArts  *widgets.QAction
+		deleteArts *widgets.QAction
 	}
 }
 
@@ -93,15 +96,18 @@ func (v *ProjWindow) init() {
 	v.SetWindowTitle("Steno")
 
 	m := v.MenuBar().AddMenu2("&File")
-	v.actions.open = m.AddAction("Open")
-	v.actions.newProject = m.AddAction("New")
+	v.action.open = m.AddAction("Open")
+	v.action.newProject = m.AddAction("New")
 	m.AddSeparator()
-	v.actions.newWindow = m.AddAction("New Window")
+	v.action.newWindow = m.AddAction("New Window")
 	m.AddSeparator()
-	v.actions.close = m.AddAction("Close")
+	v.action.close = m.AddAction("Close")
 
 	m = v.MenuBar().AddMenu2("&Tools")
-	v.actions.slurp = m.AddAction("Slurp...")
+	v.action.slurp = m.AddAction("Slurp...")
+	v.action.tagArts = m.AddAction("Tag")
+	v.action.untagArts = m.AddAction("Untag")
+	v.action.deleteArts = m.AddAction("Delete")
 
 	widget := widgets.NewQWidget(nil, 0)
 	vbox := widgets.NewQVBoxLayout()
@@ -145,9 +151,23 @@ func (v *ProjWindow) init() {
 		//
 		v.c.tagEntry = widgets.NewQLineEdit(nil)
 		v.c.tagEntry.SetPlaceholderText("enter tag")
-		v.c.addTagButton = widgets.NewQPushButton2("tag", nil)
-		v.c.removeTagButton = widgets.NewQPushButton2("untag", nil)
-		v.c.deleteButton = widgets.NewQPushButton2("delete", nil)
+		v.c.tagEntry.ConnectTextEdited(func(tags string) {
+			v.rethinkSelectionSummary()
+		})
+		v.c.addTagButton = widgets.NewQToolButton(nil)
+		v.c.addTagButton.SetText("Tag")
+		v.c.addTagButton.SetToolButtonStyle(core.Qt__ToolButtonTextOnly)
+		v.c.addTagButton.SetDefaultAction(v.action.tagArts)
+
+		v.c.removeTagButton = widgets.NewQToolButton(nil)
+		v.c.removeTagButton.SetText("Untag")
+		v.c.removeTagButton.SetToolButtonStyle(core.Qt__ToolButtonTextOnly)
+		v.c.removeTagButton.SetDefaultAction(v.action.untagArts)
+
+		v.c.deleteButton = widgets.NewQToolButton(nil)
+		v.c.deleteButton.SetText("Delete")
+		v.c.deleteButton.SetToolButtonStyle(core.Qt__ToolButtonTextOnly)
+		v.c.deleteButton.SetDefaultAction(v.action.deleteArts)
 
 		group1 := widgets.NewQHBoxLayout()
 		group1.AddWidget(v.c.selSummary, 0, 0)
@@ -193,7 +213,7 @@ func (v *ProjWindow) init() {
 
 	// set up actions
 	{
-		v.actions.open.ConnectTriggered(func(checked bool) {
+		v.action.open.ConnectTriggered(func(checked bool) {
 			fileDialog := widgets.NewQFileDialog2(v, "Open File...", "", "")
 			fileDialog.SetAcceptMode(widgets.QFileDialog__AcceptOpen)
 			fileDialog.SetFileMode(widgets.QFileDialog__ExistingFile)
@@ -218,14 +238,14 @@ func (v *ProjWindow) init() {
 			}
 			v.SetProject(proj)
 		})
-		v.actions.open.SetShortcuts2(gui.QKeySequence__Open)
+		v.action.open.SetShortcuts2(gui.QKeySequence__Open)
 
-		v.actions.newWindow.ConnectTriggered(func(checked bool) {
+		v.action.newWindow.ConnectTriggered(func(checked bool) {
 			win := NewProjWindow(nil, 0)
 			win.SetProject(v.Proj)
 		})
 
-		v.actions.slurp.ConnectTriggered(func(checked bool) {
+		v.action.slurp.ConnectTriggered(func(checked bool) {
 			srcs, err := steno.LoadSlurpSources("slurp_sources.csv")
 			if err != nil {
 				// TODO: show error!!!
@@ -244,8 +264,15 @@ func (v *ProjWindow) init() {
 			v.Proj.doSlurp(&srcs[sel], from, to)
 		})
 
-		v.actions.close.ConnectTriggered(func(checked bool) {
+		v.action.close.ConnectTriggered(func(checked bool) {
 			v.Close()
+		})
+
+		v.action.tagArts.ConnectTriggered(func(checked bool) {
+			v.Proj.DoAddTags(v.selectedArts(), v.c.tagEntry.Text())
+		})
+		v.action.untagArts.ConnectTriggered(func(checked bool) {
+			v.Proj.DoRemoveTags(v.selectedArts(), v.c.tagEntry.Text())
 		})
 	}
 
@@ -253,6 +280,17 @@ func (v *ProjWindow) init() {
 	v.rethinkSelectionSummary()
 
 	v.Show()
+}
+
+// selectedArts returns a list of the currently-selected article IDs.
+func (v *ProjWindow) selectedArts() store.ArtList {
+	rowIndices := v.c.resultView.SelectionModel().SelectedRows(0)
+
+	sel := make(store.ArtList, len(rowIndices))
+	for i, rowIdx := range rowIndices {
+		sel[i] = v.model.results.Arts[rowIdx.Row()]
+	}
+	return sel
 }
 
 // proj can be nil
@@ -308,15 +346,12 @@ func (v *ProjWindow) buildToolbar() *ui.Box {
 */
 
 func (v *ProjWindow) rethinkSelectionSummary() {
-	sel := v.c.resultView.SelectionModel().SelectedRows(0)
-	v.c.selSummary.SetText(fmt.Sprintf("%d selected", len(sel)))
-	tagtxt := v.c.tagEntry.Text()
-	if tagtxt != "" && len(sel) > 0 {
-		v.c.addTagButton.SetEnabled(true)
-		v.c.removeTagButton.SetEnabled(true)
-	} else {
-		v.c.addTagButton.SetEnabled(false)
-		v.c.removeTagButton.SetEnabled(false)
-	}
-
+	selection := v.c.resultView.SelectionModel().SelectedRows(0)
+	v.c.selSummary.SetText(fmt.Sprintf("%d selected", len(selection)))
+	// update the action states
+	haveSel := len(selection) > 0
+	haveTxt := len(v.c.tagEntry.Text()) > 0
+	v.action.tagArts.SetEnabled(haveSel && haveTxt)
+	v.action.untagArts.SetEnabled(haveSel && haveTxt)
+	v.action.deleteArts.SetEnabled(haveSel)
 }
