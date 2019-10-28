@@ -1,7 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/bcampbell/steno/steno"
 	"github.com/bcampbell/steno/steno/store"
+	"github.com/therecipe/qt/core"
+	"github.com/therecipe/qt/widgets"
 )
 
 type Project struct {
@@ -53,3 +59,63 @@ func (proj *Project) ArtsModified(ids store.ArtList) {
 		v.OnArtsModified(ids)
 	}
 }
+
+// doSlurp imports articles from a slurp API source.
+// It checks urls and doesn't add duplicate articles.
+func (proj *Project) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo time.Time) {
+	//progress := NewProgressWindow("Slurping...")
+	progressDlg := widgets.NewQProgressDialog(nil, core.Qt__Widget)
+	progressDlg.SetModal(true)
+	progressDlg.SetMinimumDuration(0)
+	progressDlg.SetWindowModality(core.Qt__ApplicationModal)
+	progressDlg.SetWindowTitle("Slurp from " + src.Name)
+
+	go func() {
+		progFn := func(fetchedCnt int, expectedCnt int, newCnt int, msg string) {
+			progressDlg.SetRange(0, expectedCnt)
+			progressDlg.SetValue(fetchedCnt)
+
+			txt := fmt.Sprintf("%s\nreceived %d/%d articles (%d new)", msg, fetchedCnt, expectedCnt, newCnt)
+			progressDlg.SetLabelText(txt)
+
+		}
+		dayTo := dayTo.AddDate(0, 0, 1)
+		fmt.Printf("slurp %v,%v to %v\n", src, dayFrom, dayTo)
+		newArts, err := steno.Slurp(proj.Store, src, dayFrom, dayTo, progFn)
+		if err != nil {
+			fmt.Printf("slurp ERROR: %s\n", err)
+		}
+		fmt.Printf("%v %v\n", newArts, err)
+		progressDlg.Hide()
+		if len(newArts) > 0 {
+			proj.ArtsAdded(newArts) // newArts valid even for failed slurp
+		}
+	}()
+}
+
+/*
+
+func (v *ProjWindow) DoAddTags(artIDs store.ArtList, tags string) {
+	tagList := strings.Fields(tags)
+	affected, err := v.Proj.Store.AddTags(artIDs, tagList)
+	if err != nil {
+		dbug.Printf("AddTags(%q): ERROR: %s\n", tagList, err)
+	} else {
+		dbug.Printf("AddTags(%q): %d affected\n", tagList, len(affected))
+	}
+
+	v.Proj.ArtsModified(affected)
+}
+
+func (v *ProjWindow) DoRemoveTags(artIDs store.ArtList, tags string) {
+	tagList := strings.Fields(tags)
+	affected, err := v.Proj.Store.RemoveTags(artIDs, tagList)
+	if err != nil {
+		dbug.Printf("RemoveTags(%q): ERROR: %s\n", tagList, err)
+	} else {
+		dbug.Printf("RemoveTags(%q): %d affected\n", tagList, len(affected))
+	}
+
+	v.Proj.ArtsModified(affected)
+}
+*/

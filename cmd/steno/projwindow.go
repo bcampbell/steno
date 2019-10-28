@@ -241,7 +241,7 @@ func (v *ProjWindow) init() {
 			if sel < 0 || sel >= len(srcs) {
 				// TODO: show error?
 			}
-			v.doSlurp(&srcs[sel], from, to)
+			v.Proj.doSlurp(&srcs[sel], from, to)
 		})
 
 		v.actions.close.ConnectTriggered(func(checked bool) {
@@ -307,46 +307,6 @@ func (v *ProjWindow) buildToolbar() *ui.Box {
 
 */
 
-// This could be moved into project?
-func (v *ProjWindow) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo time.Time) {
-	//progress := NewProgressWindow("Slurping...")
-	progressDlg := widgets.NewQProgressDialog(v, core.Qt__Widget)
-	progressDlg.SetModal(true)
-	progressDlg.SetMinimumDuration(0)
-	progressDlg.SetWindowModality(core.Qt__WindowModal)
-	progressDlg.SetWindowTitle("Slurp from " + src.Name)
-
-	go func() {
-		progFn := func(fetchedCnt int, expectedCnt int, newCnt int, msg string) {
-			progressDlg.SetRange(0, expectedCnt)
-			progressDlg.SetValue(fetchedCnt)
-
-			txt := fmt.Sprintf("%s\nreceived %d/%d articles (%d new)", msg, fetchedCnt, expectedCnt, newCnt)
-			progressDlg.SetLabelText(txt)
-
-		}
-		dayTo := dayTo.AddDate(0, 0, 1)
-		fmt.Printf("slurp %v,%v to %v\n", src, dayFrom, dayTo)
-		newArts, err := steno.Slurp(v.Proj.Store, src, dayFrom, dayTo, progFn)
-		if err != nil {
-			fmt.Printf("slurp ERROR: %s\n", err)
-		}
-		fmt.Printf("%v %v\n", newArts, err)
-		/*
-			ui.QueueMain(func() {
-				progress.Close()
-				v.c.window.Enable()
-				if len(newArts) > 0 {
-					v.Proj.ArtsAdded(newArts) // newArts valid even for failed slurp
-				}
-			})
-		*/
-		if len(newArts) > 0 {
-			v.Proj.ArtsAdded(newArts) // newArts valid even for failed slurp
-		}
-	}()
-}
-
 func (v *ProjWindow) rethinkSelectionSummary() {
 	sel := v.c.resultView.SelectionModel().SelectedRows(0)
 	v.c.selSummary.SetText(fmt.Sprintf("%d selected", len(sel)))
@@ -359,38 +319,4 @@ func (v *ProjWindow) rethinkSelectionSummary() {
 		v.c.removeTagButton.SetEnabled(false)
 	}
 
-	/*
-		if len(v.selected) == 1 {
-			v.c.showArt.Enable()
-		} else {
-			v.c.showArt.Disable()
-		}
-	*/
 }
-
-/*
-
-func (v *ProjWindow) DoAddTags(artIDs store.ArtList, tags string) {
-	tagList := strings.Fields(tags)
-	affected, err := v.Proj.Store.AddTags(artIDs, tagList)
-	if err != nil {
-		dbug.Printf("AddTags(%q): ERROR: %s\n", tagList, err)
-	} else {
-		dbug.Printf("AddTags(%q): %d affected\n", tagList, len(affected))
-	}
-
-	v.Proj.ArtsModified(affected)
-}
-
-func (v *ProjWindow) DoRemoveTags(artIDs store.ArtList, tags string) {
-	tagList := strings.Fields(tags)
-	affected, err := v.Proj.Store.RemoveTags(artIDs, tagList)
-	if err != nil {
-		dbug.Printf("RemoveTags(%q): ERROR: %s\n", tagList, err)
-	} else {
-		dbug.Printf("RemoveTags(%q): %d affected\n", tagList, len(affected))
-	}
-
-	v.Proj.ArtsModified(affected)
-}
-*/
