@@ -39,6 +39,9 @@ type ProjWindow struct {
 		addTagButton    *widgets.QToolButton
 		removeTagButton *widgets.QToolButton
 		deleteButton    *widgets.QToolButton
+
+		//
+		artView *widgets.QTextBrowser
 	}
 
 	// actions
@@ -110,9 +113,12 @@ func (v *ProjWindow) init() {
 	v.action.deleteArts = m.AddAction("Delete")
 
 	widget := widgets.NewQWidget(nil, 0)
+	splitter := widgets.NewQSplitter2(core.Qt__Vertical, nil)
+
 	vbox := widgets.NewQVBoxLayout()
 	widget.SetLayout(vbox)
-	v.SetCentralWidget(widget)
+	splitter.AddWidget(widget)
+	v.SetCentralWidget(splitter)
 
 	{
 
@@ -207,9 +213,28 @@ func (v *ProjWindow) init() {
 	tv.SelectionModel().ConnectSelectionChanged(func(selected *core.QItemSelection, deselected *core.QItemSelection) {
 		v.rethinkSelectionSummary()
 	})
+	tv.SelectionModel().ConnectCurrentChanged(func(current *core.QModelIndex, previous *core.QModelIndex) {
+		// show article text for most recently-selected article (if any)
+		if current.IsValid() {
+			artIdx := v.model.results.Arts[current.Row()]
+			arts, err := v.Proj.Store.Fetch(artIdx)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Err: %s\n", err)
+				return
+			} else {
+				art := arts[0]
+				v.c.artView.SetHtml(art.FormatContent(""))
+				//v.c.artView.SetHtml(art.Content)
+			}
+		}
+	})
 
 	widget.Layout().AddWidget(tv)
 	v.c.resultView = tv
+
+	// article view
+	v.c.artView = widgets.NewQTextBrowser(nil)
+	splitter.AddWidget(v.c.artView)
 
 	// set up actions
 	{
