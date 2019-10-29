@@ -1,11 +1,12 @@
 x tagging
-article view
-run scripts
+x article view
+x delete articles
 new db
-configurable date format
+run scripts
 clickable urls in results (or rightclick)
-right-click copy from results
 open scripts directory
+configurable date format
+right-click copy from results
 
 import from other db
 json import/export

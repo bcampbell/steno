@@ -38,11 +38,6 @@ func (proj *Project) attachView(v View) {
 
 func (proj *Project) detachView(v View) {
 	delete(proj.Views, v)
-
-	if len(proj.Views) == 0 {
-		// XYZZY QUIT!
-		//		ui.Quit()
-	}
 }
 
 func (proj *Project) ArtsAdded(ids store.ArtList) {
@@ -95,6 +90,7 @@ func (proj *Project) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo ti
 }
 
 func (proj *Project) DoAddTags(artIDs store.ArtList, tags string) {
+	// TODO: plug in a progress dialog...
 	tagList := strings.Fields(tags)
 	affected, err := proj.Store.AddTags(artIDs, tagList)
 	if err != nil {
@@ -107,6 +103,7 @@ func (proj *Project) DoAddTags(artIDs store.ArtList, tags string) {
 }
 
 func (proj *Project) DoRemoveTags(artIDs store.ArtList, tags string) {
+	// TODO: plug in a progress dialog...
 	tagList := strings.Fields(tags)
 	affected, err := proj.Store.RemoveTags(artIDs, tagList)
 	if err != nil {
@@ -116,4 +113,14 @@ func (proj *Project) DoRemoveTags(artIDs store.ArtList, tags string) {
 	}
 
 	proj.ArtsModified(affected)
+}
+
+func (proj *Project) DoDeleteArts(artIDs store.ArtList) {
+	// TODO: plug in a progress dialog...
+	err := proj.Store.Delete(artIDs, nil)
+	if err != nil {
+		dbug.Printf("Delete: ERROR: %s\n", err)
+	}
+
+	proj.ArtsDeleted(artIDs)
 }

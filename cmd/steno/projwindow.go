@@ -299,6 +299,9 @@ func (v *ProjWindow) init() {
 		v.action.untagArts.ConnectTriggered(func(checked bool) {
 			v.Proj.DoRemoveTags(v.selectedArts(), v.c.tagEntry.Text())
 		})
+		v.action.deleteArts.ConnectTriggered(func(checked bool) {
+			v.Proj.DoDeleteArts(v.selectedArts())
+		})
 	}
 
 	v.rethinkResultSummary()
