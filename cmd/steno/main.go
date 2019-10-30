@@ -6,10 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
-	//	"github.com/bcampbell/steno/steno"
-	"github.com/bcampbell/steno/steno/store"
 	"github.com/therecipe/qt/widgets"
 )
 
@@ -40,11 +37,13 @@ func Run() error {
 
 	win := NewProjWindow(nil, 0)
 	if dbFilename != "" {
-		db, err := store.New(dbFilename, dbug, "en", time.Local)
-		if err != nil {
-			return err
+		var proj *Project
+		_, err := os.Stat(dbFilename)
+		if err == nil {
+			proj, err = OpenProject(dbFilename)
+		} else if os.IsNotExist(err) {
+			proj, err = CreateProject(dbFilename)
 		}
-		proj, err := NewProject(db)
 		if err != nil {
 			return err
 		}

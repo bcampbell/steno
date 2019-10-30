@@ -15,6 +15,7 @@ type ResultsModel struct {
 
 	_ func() `constructor:"init"`
 
+	// can be nil
 	results *steno.Results
 }
 

@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	//	"strings"
-	"time"
+	//	"time"
 
 	"github.com/bcampbell/steno/steno"
 	"github.com/bcampbell/steno/steno/store"
@@ -76,6 +77,7 @@ func (v *ProjWindow) rerun() {
 		v.model.setResults(results)
 		v.rethinkResultSummary()
 		v.rethinkSelectionSummary()
+		v.rethinkActionStates()
 	} else {
 		// TODO XYZZY - show bad query message
 		fmt.Printf("Error: %s\n", err)
@@ -96,7 +98,6 @@ func (v *ProjWindow) init() {
 	v.model = NewResultsModel(nil)
 
 	v.SetMinimumSize2(640, 400)
-	v.SetWindowTitle("Steno")
 
 	m := v.MenuBar().AddMenu2("&File")
 	v.action.open = m.AddAction("Open")
@@ -158,7 +159,7 @@ func (v *ProjWindow) init() {
 		v.c.tagEntry = widgets.NewQLineEdit(nil)
 		v.c.tagEntry.SetPlaceholderText("enter tag")
 		v.c.tagEntry.ConnectTextEdited(func(tags string) {
-			v.rethinkSelectionSummary()
+			v.rethinkActionStates()
 		})
 		v.c.addTagButton = widgets.NewQToolButton(nil)
 		v.c.addTagButton.SetText("Tag")
@@ -212,6 +213,7 @@ func (v *ProjWindow) init() {
 	}
 	tv.SelectionModel().ConnectSelectionChanged(func(selected *core.QItemSelection, deselected *core.QItemSelection) {
 		v.rethinkSelectionSummary()
+		v.rethinkActionStates()
 	})
 	tv.SelectionModel().ConnectCurrentChanged(func(current *core.QModelIndex, previous *core.QModelIndex) {
 		// show article text for most recently-selected article (if any)
@@ -239,29 +241,7 @@ func (v *ProjWindow) init() {
 	// set up actions
 	{
 		v.action.open.ConnectTriggered(func(checked bool) {
-			fileDialog := widgets.NewQFileDialog2(v, "Open File...", "", "")
-			fileDialog.SetAcceptMode(widgets.QFileDialog__AcceptOpen)
-			fileDialog.SetFileMode(widgets.QFileDialog__ExistingFile)
-			//	var mimeTypes = []string{"text/html", "text/plain"}
-			//	fileDialog.SetMimeTypeFilters(mimeTypes)
-			if fileDialog.Exec() != int(widgets.QDialog__Accepted) {
-				return
-			}
-			filename := fileDialog.SelectedFiles()[0]
-			// TODO: move into project
-			db, err := store.New(filename, dbug, "en", time.Local)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "store.New failed: %s\n", err)
-				// TODO: show error!
-				return
-			}
-			proj, err := NewProject(db)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "NewProject failed: %s\n", err)
-				// TODO: show error!
-				return
-			}
-			v.SetProject(proj)
+			v.doOpenProject()
 		})
 		v.action.open.SetShortcuts2(gui.QKeySequence__Open)
 
@@ -293,6 +273,10 @@ func (v *ProjWindow) init() {
 			v.Close()
 		})
 
+		v.action.newProject.ConnectTriggered(func(checked bool) {
+			v.doNewProject()
+		})
+
 		v.action.tagArts.ConnectTriggered(func(checked bool) {
 			v.Proj.DoAddTags(v.selectedArts(), v.c.tagEntry.Text())
 		})
@@ -304,8 +288,10 @@ func (v *ProjWindow) init() {
 		})
 	}
 
+	v.rethinkWindowTitle()
 	v.rethinkResultSummary()
 	v.rethinkSelectionSummary()
+	v.rethinkActionStates()
 
 	v.Show()
 }
@@ -342,8 +328,18 @@ func (v *ProjWindow) SetProject(proj *Project) {
 		v.model.setResults(results)
 	}
 
+	v.rethinkWindowTitle()
 	v.rethinkResultSummary()
 	v.rethinkSelectionSummary()
+	v.rethinkActionStates()
+}
+
+func (v *ProjWindow) rethinkWindowTitle() {
+	title := "Steno"
+	if v.Proj != nil {
+		title += " - " + filepath.Base(v.Proj.Store.Filename())
+	}
+	v.SetWindowTitle(title)
 }
 
 func (v *ProjWindow) rethinkResultSummary() {
@@ -354,32 +350,80 @@ func (v *ProjWindow) rethinkResultSummary() {
 	v.c.resultSummary.SetText(txt)
 }
 
-/*
-func (v *ProjWindow) buildToolbar() *ui.Box {
-	toolbar := ui.NewHorizontalBox()
-
-	slurpButton := ui.NewButton("Slurp...")
-	slurpButton.OnClicked(func(b *ui.Button) { v.SlurpTool() })
-	toolbar.Append(slurpButton, false)
-
-	newViewButton := ui.NewButton("New window...")
-	newViewButton.OnClicked(func(b *ui.Button) {
-		NewProjWindow(v.Proj)
-	})
-	toolbar.Append(newViewButton, false)
-
-	return toolbar
-}
-
-*/
-
 func (v *ProjWindow) rethinkSelectionSummary() {
 	selection := v.c.resultView.SelectionModel().SelectedRows(0)
 	v.c.selSummary.SetText(fmt.Sprintf("%d selected", len(selection)))
+}
+
+func (v *ProjWindow) rethinkActionStates() {
 	// update the action states
+	selection := v.c.resultView.SelectionModel().SelectedRows(0)
+	haveProj := !(v.Proj == nil)
 	haveSel := len(selection) > 0
 	haveTxt := len(v.c.tagEntry.Text()) > 0
-	v.action.tagArts.SetEnabled(haveSel && haveTxt)
-	v.action.untagArts.SetEnabled(haveSel && haveTxt)
-	v.action.deleteArts.SetEnabled(haveSel)
+
+	// always available
+	//v.action.open.SetEnabled(true)
+	//v.action.newProject.SetEnabled(true)
+	// v.action.close.SetEnabled(true)
+
+	v.action.newWindow.SetEnabled(haveProj)
+	v.action.slurp.SetEnabled(haveProj)
+	v.action.tagArts.SetEnabled(haveProj && haveSel && haveTxt)
+	v.action.untagArts.SetEnabled(haveProj && haveSel && haveTxt)
+	v.action.deleteArts.SetEnabled(haveProj && haveSel)
+}
+
+func (v *ProjWindow) doOpenProject() {
+	fileDialog := widgets.NewQFileDialog2(v, "Open File...", "", "")
+	fileDialog.SetAcceptMode(widgets.QFileDialog__AcceptOpen)
+	fileDialog.SetFileMode(widgets.QFileDialog__ExistingFile)
+	//	var mimeTypes = []string{"text/html", "text/plain"}
+	//	fileDialog.SetMimeTypeFilters(mimeTypes)
+	if fileDialog.Exec() != int(widgets.QDialog__Accepted) {
+		return
+	}
+	filename := fileDialog.SelectedFiles()[0]
+	proj, err := OpenProject(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "NewProject failed: %s\n", err)
+		// TODO: show error!
+		return
+	}
+
+	if v.Proj == nil {
+		// Use existing window
+		v.SetProject(proj)
+	} else {
+		// open a new window and leave this one in peace
+		win := NewProjWindow(nil, 0)
+		win.SetProject(proj)
+	}
+
+}
+
+func (v *ProjWindow) doNewProject() {
+	fileDialog := widgets.NewQFileDialog2(v, "Create new project...", "", "")
+	fileDialog.SetAcceptMode(widgets.QFileDialog__AcceptSave)
+	fileDialog.SetFileMode(widgets.QFileDialog__AnyFile)
+	if fileDialog.Exec() != int(widgets.QDialog__Accepted) {
+		return
+	}
+	filename := fileDialog.SelectedFiles()[0]
+	proj, err := CreateProject(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "CreateProject failed: %s\n", err)
+		// TODO: show error!
+		return
+	}
+
+	if v.Proj == nil {
+		// Use existing window
+		v.SetProject(proj)
+	} else {
+		// open a new window and leave this one in peace
+		win := NewProjWindow(nil, 0)
+		win.SetProject(proj)
+	}
+
 }

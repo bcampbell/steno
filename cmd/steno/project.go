@@ -12,7 +12,6 @@ import (
 )
 
 type Project struct {
-	//App   *App
 	Store *store.Store
 	Views map[View]struct{}
 }
@@ -23,9 +22,26 @@ type View interface {
 	OnArtsDeleted(store.ArtList)
 }
 
-func NewProject(db *store.Store) (*Project, error) {
+// OpenProject opens a project based on an existing store.
+func OpenProject(dbFilename string) (*Project, error) {
+	db, err := store.Open(dbFilename, dbug, "en", time.Local)
+	if err != nil {
+		return nil, err
+	}
 	proj := &Project{}
-	//proj.App = app
+	proj.Store = db
+	proj.Views = make(map[View]struct{})
+
+	return proj, nil
+}
+
+// CreateProject opens a project based on a new store.
+func CreateProject(dbFilename string) (*Project, error) {
+	db, err := store.Create(dbFilename, dbug, "en", time.Local)
+	if err != nil {
+		return nil, err
+	}
+	proj := &Project{}
 	proj.Store = db
 	proj.Views = make(map[View]struct{})
 

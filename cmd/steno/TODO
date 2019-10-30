@@ -1,12 +1,15 @@
 x tagging
 x article view
 x delete articles
-new db
+x new db
 run scripts
 clickable urls in results (or rightclick)
+sensible handling of .db filename extension when opening new project
 open scripts directory
 configurable date format
 right-click copy from results
+x bug: slurp on an empty project crashes
+x show current project in window title
 
 import from other db
 json import/export

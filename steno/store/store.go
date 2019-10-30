@@ -48,6 +48,27 @@ func (store *Store) DB() *sql.DB {
 	return store.db
 }
 
+// Open an existing database & index. Returns error if non-existant.
+func Open(dbFile string, dbug Logger, defaultLang string, loc *time.Location) (*Store, error) {
+	_, err := os.Stat(dbFile)
+	if err != nil {
+		//if os.IsNotExist(err) { ... }
+		return nil, err
+	}
+	return internalNew(dbFile, dbug, defaultLang, loc, true)
+}
+
+// Create creates a new database and index. Returns an error if already existant.
+func Create(dbFile string, dbug Logger, defaultLang string, loc *time.Location) (*Store, error) {
+	_, err := os.Stat(dbFile)
+	if os.IsNotExist(err) {
+		return internalNew(dbFile, dbug, defaultLang, loc, true)
+	} else {
+		return nil, fmt.Errorf("%s already exists", dbFile)
+	}
+}
+
+// DEPRECATED - use Open() or Create() instead
 // defaultLang is lang used when creating a new db (or updating an older version).
 // Otherwise Lang set from existing DB.
 func New(dbFile string, dbug Logger, defaultLang string, loc *time.Location) (*Store, error) {
@@ -118,6 +139,11 @@ func internalNew(dbFile string, dbug Logger, defaultLang string, loc *time.Locat
 	//
 
 	return store, nil
+}
+
+// Filename returns the filename of the .db file underlying this store
+func (store *Store) Filename() string {
+	return store.dbFile
 }
 
 func (store *Store) Close() {
