@@ -12,7 +12,10 @@ x bug: slurp on an empty project crashes
 x show current project in window title
 
 import from other db
-json import/export
+x json import
+json import - handle urls and dates better
+json import - progress dialog
+json export
 bayesean tagging
 support non-english articles
 

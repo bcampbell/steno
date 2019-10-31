@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -52,6 +53,7 @@ type ProjWindow struct {
 		newProject *widgets.QAction
 		newWindow  *widgets.QAction
 		slurp      *widgets.QAction
+		importJSON *widgets.QAction
 		tagArts    *widgets.QAction
 		untagArts  *widgets.QAction
 		deleteArts *widgets.QAction
@@ -109,6 +111,7 @@ func (v *ProjWindow) init() {
 
 	m = v.MenuBar().AddMenu2("&Tools")
 	v.action.slurp = m.AddAction("Slurp...")
+	v.action.importJSON = m.AddAction("Import JSON...")
 	v.action.tagArts = m.AddAction("Tag")
 	v.action.untagArts = m.AddAction("Untag")
 	v.action.deleteArts = m.AddAction("Delete")
@@ -268,6 +271,9 @@ func (v *ProjWindow) init() {
 			}
 			v.Proj.doSlurp(&srcs[sel], from, to)
 		})
+		v.action.importJSON.ConnectTriggered(func(checked bool) {
+			v.doImportJSON()
+		})
 
 		v.action.close.ConnectTriggered(func(checked bool) {
 			v.Close()
@@ -369,6 +375,7 @@ func (v *ProjWindow) rethinkActionStates() {
 
 	v.action.newWindow.SetEnabled(haveProj)
 	v.action.slurp.SetEnabled(haveProj)
+	v.action.importJSON.SetEnabled(haveProj)
 	v.action.tagArts.SetEnabled(haveProj && haveSel && haveTxt)
 	v.action.untagArts.SetEnabled(haveProj && haveSel && haveTxt)
 	v.action.deleteArts.SetEnabled(haveProj && haveSel)
@@ -424,6 +431,53 @@ func (v *ProjWindow) doNewProject() {
 		// open a new window and leave this one in peace
 		win := NewProjWindow(nil, 0)
 		win.SetProject(proj)
+	}
+}
+
+func (v *ProjWindow) doImportJSON() {
+	fileDialog := widgets.NewQFileDialog2(v, "Import JSON data...", "", "")
+	fileDialog.SetAcceptMode(widgets.QFileDialog__AcceptOpen)
+	fileDialog.SetFileMode(widgets.QFileDialog__ExistingFile)
+	//	var mimeTypes = []string{"text/html", "text/plain"}
+	//	fileDialog.SetMimeTypeFilters(mimeTypes)
+	if fileDialog.Exec() != int(widgets.QDialog__Accepted) {
+		return
+	}
+	filename := fileDialog.SelectedFiles()[0]
+
+	inFile, err := os.Open(filename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed: %s\n", err)
+		// TODO: show error!
+		return
+	}
+	defer inFile.Close()
+
+	dec := json.NewDecoder(inFile)
+
+	stasher := store.NewStasher(v.Proj.Store)
+	defer func() {
+		stasher.Close()
+		v.Proj.ArtsAdded(stasher.StashedIDs)
+	}()
+	ids := store.ArtList{}
+	for dec.More() {
+		art := store.Article{}
+		err = dec.Decode(&art)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "decode failed: %s\n", err)
+			// TODO: show error!
+			return
+		}
+
+		err = stasher.Stash(&art)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "decode failed: %s\n", err)
+			// TODO: show error!
+			return
+		}
+		// Stash() sets the article ID field
+		ids = append(ids, art.ID)
 	}
 
 }
