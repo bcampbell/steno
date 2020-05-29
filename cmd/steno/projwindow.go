@@ -191,49 +191,8 @@ func (v *ProjWindow) init() {
 
 	}
 
-	tv := widgets.NewQTableView(nil)
-	tv.SetShowGrid(false)
-	tv.SetSelectionBehavior(widgets.QAbstractItemView__SelectRows)
-	tv.SetSelectionMode(widgets.QAbstractItemView__ExtendedSelection)
-	tv.VerticalHeader().SetVisible(false)
-	//tv.HorizontalHeader().SetSectionResizeMode(widgets.QHeaderView__Stretch)
-
-	tv.SetModel(v.model)
-	tv.ResizeColumnsToContents()
-
-	// cheesy autosize.
-	{
-		w := tv.Width()
-		if w < 600 {
-			w = 600
-		}
-		hdr := tv.HorizontalHeader()
-		hdr.ResizeSection(0, w/3) // url
-		hdr.ResizeSection(1, w/3) // headline
-		hdr.ResizeSection(2, w/6) // published
-		hdr.ResizeSection(3, w/6) // pub
-		hdr.ResizeSection(4, w/6) // tags
-	}
-	tv.SelectionModel().ConnectSelectionChanged(func(selected *core.QItemSelection, deselected *core.QItemSelection) {
-		v.rethinkSelectionSummary()
-		v.rethinkActionStates()
-	})
-	tv.SelectionModel().ConnectCurrentChanged(func(current *core.QModelIndex, previous *core.QModelIndex) {
-		// show article text for most recently-selected article (if any)
-		if current.IsValid() {
-			artIdx := v.model.results.Arts[current.Row()]
-			arts, err := v.Proj.Store.Fetch(artIdx)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Err: %s\n", err)
-				return
-			} else {
-				art := arts[0]
-				v.c.artView.SetHtml(art.FormatContent(""))
-				//v.c.artView.SetHtml(art.Content)
-			}
-		}
-	})
-
+	// set up the results tableview
+	tv := v.initResultsView()
 	widget.Layout().AddWidget(tv)
 	v.c.resultView = tv
 
@@ -300,6 +259,74 @@ func (v *ProjWindow) init() {
 	v.rethinkActionStates()
 
 	v.Show()
+}
+
+func (v *ProjWindow) initResultsView() *widgets.QTableView {
+
+	tv := widgets.NewQTableView(nil)
+	tv.SetShowGrid(false)
+	tv.SetSelectionBehavior(widgets.QAbstractItemView__SelectRows)
+	tv.SetSelectionMode(widgets.QAbstractItemView__ExtendedSelection)
+	tv.VerticalHeader().SetVisible(false)
+	//tv.HorizontalHeader().SetSectionResizeMode(widgets.QHeaderView__Stretch)
+
+	tv.SetModel(v.model)
+	tv.ResizeColumnsToContents()
+
+	// cheesy autosize.
+	{
+		w := tv.Width()
+		if w < 600 {
+			w = 600
+		}
+		hdr := tv.HorizontalHeader()
+		hdr.ResizeSection(0, w/3) // url
+		hdr.ResizeSection(1, w/3) // headline
+		hdr.ResizeSection(2, w/6) // published
+		hdr.ResizeSection(3, w/6) // pub
+		hdr.ResizeSection(4, w/6) // tags
+	}
+	tv.SelectionModel().ConnectSelectionChanged(func(selected *core.QItemSelection, deselected *core.QItemSelection) {
+		v.rethinkSelectionSummary()
+		v.rethinkActionStates()
+	})
+	tv.SelectionModel().ConnectCurrentChanged(func(current *core.QModelIndex, previous *core.QModelIndex) {
+		// show article text for most recently-selected article (if any)
+		if current.IsValid() {
+			artIdx := v.model.results.Arts[current.Row()]
+			arts, err := v.Proj.Store.Fetch(artIdx)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Err: %s\n", err)
+				return
+			} else {
+				art := arts[0]
+				v.c.artView.SetHtml(art.FormatContent(""))
+				//v.c.artView.SetHtml(art.Content)
+			}
+		}
+	})
+	tv.SetContextMenuPolicy(core.Qt__CustomContextMenu) // Qt::CustomContextMenu
+	tv.ConnectCustomContextMenuRequested(func(pt *core.QPoint) {
+		row := tv.RowAt(pt.Y())
+		//col := tv.ColumnAt(pt.X())
+
+		var focusArt *store.Article
+		if row >= 0 && row < len(v.model.results.Arts) {
+			// clicked on an valid article
+			focusArt = v.model.results.Art(row)
+		}
+
+		if focusArt != nil {
+			menu := widgets.NewQMenu(tv)
+			action := menu.AddAction("Open " + focusArt.CanonicalURL)
+			action.ConnectTriggered(func(checked bool) {
+				u := core.NewQUrl3(focusArt.CanonicalURL, core.QUrl__TolerantMode)
+				gui.QDesktopServices_OpenUrl(u)
+			})
+			menu.Popup(tv.MapToGlobal(pt), nil)
+		}
+	})
+	return tv
 }
 
 // selectedArts returns a list of the currently-selected article IDs.
@@ -444,6 +471,8 @@ func (v *ProjWindow) doImportJSON() {
 		return
 	}
 	filename := fileDialog.SelectedFiles()[0]
+
+	// TODO: move the rest of this into Project
 
 	inFile, err := os.Open(filename)
 	if err != nil {
