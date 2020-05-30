@@ -198,6 +198,7 @@ func (v *ProjWindow) init() {
 
 	// article view
 	v.c.artView = widgets.NewQTextBrowser(nil)
+	v.c.artView.SetOpenExternalLinks(true)
 	splitter.AddWidget(v.c.artView)
 
 	// set up actions
@@ -261,6 +262,7 @@ func (v *ProjWindow) init() {
 	v.Show()
 }
 
+// set up the tableview for displaying the list of articles.
 func (v *ProjWindow) initResultsView() *widgets.QTableView {
 
 	tv := widgets.NewQTableView(nil)
@@ -300,8 +302,8 @@ func (v *ProjWindow) initResultsView() *widgets.QTableView {
 				return
 			} else {
 				art := arts[0]
-				v.c.artView.SetHtml(art.FormatContent(""))
-				//v.c.artView.SetHtml(art.Content)
+				rawHTML, _ := HTMLArt(art)
+				v.c.artView.SetHtml(rawHTML)
 			}
 		}
 	})
@@ -340,7 +342,7 @@ func (v *ProjWindow) selectedArts() store.ArtList {
 	return sel
 }
 
-// proj can be nil
+// proj can be nil to detach project from window
 func (v *ProjWindow) SetProject(proj *Project) {
 
 	if v.Proj != nil {
