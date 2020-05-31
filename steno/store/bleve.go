@@ -11,7 +11,7 @@ import (
 	"github.com/blevesearch/bleve/analysis/lang/es"
 	"github.com/blevesearch/bleve/analysis/token/lowercase"
 	regexp_tokenizer "github.com/blevesearch/bleve/analysis/tokenizer/regexp"
-	"github.com/blevesearch/bleve/index/store/goleveldb"
+	"github.com/blevesearch/bleve/index/scorch"
 	"regexp"
 	"strconv"
 	"time"
@@ -59,7 +59,8 @@ func newBleveIndex(dbug Logger, idxName string, lang string, loc *time.Location)
 		return nil, err
 	}
 
-	bleve.Config.DefaultKVStore = goleveldb.Name
+	bleve.Config.DefaultKVStore = scorch.Name
+	bleve.Config.DefaultIndexType = scorch.Name
 
 	indexMapping := bleve.NewIndexMapping()
 	// need to do this for sensible handling of default fields ("_all" uses this)
@@ -145,7 +146,8 @@ func newBleveIndex(dbug Logger, idxName string, lang string, loc *time.Location)
 }
 
 func openBleveIndex(dbug Logger, idxName string, loc *time.Location) (*bleveIndex, error) {
-	bleve.Config.DefaultKVStore = goleveldb.Name
+	bleve.Config.DefaultKVStore = scorch.Name
+	bleve.Config.DefaultIndexType = scorch.Name
 
 	index, err := bleve.Open(idxName)
 	if err != nil {
