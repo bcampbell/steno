@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"github.com/bcampbell/scrapeomat/slurp"
-	"github.com/bcampbell/steno/steno/store"
+	"github.com/bcampbell/steno/store"
 	"io"
 	"os"
 	"time"

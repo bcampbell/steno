@@ -8,7 +8,7 @@ import (
 	"net/http"
 	//	"net/url"
 	//	"os"
-	"github.com/bcampbell/steno/steno/store"
+	"github.com/bcampbell/steno/store"
 	//	"strings"
 	"sync"
 	"sync/atomic"

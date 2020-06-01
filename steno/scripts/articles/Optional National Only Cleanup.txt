@@ -1,4 +1,0 @@
-
-# Optional cleanup to remove all non-national articles
-
-tags: (blog OR reg OR mag) => TAG cruft

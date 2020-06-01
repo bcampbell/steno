@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/bcampbell/steno/steno/store"
+	"github.com/bcampbell/steno/store"
 	"html/template"
 	"strings"
 )

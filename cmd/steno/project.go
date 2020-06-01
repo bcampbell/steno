@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bcampbell/steno/steno/store"
+	"github.com/bcampbell/steno/store"
 )
 
 type Project struct {

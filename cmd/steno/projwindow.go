@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/bcampbell/steno/steno"
-	"github.com/bcampbell/steno/steno/store"
+	"github.com/bcampbell/steno/store"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
