@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	//	"strings"
-	//	"time"
+	"time"
 
 	"github.com/bcampbell/steno/steno"
 	"github.com/bcampbell/steno/steno/store"
@@ -229,7 +229,7 @@ func (v *ProjWindow) init() {
 			if sel < 0 || sel >= len(srcs) {
 				// TODO: show error?
 			}
-			v.Proj.doSlurp(&srcs[sel], from, to)
+			v.doSlurp(&srcs[sel], from, to)
 		})
 		v.action.importJSON.ConnectTriggered(func(checked bool) {
 			v.doImportJSON()
@@ -260,6 +260,40 @@ func (v *ProjWindow) init() {
 	v.rethinkActionStates()
 
 	v.Show()
+}
+
+// doSlurp imports articles from a slurp API source.
+// It displays a progress dialog.
+// It checks urls and doesn't add duplicate articles.
+func (v *ProjWindow) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo time.Time) {
+	//progress := NewProgressWindow("Slurping...")
+	progressDlg := widgets.NewQProgressDialog(nil, core.Qt__Widget)
+	progressDlg.SetModal(true)
+	progressDlg.SetMinimumDuration(0)
+	progressDlg.SetWindowModality(core.Qt__ApplicationModal)
+	progressDlg.SetWindowTitle("Slurp from " + src.Name)
+
+	go func() {
+		progFn := func(fetchedCnt int, expectedCnt int, newCnt int, msg string) {
+			progressDlg.SetRange(0, expectedCnt)
+			progressDlg.SetValue(fetchedCnt)
+
+			txt := fmt.Sprintf("%s\nreceived %d/%d articles (%d new)", msg, fetchedCnt, expectedCnt, newCnt)
+			progressDlg.SetLabelText(txt)
+
+		}
+		dayTo := dayTo.AddDate(0, 0, 1)
+		fmt.Printf("slurp %v,%v to %v\n", src, dayFrom, dayTo)
+		newArts, err := steno.Slurp(v.Proj.Store, src, dayFrom, dayTo, progFn)
+		if err != nil {
+			fmt.Printf("slurp ERROR: %s\n", err)
+		}
+		fmt.Printf("%v %v\n", newArts, err)
+		progressDlg.Hide()
+		if len(newArts) > 0 {
+			v.Proj.ArtsAdded(newArts) // newArts valid even for failed slurp
+		}
+	}()
 }
 
 // set up the tableview for displaying the list of articles.
