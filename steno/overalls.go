@@ -1,4 +1,4 @@
-package main
+package steno
 
 import (
 	//	"encoding/csv"

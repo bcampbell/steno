@@ -1,10 +1,11 @@
-package main
+package steno
 
 import (
 	"encoding/csv"
 	"fmt"
 	"github.com/bcampbell/scrapeomat/slurp"
 	"github.com/bcampbell/steno/steno/store"
+	"io"
 	"os"
 	"time"
 )
@@ -14,6 +15,7 @@ type SlurpSource struct {
 	Loc  string
 }
 
+/*
 // article format we expect down the wire from the slurp API
 type wireFmtArt struct {
 	slurp.Article
@@ -31,6 +33,7 @@ type Msg struct {
 	Article *store.Article
 	Error   string
 }
+*/
 
 func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
 	srcs := []SlurpSource{}
@@ -52,7 +55,9 @@ func LoadSlurpSources(fileName string) ([]SlurpSource, error) {
 	return srcs, nil
 }
 
-func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, progress *Progress) error {
+// returns IDs of sucessfully-added articles
+func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, progressFn func(fetchedCnt int, expectedCnt int, newCnt int, msg string)) (store.ArtList, error) {
+	newlySlurped := store.ArtList{}
 
 	slurper := slurp.NewSlurper(server.Loc)
 
@@ -61,40 +66,42 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 		PubTo:   timeTo,
 	}
 
-	stream, cancel := slurper.Slurp(filt)
+	progressFn(0, 0, 0, "Fetching count...")
+	totalCnt, err := slurper.FetchCount(filt)
+	if err != nil {
+		return newlySlurped, err
+	}
+
+	progressFn(0, totalCnt, 0, "Slurping...")
+	stream := slurper.Slurp2(filt)
+	defer stream.Close()
 
 	batchSize := 200
 
 	newCnt := 0
 	receivedCnt := 0
+	done := false
 	for {
+		// all done?
+		if done {
+			break
+		}
 		// read a batch of articles in from the wire...
 		arts := []*store.Article{}
 		for i := 0; i < batchSize; i++ {
-			msg, ok := <-stream
-
-			if !ok {
-				break
+			wireArt, err := stream.Next()
+			if err != nil {
+				if err == io.EOF {
+					done = true
+					break
+				} else {
+					// uhoh.
+					return newlySlurped, err
+				}
 			}
-
-			// handle errors
-			if msg.Error != "" {
-				//cancel <- struct{}{} // TODO: this isn't enough.
-				return fmt.Errorf("Slurp error from server: %s", msg.Error)
-			}
-			if msg.Article == nil {
-				dbug.Printf("Slurp WARN: missing article\n")
-				continue
-			}
-
-			art := convertArt(msg.Article)
+			art := convertArt(wireArt)
 			arts = append(arts, art)
 			receivedCnt += 1
-		}
-
-		// empty batch? all done?
-		if len(arts) == 0 {
-			break
 		}
 
 		// check which articles are new
@@ -102,8 +109,7 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 		for _, art := range arts {
 			got, err := db.FindArt(art.URLs)
 			if err != nil {
-				cancel <- struct{}{} // TODO: this isn't enough.
-				return fmt.Errorf("FindArt() failed: %s", err)
+				return newlySlurped, fmt.Errorf("FindArt() failed: %s", err)
 			}
 			if got > 0 {
 				// already got it.
@@ -116,16 +122,21 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 		if len(newArts) > 0 {
 			err := db.Stash(newArts)
 			if err != nil {
-				cancel <- struct{}{} // TODO: this isn't enough.
-				return fmt.Errorf("Stash failed: %s", err)
+				return newlySlurped, fmt.Errorf("Stash failed: %s", err)
 			}
+			// Stash will have assigned article IDs
+			for _, a := range newArts {
+				newlySlurped = append(newlySlurped, a.ID)
+			}
+
 		}
 		//dbug.Printf("stashed %s as %d\n", art.Headline, art.ID)
 		// TODO: not right, but hey
 		newCnt += len(newArts)
-		progress.SetStatus(fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt))
+		//		progressFn(fmt.Sprintf("Received %d (%d new)", receivedCnt, newCnt))
+		progressFn(receivedCnt, totalCnt, newCnt, "Slurping...")
 	}
-	return nil
+	return newlySlurped, nil
 }
 
 // convert the wire-format article into our local form

@@ -1,0 +1,22 @@
+x tagging
+x article view
+x delete articles
+x new db
+run scripts
+clickable urls in results (or rightclick)
+sensible handling of .db filename extension when opening new project
+open scripts directory
+configurable date format
+right-click copy from results
+x bug: slurp on an empty project crashes
+x show current project in window title
+
+import from other db
+x json import
+json import - handle urls and dates better
+json import - progress dialog
+json export
+bayesean tagging
+support non-english articles
+
+

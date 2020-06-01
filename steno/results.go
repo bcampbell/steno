@@ -1,4 +1,4 @@
-package main
+package steno
 
 import (
 	"fmt"
@@ -7,9 +7,14 @@ import (
 	"strings"
 )
 
+type Facet struct {
+	Txt string
+	Cnt int
+}
+
 type Results struct {
 	Query string
-	arts  store.ArtList
+	Arts  store.ArtList
 	Len   int
 
 	FacetLen int
@@ -43,8 +48,8 @@ func NewResults(db *store.Store, query string) (*Results, error) {
 }
 
 func (res *Results) setArts(arts store.ArtList) {
-	res.arts = arts
-	res.Len = len(res.arts)
+	res.Arts = arts
+	res.Len = len(res.Arts)
 
 	/* XYZZY */
 	/*
@@ -104,7 +109,7 @@ func (res *Results) Match(artIdx int, needle string) bool {
 }
 
 func (res *Results) FindForward(artIdx int, needle string) int {
-	for ; artIdx < len(res.arts); artIdx++ {
+	for ; artIdx < len(res.Arts); artIdx++ {
 		if res.Match(artIdx, needle) {
 			return artIdx
 		}
@@ -121,8 +126,9 @@ func (res *Results) FindReverse(artIdx int, needle string) int {
 	return -1
 }
 
+// TODO: make db access explict! + proper error handling
 func (res *Results) Art(idx int) *store.Article {
-	if idx < 0 || idx >= len(res.arts) {
+	if idx < 0 || idx >= len(res.Arts) {
 		// sometimes get here... seems to be tableview doing one last refresh on
 		// old delegates before zapping/recycling them
 		// TODO: investigate!
@@ -130,14 +136,14 @@ func (res *Results) Art(idx int) *store.Article {
 		return &store.Article{Headline: fmt.Sprintf("<BAD> %d", idx)}
 	}
 
-	artID := res.arts[idx]
+	artID := res.Arts[idx]
 	art, got := res.hydrated[artID]
 	if got {
 		return art
 	}
 	// not in cache - fetch it!
 
-	//	dbug.Printf("fetch art %d\n", artID)
+	//dbug.Printf("fetch art %d\n", artID)
 	fetchedArts, err := res.db.Fetch(artID)
 	if err != nil {
 		return &store.Article{Headline: fmt.Sprintf("<BAD> %d", idx)}
@@ -162,7 +168,7 @@ func (res *Results) Sort(sortColumn string, sortOrder int) *Results {
 		ord = store.Descending
 	}
 
-	sorted, err := res.db.Sort(res.arts, sortColumn, ord)
+	sorted, err := res.db.Sort(res.Arts, sortColumn, ord)
 	if err != nil {
 		//TODO: log error to dbug?
 		return res
@@ -170,7 +176,7 @@ func (res *Results) Sort(sortColumn string, sortOrder int) *Results {
 
 	return &Results{
 		Query:    res.Query,
-		arts:     sorted,
+		Arts:     sorted,
 		Len:      len(sorted),
 		facets:   res.facets, // facets don't change
 		FacetLen: res.FacetLen,
