@@ -12,3 +12,8 @@ $ qtdeploy build desktop
 ```
 
 
+
+Cross compile windows static build:
+```
+$ qtdeploy -docker build windows_64_static
+```
