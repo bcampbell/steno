@@ -8,6 +8,7 @@ import (
 	//	"strings"
 	"time"
 
+	"github.com/bcampbell/steno/script"
 	"github.com/bcampbell/steno/steno"
 	"github.com/bcampbell/steno/store"
 	"github.com/therecipe/qt/core"
@@ -53,6 +54,7 @@ type ProjWindow struct {
 		newProject *widgets.QAction
 		newWindow  *widgets.QAction
 		slurp      *widgets.QAction
+		runScript  *widgets.QAction
 		importJSON *widgets.QAction
 		tagArts    *widgets.QAction
 		untagArts  *widgets.QAction
@@ -70,6 +72,10 @@ func (v *ProjWindow) OnArtsAdded(store.ArtList) {
 }
 
 func (v *ProjWindow) OnArtsDeleted(store.ArtList) {
+	v.rerun()
+}
+
+func (v *ProjWindow) OnRethink() {
 	v.rerun()
 }
 
@@ -111,6 +117,7 @@ func (v *ProjWindow) init() {
 
 	m = v.MenuBar().AddMenu2("&Tools")
 	v.action.slurp = m.AddAction("Slurp...")
+	v.action.runScript = m.AddAction("Run script...")
 	v.action.importJSON = m.AddAction("Import JSON...")
 	v.action.tagArts = m.AddAction("Tag")
 	v.action.untagArts = m.AddAction("Untag")
@@ -231,6 +238,9 @@ func (v *ProjWindow) init() {
 			}
 			v.doSlurp(&srcs[sel], from, to)
 		})
+		v.action.runScript.ConnectTriggered(func(checked bool) {
+			v.doRunScript()
+		})
 		v.action.importJSON.ConnectTriggered(func(checked bool) {
 			v.doImportJSON()
 		})
@@ -293,6 +303,54 @@ func (v *ProjWindow) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo ti
 		if len(newArts) > 0 {
 			v.Proj.ArtsAdded(newArts) // newArts valid even for failed slurp
 		}
+	}()
+}
+
+func (v *ProjWindow) doRunScript() {
+	scripts, err := script.LoadScripts("scripts")
+	if err != nil {
+		fmt.Printf("Error loading scripts: %s", err) // TODO: show error in GUI!
+		return
+	}
+	dlg := NewScriptDialog(nil, 0)
+	dlg.SetScripts(scripts)
+	if dlg.Exec() != int(widgets.QDialog__Accepted) {
+		return
+	}
+
+	//	for _, s := range scripts {
+	//		fmt.Println(s.Name, s.Category)
+	//	}
+
+	idx, got := dlg.SelectedIndex()
+	if !got {
+		return
+	}
+
+	// All set to run!
+	script := scripts[idx]
+	fmt.Printf("running %d: '%s'\n", idx, script.Name)
+	progressDlg := widgets.NewQProgressDialog(nil, core.Qt__Widget)
+	progressDlg.SetModal(true)
+	progressDlg.SetMinimumDuration(0)
+	progressDlg.SetWindowModality(core.Qt__ApplicationModal)
+	progressDlg.SetWindowTitle("Running script " + script.Name)
+
+	go func() {
+		progFn := func(expected int, completed int, msg string) {
+			progressDlg.SetRange(0, expected)
+			progressDlg.SetValue(completed)
+			progressDlg.SetLabelText(msg)
+		}
+
+		err := script.Run(v.Proj.Store, progFn)
+
+		if err != nil {
+			fmt.Printf("slurp ERROR: %s\n", err)
+			// TODO: show error in GUI!
+		}
+		progressDlg.Hide()
+		v.Proj.Rethink() // make sure all the views refresh (including this one!)
 	}()
 }
 

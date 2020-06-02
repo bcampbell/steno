@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	//	"sort"
 	"time"
 )
 
@@ -19,9 +19,9 @@ type App struct {
 	ScriptPath  string
 	HasCurrent  bool
 
-	scriptCategories []string
-	scripts          []*script
-	SlurpSources     []SlurpSource
+	//	scriptCategories []string
+	//	scripts          []*script
+	SlurpSources []SlurpSource
 
 	Wibble      []string
 	ErrorMsg    string
@@ -97,13 +97,9 @@ func NewApp() (*App, error) {
 	app.ScriptPath = filepath.Join(app.PerUserPath, "scripts")
 
 	app.ErrorMsg = "Hello"
-	app.RefreshScripts()
+	//app.RefreshScripts()
 	app.initSlurpSources()
 	return app, nil
-}
-
-func (app *App) GetScript(idx int) *script {
-	return app.scripts[idx]
 }
 
 func (app *App) SetError(msg string) {
@@ -111,6 +107,7 @@ func (app *App) SetError(msg string) {
 	//	qml.Changed(app, &app.ErrorMsg)
 }
 
+/*
 func (app *App) RefreshScripts() {
 
 	var scripts []*script
@@ -128,28 +125,27 @@ func (app *App) RefreshScripts() {
 		app.SetError(err.Error())
 		return
 	}
-	/*
 		for _, s := range scripts {
 			fmt.Printf("%s - %s\n", s.Name, s.Desc)
 			for _, l := range s.lines {
 				fmt.Println(l)
 			}
 		}
-	*/
 
-	app.scripts = scripts
-	app.scriptCategories = []string{}
-	cats := map[string]struct{}{}
+		app.scripts = scripts
+		app.scriptCategories = []string{}
+		cats := map[string]struct{}{}
 
-	for _, s := range scripts {
-		cats[s.Category] = struct{}{}
-	}
+		for _, s := range scripts {
+			cats[s.Category] = struct{}{}
+		}
 
-	for cat, _ := range cats {
-		app.scriptCategories = append(app.scriptCategories, cat)
-	}
-	sort.Strings(app.scriptCategories)
+		for cat, _ := range cats {
+			app.scriptCategories = append(app.scriptCategories, cat)
+		}
+		sort.Strings(app.scriptCategories)
 }
+*/
 
 func (app *App) initSlurpSources() {
 	srcs, err := LoadSlurpSources(filepath.Join(app.DataPath, "slurp_sources.csv"))
@@ -159,10 +155,6 @@ func (app *App) initSlurpSources() {
 		return
 	}
 	app.SlurpSources = srcs
-}
-
-func (app *App) GetScriptCategory(idx int) string {
-	return app.scriptCategories[idx]
 }
 
 func (app *App) GetSlurpSourceName(idx int) string {

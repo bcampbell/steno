@@ -16,6 +16,7 @@ type View interface {
 	OnArtsModified(store.ArtList)
 	OnArtsAdded(store.ArtList)
 	OnArtsDeleted(store.ArtList)
+	OnRethink()
 }
 
 // OpenProject opens a project based on an existing store.
@@ -65,6 +66,13 @@ func (proj *Project) ArtsDeleted(ids store.ArtList) {
 func (proj *Project) ArtsModified(ids store.ArtList) {
 	for v, _ := range proj.Views {
 		v.OnArtsModified(ids)
+	}
+}
+
+// Rethink tells all the views to refresh.
+func (proj *Project) Rethink() {
+	for v, _ := range proj.Views {
+		v.OnRethink()
 	}
 }
 

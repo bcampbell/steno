@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+type ProgressFunc func(expected int, completed int, msg string)
+
 func isShortlink(link string) bool {
 	/*u, err := url.Parse(link)
 	if err != nil {

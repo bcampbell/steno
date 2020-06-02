@@ -1,4 +1,4 @@
-package steno
+package script
 
 import (
 	"bufio"
@@ -23,7 +23,7 @@ func (l *scriptLine) String() string {
 	return l.query + "=>" + l.op + " " + strings.Join(l.params, " ")
 }
 
-type script struct {
+type Script struct {
 	Category string // taken from subdirectory
 	Name     string
 	Desc     string
@@ -33,8 +33,8 @@ type script struct {
 type ProgressFunc func(expected int, completed int, msg string)
 
 // Apply script to a store
-func (s *script) Run(store *store.Store, progress ProgressFunc) error {
-	dbug.Printf("running script '%s'\n", s.Name)
+func (s *Script) Run(store *store.Store, progress ProgressFunc) error {
+	fmt.Printf("running script '%s'\n", s.Name)
 
 	for lineNum, line := range s.lines {
 		if progress != nil {
@@ -45,7 +45,7 @@ func (s *script) Run(store *store.Store, progress ProgressFunc) error {
 			return fmt.Errorf("Bad query on line %d (%s): %s", line.srcLine, line.query, err)
 		}
 
-		dbug.Printf("%s (Matched %d)\n", line.String(), len(matching))
+		fmt.Printf("%s (Matched %d)\n", line.String(), len(matching))
 
 		switch line.op {
 		case "tag":
@@ -79,7 +79,7 @@ func strippedName(fullname string) string {
 	return b[0 : len(b)-len(filepath.Ext(b))]
 }
 
-func loadScript(filename string) (*script, error) {
+func loadScript(filename string) (*Script, error) {
 
 	infile, err := os.Open(filename)
 	if err != nil {
@@ -87,7 +87,7 @@ func loadScript(filename string) (*script, error) {
 	}
 	defer infile.Close()
 
-	out := &script{
+	out := &Script{
 		Category: filepath.Base(filepath.Dir(filename)),
 		Name:     strippedName(filename),
 	}
@@ -115,7 +115,7 @@ func loadScript(filename string) (*script, error) {
 			out.lines = append(out.lines, l)
 			// check for dodgy cut&paste detritus
 			if strings.ContainsAny(query, "“”") {
-				dbug.Printf("WARNING %s (line %d): query has dodgy quotes: %s\n", filename, lineNum, query)
+				fmt.Printf("WARNING %s (line %d): query has dodgy quotes: %s\n", filename, lineNum, query)
 			}
 		}
 
@@ -128,7 +128,7 @@ func loadScript(filename string) (*script, error) {
 }
 
 // load the simplified CSV-based script format
-func loadCSVScript(filename string) (*script, error) {
+func loadCSVScript(filename string) (*Script, error) {
 
 	infile, err := os.Open(filename)
 	if err != nil {
@@ -144,7 +144,7 @@ func loadCSVScript(filename string) (*script, error) {
 		return nil, err
 	}
 
-	out := &script{
+	out := &Script{
 		Category: filepath.Base(filepath.Dir(filename)),
 		Name:     strippedName(filename),
 	}
@@ -178,11 +178,11 @@ func loadCSVScript(filename string) (*script, error) {
 
 		q := strings.Join(frags, " ")
 		if q == "" {
-			dbug.Printf("WARNING %s (line %d): empty query. Ignoring\n", filename, lineNum)
+			fmt.Printf("WARNING %s (line %d): empty query. Ignoring\n", filename, lineNum)
 			continue
 		}
 		if len(tags) == 0 {
-			dbug.Printf("WARNING %s (line %d): no tags. Ignoring\n", filename, lineNum)
+			fmt.Printf("WARNING %s (line %d): no tags. Ignoring\n", filename, lineNum)
 			continue
 		}
 		l := scriptLine{srcLine: lineNum, query: q, op: "tag", params: tags}
@@ -194,7 +194,9 @@ func loadCSVScript(filename string) (*script, error) {
 	return out, nil
 }
 
-func loadScripts(dir string) ([]*script, error) {
+// LoadScripts loads a directory of scripts. Subdirectories are used to populate
+// the script category field.
+func LoadScripts(dir string) ([]*Script, error) {
 
 	fileNames := []string{}
 	err := filepath.Walk(dir, func(fileName string, info os.FileInfo, err error) error {
@@ -203,7 +205,7 @@ func loadScripts(dir string) ([]*script, error) {
 		}
 		ext := filepath.Ext(fileName)
 		if ext != ".txt" && ext != ".csv" {
-			dbug.Printf("WARNING ignoring %s\n", fileName)
+			fmt.Printf("WARNING ignoring %s\n", fileName)
 			return nil
 		}
 		fileNames = append(fileNames, fileName)
@@ -215,10 +217,10 @@ func loadScripts(dir string) ([]*script, error) {
 	}
 
 	//	fmt.Printf("found %d scripts\n", len(fileNames))
-	scripts := []*script{}
+	scripts := []*Script{}
 	for _, fileName := range fileNames {
 		ext := filepath.Ext(fileName)
-		var s *script
+		var s *Script
 		var err error
 		if ext == ".txt" {
 			s, err = loadScript(fileName)
@@ -232,7 +234,7 @@ func loadScripts(dir string) ([]*script, error) {
 			return nil, err
 		}
 
-		//	dbug.Printf("SCRIPT: [%s] %s\n", s.Category, s.Name)
+		//	fmt.Printf("SCRIPT: [%s] %s\n", s.Category, s.Name)
 		scripts = append(scripts, s)
 	}
 	return scripts, nil
