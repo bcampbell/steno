@@ -2,7 +2,7 @@ package simrep
 
 import (
 	"fmt"
-	"github.com/bcampbell/steno/steno/store"
+	"github.com/bcampbell/steno/store"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"io"
 )

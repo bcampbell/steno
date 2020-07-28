@@ -3,7 +3,7 @@ package ft
 import (
 	"fmt"
 	"github.com/bcampbell/htmlutil"
-	"github.com/bcampbell/steno/steno/store"
+	"github.com/bcampbell/steno/store"
 	"golang.org/x/net/html"
 	"io"
 	"regexp"

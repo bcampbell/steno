@@ -7,7 +7,7 @@ import (
 	//	"github.com/blevesearch/bleve/analysis"
 	"github.com/andlabs/ui"
 	_ "github.com/andlabs/ui/winmanifest"
-	"github.com/bcampbell/steno/steno/simrep"
+	"github.com/bcampbell/steno/simrep"
 	"log"
 	"os"
 )

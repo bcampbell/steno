@@ -4,7 +4,7 @@ import (
 	"bufio"
 	//	"bytes"
 	"fmt"
-	"github.com/bcampbell/steno/steno/store"
+	"github.com/bcampbell/steno/store"
 	"io/ioutil"
 	"os"
 	"os/exec"

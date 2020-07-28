@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/bcampbell/steno/steno/kludge"
+	"github.com/bcampbell/steno/kludge"
 )
 
 func main() {

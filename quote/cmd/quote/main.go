@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	//	"github.com/bcampbell/htmlutil"
-	"github.com/bcampbell/steno/steno/quote"
+	"github.com/bcampbell/steno/quote"
 	"golang.org/x/net/html"
 	"os"
 	"strconv"
