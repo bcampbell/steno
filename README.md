@@ -32,5 +32,7 @@ $ cd cmd/steno
 $ qtdeploy build desktop
 ```
 
+Cross-compile for windows:
+https://github.com/therecipe/qt/wiki/Deploying-Linux-to-Windows-64-bit-Static
 
 
