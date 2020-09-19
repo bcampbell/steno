@@ -200,6 +200,9 @@ func LoadScripts(dir string) ([]*Script, error) {
 
 	fileNames := []string{}
 	err := filepath.Walk(dir, func(fileName string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() {
 			return nil
 		}

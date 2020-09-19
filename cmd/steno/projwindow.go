@@ -8,6 +8,7 @@ import (
 	//	"strings"
 	"time"
 
+	"github.com/adrg/xdg"
 	"github.com/bcampbell/steno/script"
 	"github.com/bcampbell/steno/steno"
 	"github.com/bcampbell/steno/store"
@@ -221,9 +222,15 @@ func (v *ProjWindow) init() {
 		})
 
 		v.action.slurp.ConnectTriggered(func(checked bool) {
-			srcs, err := steno.LoadSlurpSources("slurp_sources.csv")
+			sourcesFile, err := xdg.ConfigFile("steno/slurp_sources.csv")
 			if err != nil {
-				// TODO: show error!!!
+				widgets.QMessageBox_Warning(nil, "Error finding slurp_sources.csv", fmt.Sprintf("Error finding slurp sources:\n%s", err.Error()), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+				return
+			}
+
+			srcs, err := steno.LoadSlurpSources(sourcesFile)
+			if err != nil {
+				widgets.QMessageBox_Warning(nil, "Error", fmt.Sprintf("Error loading slurp sources:\n%s", err.Error()), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 				return
 			}
 			dlg := NewSlurpDialog(nil, 0)
@@ -307,11 +314,14 @@ func (v *ProjWindow) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo ti
 }
 
 func (v *ProjWindow) doRunScript() {
-	scripts, err := script.LoadScripts("scripts")
+
+	scriptsDir := filepath.Join(xdg.DataHome, "steno/scripts")
+	scripts, err := script.LoadScripts(scriptsDir)
 	if err != nil {
-		fmt.Printf("Error loading scripts: %s", err) // TODO: show error in GUI!
+		widgets.QMessageBox_Warning(nil, "Error finding scripts", fmt.Sprintf("Error finding scripts:\n%s", err.Error()), widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
 		return
 	}
+
 	dlg := NewScriptDialog(nil, 0)
 	dlg.SetScripts(scripts)
 	if dlg.Exec() != int(widgets.QDialog__Accepted) {
