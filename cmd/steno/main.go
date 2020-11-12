@@ -5,22 +5,35 @@ import "C"
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 
+	"github.com/adrg/xdg"
+	"github.com/bcampbell/steno/script"
 	"github.com/therecipe/qt/widgets"
 )
 
-type FOO struct{}
-
-func (f *FOO) Printf(format string, v ...interface{}) {
-	fmt.Printf(format, v...)
-}
-
-var dbug = &FOO{}
+var (
+	dbug *log.Logger
+)
 
 func main() {
 	flag.Parse()
-	err := Run()
+
+	logFilename := filepath.Join(xdg.DataHome, "steno/log.txt")
+	f, err := os.Create(logFilename)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err)
+		os.Exit(1)
+	}
+	defer f.Close()
+	dbug = log.New(f, "", 0)
+
+	//
+	script.Log = dbug
+
+	err = Run()
 	if err != nil {
 		dbug.Printf("ERROR: %s\n", err)
 		os.Exit(1)

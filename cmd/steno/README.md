@@ -17,8 +17,9 @@ $ qtdeploy build desktop
 To cross compile a windows static build (after following the therecipe/qt
 instructions for installing an appropriate docker image):
 ```
-$ qtdeploy -docker build windows_64_static
+$ qtdeploy -docker build windows_64_shared
 ```
+(could also do `windows_64_static`, but had some stability issues...)
 
 
 ## Troubleshooting

@@ -12,6 +12,18 @@ import (
 	"strings"
 )
 
+type Logger interface {
+	Printf(format string, v ...interface{})
+}
+
+type StdoutLogger struct{}
+
+func (l *StdoutLogger) Printf(format string, v ...interface{}) {
+	fmt.Printf(format, v...)
+}
+
+var Log Logger = &StdoutLogger{}
+
 type scriptLine struct {
 	srcLine int
 	query   string
@@ -34,7 +46,7 @@ type ProgressFunc func(expected int, completed int, msg string)
 
 // Apply script to a store
 func (s *Script) Run(store *store.Store, progress ProgressFunc) error {
-	fmt.Printf("running script '%s'\n", s.Name)
+	Log.Printf("START script '%s'\n", s.Name)
 
 	for lineNum, line := range s.lines {
 		if progress != nil {
@@ -45,7 +57,7 @@ func (s *Script) Run(store *store.Store, progress ProgressFunc) error {
 			return fmt.Errorf("Bad query on line %d (%s): %s", line.srcLine, line.query, err)
 		}
 
-		fmt.Printf("%s (Matched %d)\n", line.String(), len(matching))
+		Log.Printf("%s (Matched %d)\n", line.String(), len(matching))
 
 		switch line.op {
 		case "tag":
@@ -68,6 +80,7 @@ func (s *Script) Run(store *store.Store, progress ProgressFunc) error {
 		}
 
 	}
+	Log.Printf("FINISH script '%s'\n", s.Name)
 	return nil
 }
 
@@ -115,7 +128,7 @@ func loadScript(filename string) (*Script, error) {
 			out.lines = append(out.lines, l)
 			// check for dodgy cut&paste detritus
 			if strings.ContainsAny(query, "“”") {
-				fmt.Printf("WARNING %s (line %d): query has dodgy quotes: %s\n", filename, lineNum, query)
+				Log.Printf("WARNING %s (line %d): query has dodgy quotes: %s\n", filename, lineNum, query)
 			}
 		}
 
@@ -178,11 +191,11 @@ func loadCSVScript(filename string) (*Script, error) {
 
 		q := strings.Join(frags, " ")
 		if q == "" {
-			fmt.Printf("WARNING %s (line %d): empty query. Ignoring\n", filename, lineNum)
+			Log.Printf("WARNING %s (line %d): empty query. Ignoring\n", filename, lineNum)
 			continue
 		}
 		if len(tags) == 0 {
-			fmt.Printf("WARNING %s (line %d): no tags. Ignoring\n", filename, lineNum)
+			Log.Printf("WARNING %s (line %d): no tags. Ignoring\n", filename, lineNum)
 			continue
 		}
 		l := scriptLine{srcLine: lineNum, query: q, op: "tag", params: tags}
@@ -208,7 +221,7 @@ func LoadScripts(dir string) ([]*Script, error) {
 		}
 		ext := filepath.Ext(fileName)
 		if ext != ".txt" && ext != ".csv" {
-			fmt.Printf("WARNING ignoring %s\n", fileName)
+			Log.Printf("WARNING ignoring %s\n", fileName)
 			return nil
 		}
 		fileNames = append(fileNames, fileName)

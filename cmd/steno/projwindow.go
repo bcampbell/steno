@@ -89,7 +89,7 @@ func (v *ProjWindow) rerun() {
 		v.rethinkActionStates()
 	} else {
 		// TODO XYZZY - show bad query message
-		fmt.Printf("Error: %s\n", err)
+		dbug.Printf("bad query: %s\n", err)
 	}
 }
 
@@ -100,7 +100,7 @@ func (v *ProjWindow) init() {
 	//})
 	v.ConnectCloseEvent(func(event *gui.QCloseEvent) {
 		v.SetProject(nil)
-		fmt.Printf("byebye!\n")
+		dbug.Printf("byebye!\n")
 		event.Accept()
 	})
 
@@ -145,7 +145,7 @@ func (v *ProjWindow) init() {
 				// TODO: complain!
 				return
 			}
-			fmt.Printf("new query: %s\n", query.Text())
+			dbug.Printf("new query: %s\n", query.Text())
 			v.rerun()
 		})
 
@@ -300,12 +300,12 @@ func (v *ProjWindow) doSlurp(src *steno.SlurpSource, dayFrom time.Time, dayTo ti
 
 		}
 		dayTo := dayTo.AddDate(0, 0, 1)
-		fmt.Printf("slurp %v,%v to %v\n", src, dayFrom, dayTo)
+		dbug.Printf("slurp %v,%v to %v\n", src, dayFrom, dayTo)
 		newArts, err := steno.Slurp(v.Proj.Store, src, dayFrom, dayTo, progFn)
 		if err != nil {
-			fmt.Printf("slurp ERROR: %s\n", err)
+			dbug.Printf("slurp ERROR: %s\n", err)
 		}
-		fmt.Printf("%v %v\n", newArts, err)
+		dbug.Printf("%v %v\n", newArts, err)
 		progressDlg.Hide()
 		if len(newArts) > 0 {
 			v.Proj.ArtsAdded(newArts) // newArts valid even for failed slurp
@@ -339,7 +339,7 @@ func (v *ProjWindow) doRunScript() {
 
 	// All set to run!
 	script := scripts[idx]
-	fmt.Printf("running %d: '%s'\n", idx, script.Name)
+	dbug.Printf("running %d: '%s'\n", idx, script.Name)
 	progressDlg := widgets.NewQProgressDialog(nil, core.Qt__Widget)
 	progressDlg.SetModal(true)
 	progressDlg.SetMinimumDuration(0)
@@ -356,7 +356,7 @@ func (v *ProjWindow) doRunScript() {
 		err := script.Run(v.Proj.Store, progFn)
 
 		if err != nil {
-			fmt.Printf("slurp ERROR: %s\n", err)
+			dbug.Printf("script ERROR: %s\n", err)
 			// TODO: show error in GUI!
 		}
 		progressDlg.Hide()
@@ -453,7 +453,7 @@ func (v *ProjWindow) SetProject(proj *Project) {
 	}
 	v.Proj = proj
 	if v.Proj != nil {
-		fmt.Printf("Setting new project...\n")
+		dbug.Printf("Setting new project...\n")
 		v.Proj.attachView(v)
 
 		// Show default query
