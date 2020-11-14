@@ -5,30 +5,29 @@ import "C"
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/adrg/xdg"
 	"github.com/bcampbell/steno/script"
+	"github.com/bcampbell/steno/steno"
 	"github.com/therecipe/qt/widgets"
 )
 
 var (
-	dbug *log.Logger
+	dbug steno.Logger
 )
 
 func main() {
 	flag.Parse()
 
 	logFilename := filepath.Join(xdg.DataHome, "steno/log.txt")
-	f, err := os.Create(logFilename)
+	dbug, err := steno.NewLog(logFilename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err)
 		os.Exit(1)
 	}
-	defer f.Close()
-	dbug = log.New(f, "", 0)
+	defer dbug.Close()
 
 	//
 	script.Log = dbug

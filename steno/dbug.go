@@ -3,10 +3,9 @@ package steno
 import (
 	"fmt"
 	"os"
-	"time"
+	"path/filepath"
 )
 
-/*
 type Logger interface {
 	Printf(format string, v ...interface{})
 }
@@ -15,35 +14,38 @@ type NullLogger struct{}
 
 func (l NullLogger) Printf(format string, v ...interface{}) {
 }
-*/
 
-type dbugLog struct {
+type FileLog struct {
 	log *os.File
 }
 
-func NewDbugLog(logFile string) *dbugLog {
+func NewLog(logFile string) (*FileLog, error) {
 
-	d := &dbugLog{}
+	d := &FileLog{}
+
+	err := os.MkdirAll(filepath.Dir(logFile), os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
 	f, err := os.Create(logFile)
 	if err == nil {
 		d.log = f
 	} else {
-		fmt.Fprintf(os.Stderr, "Can't open %s (%s) - running without log\n", logFile, err)
+		return nil, err
 	}
 
-	d.Printf("startup %s\n", time.Now().Format("2006-01-02 15:04:05"))
-	return d
+	return d, nil
 }
 
-func (d *dbugLog) Close() {
-	d.Printf("shutdown %s\n", time.Now().Format("2006-01-02 15:04:05"))
+func (d *FileLog) Close() {
 	if d.log != nil {
 		d.log.Close()
 		d.log = nil
 	}
 }
 
-func (d *dbugLog) Printf(format string, v ...interface{}) {
+func (d *FileLog) Printf(format string, v ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, v...)
 	if d.log != nil {
 		fmt.Fprintf(d.log, format, v...)
@@ -51,10 +53,12 @@ func (d *dbugLog) Printf(format string, v ...interface{}) {
 	}
 }
 
-func (d *dbugLog) Println(v ...interface{}) {
+/*
+func (d *FileLog) Println(v ...interface{}) {
 	fmt.Fprintln(os.Stderr, v...)
 	if d.log != nil {
 		fmt.Fprintln(d.log, v...)
 		d.log.Sync()
 	}
 }
+*/
