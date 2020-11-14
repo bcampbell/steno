@@ -22,14 +22,15 @@ func main() {
 	flag.Parse()
 
 	logFilename := filepath.Join(xdg.DataHome, "steno/log.txt")
-	dbug, err := steno.NewLog(logFilename)
+	logger, err := steno.NewLog(logFilename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %s\n", err)
 		os.Exit(1)
 	}
-	defer dbug.Close()
+	defer logger.Close()
 
 	//
+	dbug = logger
 	script.Log = dbug
 
 	err = Run()

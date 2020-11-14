@@ -100,7 +100,6 @@ func (v *ProjWindow) init() {
 	//})
 	v.ConnectCloseEvent(func(event *gui.QCloseEvent) {
 		v.SetProject(nil)
-		dbug.Printf("byebye!\n")
 		event.Accept()
 	})
 
