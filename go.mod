@@ -3,7 +3,7 @@ module github.com/bcampbell/steno
 go 1.14
 
 require (
-	github.com/PuerkitoBio/purell v1.1.1
+	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/adrg/xdg v0.2.1
 	github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e

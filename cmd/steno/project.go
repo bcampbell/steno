@@ -1,5 +1,7 @@
 package main
 
+// NOTE: this stuff should be gui-agnostic, and could be moved into non-GUI package.
+
 import (
 	"strings"
 	"time"
@@ -7,11 +9,14 @@ import (
 	"github.com/bcampbell/steno/store"
 )
 
+// Project bundles together a Store and some Views.
 type Project struct {
 	Store *store.Store
 	Views map[View]struct{}
 }
 
+// A View watches a project, and updates itself appropriately
+// when the data is modified.
 type View interface {
 	OnArtsModified(store.ArtList)
 	OnArtsAdded(store.ArtList)

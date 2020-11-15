@@ -50,16 +50,17 @@ type ProjWindow struct {
 
 	// actions
 	action struct {
-		open       *widgets.QAction
-		close      *widgets.QAction
-		newProject *widgets.QAction
-		newWindow  *widgets.QAction
-		slurp      *widgets.QAction
-		runScript  *widgets.QAction
-		importJSON *widgets.QAction
-		tagArts    *widgets.QAction
-		untagArts  *widgets.QAction
-		deleteArts *widgets.QAction
+		open          *widgets.QAction
+		close         *widgets.QAction
+		newProject    *widgets.QAction
+		newWindow     *widgets.QAction
+		slurp         *widgets.QAction
+		runScript     *widgets.QAction
+		importJSON    *widgets.QAction
+		tagArts       *widgets.QAction
+		untagArts     *widgets.QAction
+		deleteArts    *widgets.QAction
+		runSimilarity *widgets.QAction
 	}
 }
 
@@ -122,6 +123,7 @@ func (v *ProjWindow) init() {
 	v.action.tagArts = m.AddAction("Tag")
 	v.action.untagArts = m.AddAction("Untag")
 	v.action.deleteArts = m.AddAction("Delete")
+	v.action.runSimilarity = m.AddAction("Run similarity...")
 
 	widget := widgets.NewQWidget(nil, 0)
 	splitter := widgets.NewQSplitter2(core.Qt__Vertical, nil)
@@ -246,6 +248,14 @@ func (v *ProjWindow) init() {
 		})
 		v.action.runScript.ConnectTriggered(func(checked bool) {
 			v.doRunScript()
+		})
+		v.action.runSimilarity.ConnectTriggered(func(checked bool) {
+			_, err := BuildSimilarity(v.Proj.Store)
+			if err != nil {
+				fmt.Printf("POOP: %s\n", err)
+			} else {
+				fmt.Printf("Done.\n")
+			}
 		})
 		v.action.importJSON.ConnectTriggered(func(checked bool) {
 			v.doImportJSON()

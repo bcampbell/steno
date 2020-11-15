@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/andlabs/ui"
+	"github.com/bcampbell/steno/sim"
 	"github.com/bcampbell/steno/simrep"
-	"github.com/bcampbell/steno/simrep/sim"
 	"github.com/bcampbell/steno/store"
 	"github.com/pkg/browser"
 	"io"

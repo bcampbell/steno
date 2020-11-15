@@ -3,7 +3,7 @@ package simrep
 // generate a similarity report between two steno databases...
 
 import (
-	"github.com/bcampbell/steno/simrep/sim"
+	"github.com/bcampbell/steno/sim"
 	"github.com/bcampbell/steno/store"
 	"os"
 	"strings"
