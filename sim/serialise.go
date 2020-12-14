@@ -1,5 +1,6 @@
 package sim
 
+/*
 // routines to load/save index
 
 import (
@@ -75,3 +76,4 @@ func (index *Index) Save(filename string) error {
 	defer f.Close()
 	return index.Write(f)
 }
+*/

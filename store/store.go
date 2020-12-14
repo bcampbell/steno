@@ -230,6 +230,7 @@ func (store *Store) cleanDanglingData() error {
 }
 
 // read in articles from DB
+/*
 func (store *Store) readAllArts() (ArtList, error) {
 	db := store.db
 
@@ -383,8 +384,9 @@ func (store *Store) readAllArts() (ArtList, error) {
 	}
 	return out, nil
 }
+*/
 
-//standin - return all articles
+// standin - return IDs of all articles
 func (store *Store) AllArts() (ArtList, error) {
 
 	rows, err := store.db.Query("SELECT id FROM article")

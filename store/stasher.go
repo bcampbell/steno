@@ -1,5 +1,7 @@
 package store
 
+// TODO: Ditch this in favour of generic Batch mechanism!
+
 // Stasher is a helper for loading articles into a store.
 // It batches up stashes, to improve indexing speed.
 // TODO:

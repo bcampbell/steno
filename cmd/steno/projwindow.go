@@ -250,7 +250,10 @@ func (v *ProjWindow) init() {
 			v.doRunScript()
 		})
 		v.action.runSimilarity.ConnectTriggered(func(checked bool) {
-			_, err := BuildSimilarity(v.Proj.Store)
+			err := BuildSimilarity(v.Proj.Store, func(curr int, expect int, msg string) {
+				fmt.Printf("%s %d/%d\n", msg, curr, expect)
+
+			})
 			if err != nil {
 				fmt.Printf("POOP: %s\n", err)
 			} else {

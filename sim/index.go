@@ -15,21 +15,24 @@ import (
 
 type Hash uint64
 type DocID uint32
-type Lookup map[Hash][]DocID
+
+type Index struct {
+	// Docs holds a lists of hashes for each document.
+	Docs map[DocID][]Hash
+	// Hashes holds lists of documents for each hash.
+	Hashes map[Hash][]DocID
+}
 
 //
-type Index struct {
-	DocSource string
-	Lang      string // language used for indexing
+type Indexer struct {
+	Lang      string // language used for indexering
 	NgramSize int
 	cache     *registry.Cache
 	analyser  *analysis.Analyzer
-	lookup    Lookup
-
-	hasher hash.Hash64
+	hasher    hash.Hash64
 }
 
-// group src words into ngrams of length n.
+// ngrams groups source words into ngrams of length n.
 // Joins the words and returns each ngram as a single string.
 // eg
 // ngram(2, []string{"hello", "there", "bob"})
@@ -60,68 +63,64 @@ func UniqHashes(src []Hash) []Hash {
 	return out
 }
 
-// NewIndex creates a new Index.
-func NewIndex(ngramSize int, lang string) (*Index, error) {
+// NewIndex creates a new Index
+func NewIndex() *Index {
+	return &Index{Docs: make(map[DocID][]Hash), Hashes: make(map[Hash][]DocID)}
+}
+
+// NewIndexer creates a new Indexer.
+func NewIndexer(ngramSize int, lang string) (*Indexer, error) {
 	var err error
-	index := &Index{}
-	index.NgramSize = ngramSize
-	index.Lang = lang
-	index.cache = registry.NewCache()
+	indexer := &Indexer{}
+	indexer.NgramSize = ngramSize
+	indexer.Lang = lang
+	indexer.cache = registry.NewCache()
 	config := make(map[string]interface{})
-	index.lookup = make(Lookup)
-	index.hasher = fnv.New64a()
+	indexer.hasher = fnv.New64a()
 	switch lang {
 	case "en":
-		index.analyser, err = en.AnalyzerConstructor(config, index.cache)
+		indexer.analyser, err = en.AnalyzerConstructor(config, indexer.cache)
 	case "ru":
-		index.analyser, err = ru.AnalyzerConstructor(config, index.cache)
+		indexer.analyser, err = ru.AnalyzerConstructor(config, indexer.cache)
 	case "es":
-		index.analyser, err = es.AnalyzerConstructor(config, index.cache)
+		indexer.analyser, err = es.AnalyzerConstructor(config, indexer.cache)
 	default:
 		return nil, fmt.Errorf("Unsupported language %s", lang)
 	}
 	if err != nil {
 		return nil, err
 	}
-	return index, nil
+
+	return indexer, nil
 }
 
-// AddDoc indexes a document and adds it to the index.
-func (index *Index) AddDoc(docID DocID, txt string) {
+// IndexDoc indexes a document and adds it to the target index.
+// Assumes doc does not already exist in index!
+func (indexer *Indexer) IndexDoc(targ *Index, docID DocID, txt string) {
 	//	fmt.Fprintf(os.Stderr, "--- %d ---\n", docID)
-	hashes := index.HashString(txt)
+	hashes := indexer.HashString(txt)
 	hashes = UniqHashes(hashes)
 	for _, hash := range hashes {
-		index.lookup[hash] = append(index.lookup[hash], docID)
+		targ.Hashes[hash] = append(targ.Hashes[hash], docID)
 	}
+	targ.Docs[docID] = hashes
 }
 
 // HashString tokenises a string and returns a list of hashed ngrams.
-func (index *Index) HashString(txt string) []Hash {
-	toks := index.analyser.Analyze([]byte(txt))
+func (indexer *Indexer) HashString(txt string) []Hash {
+	toks := indexer.analyser.Analyze([]byte(txt))
 	strs := make([]string, len(toks))
 	for i, tok := range toks {
 		strs[i] = string(tok.Term)
 	}
 
-	frags := ngrams(index.NgramSize, strs)
+	frags := ngrams(indexer.NgramSize, strs)
 	hashes := make([]Hash, len(frags))
 	for i, frag := range frags {
-		index.hasher.Reset()
-		index.hasher.Write([]byte(frag))
-		hashes[i] = Hash(index.hasher.Sum64())
+		indexer.hasher.Reset()
+		indexer.hasher.Write([]byte(frag))
+		hashes[i] = Hash(indexer.hasher.Sum64())
 		//		fmt.Printf("'%s' (0x%x)\n", frag, hashes[i])
 	}
 	return hashes
-}
-
-func (index *Index) Finalise() {
-	// TODO: dedupe hash lists?
-}
-
-func (index *Index) Dump() {
-	fmt.Println(index.DocSource)
-	for hash, docIDs := range index.lookup {
-		fmt.Printf("%d 0x%x\n", len(docIDs), hash)
-	}
 }
