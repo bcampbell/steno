@@ -2,7 +2,6 @@ package store
 
 import (
 	"database/sql"
-	"github.com/bcampbell/steno/sim"
 )
 
 // Batch is a helper for performing operations upon the store.
@@ -40,7 +39,7 @@ func (batch *Batch) ClearSimilar() error {
 	return nil
 }
 
-func (batch *Batch) AddSimilar(id ArtID, matches []sim.DocMatch) error {
+func (batch *Batch) AddSimilar(id ArtID, matches []Match) error {
 	insStmt, err := batch.tx.Prepare("INSERT INTO similar(article_id, other_id, score) VALUES(?,?,?)")
 	if err != nil {
 		return err

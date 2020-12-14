@@ -57,12 +57,14 @@ func BuildSimilarity(db *store.Store, progressFn func(int, int, string)) error {
 		artID := store.ArtID(docID)
 		matches := idx.Match(hashes, 0.80)
 
-		// need to filter out self-matching!
-		filteredMatches := make([]sim.DocMatch, 0, len(matches))
+		// need to convert structs and filter out self-matches
+		filteredMatches := make([]store.Match, 0, len(matches))
 		for _, match := range matches {
-			if match.ID != docID {
-				filteredMatches = append(filteredMatches, match)
+			if match.ID == docID {
+				continue
 			}
+			converted := store.Match{ID: store.ArtID(match.ID), Score: float32(match.Score)}
+			filteredMatches = append(filteredMatches, converted)
 		}
 
 		err = batch.AddSimilar(artID, filteredMatches)

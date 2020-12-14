@@ -1,5 +1,10 @@
 package store
 
+// TODO:
+// - all reads to be performed via Iter
+// - all writes to be performed by Batch
+// - kill all the direct-manipulation functions!
+
 import (
 	"database/sql"
 	"fmt"
@@ -879,6 +884,19 @@ func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 		}
 	}
 
+	// add similar articles
+	simStmt, err := tx.Prepare("INSERT INTO similar(article_id, other_id, tag) VALUES(?, ?)")
+	if err != nil {
+		return err
+	}
+	defer simStmt.Close()
+	for _, match := range art.Similar {
+		_, err = tagStmt.Exec(art.ID, match.ID, match.Score)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -1090,6 +1108,27 @@ func (store *Store) doFetch(artIDs ArtList) ([]*Article, error) {
 			danglingAuthorCnt++
 
 		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	// Similar articles
+	rows, err = db.Query("SELECT article_id, other_id, score FROM similar" + where)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var match Match
+		var artID ArtID
+		err = rows.Scan(&artID, &match.ID, &match.Score)
+		if err != nil {
+			return nil, err
+		}
+		art := tab[artID]
+		art.Similar = append(art.Similar, match)
 	}
 	err = rows.Err()
 	if err != nil {

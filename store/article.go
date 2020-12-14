@@ -40,6 +40,11 @@ type Keyword struct {
 }
 */
 
+type Match struct {
+	ID    ArtID
+	Score float32
+}
+
 //
 type Article struct {
 	ID           ArtID // id in local sqlite db
@@ -60,6 +65,9 @@ type Article struct {
 	Section  string
 
 	Tags []string
+
+	// List of articles similar to this one.
+	Similar []Match
 
 	// a couple of tweet-specific bits
 	Retweets   int
