@@ -12,6 +12,9 @@ type Facet struct {
 	Cnt int
 }
 
+// Results holds the results of a query.
+// It holds a list of article IDs, with methods
+// to fetch full articles from the store on demand.
 type Results struct {
 	Query string
 	Arts  store.ArtList
@@ -164,7 +167,7 @@ func (res *Results) Facet(idx int) *Facet {
 
 func (res *Results) Sort(sortColumn string, sortOrder int) *Results {
 	ord := store.Ascending
-	if sortOrder != 0 {
+	if sortOrder < 0 {
 		ord = store.Descending
 	}
 

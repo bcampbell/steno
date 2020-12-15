@@ -389,19 +389,66 @@ func (v *ProjWindow) initResultsView() *widgets.QTableView {
 	tv.SetModel(v.model)
 	tv.ResizeColumnsToContents()
 
-	// cheesy autosize.
 	{
+		hdr := tv.HorizontalHeader()
+		// cheesy autosize.
 		w := tv.Width()
 		if w < 600 {
 			w = 600
 		}
-		hdr := tv.HorizontalHeader()
-		hdr.ResizeSection(0, w/3) // url
-		hdr.ResizeSection(1, w/3) // headline
-		hdr.ResizeSection(2, w/6) // published
-		hdr.ResizeSection(3, w/6) // pub
-		hdr.ResizeSection(4, w/6) // tags
+
+		// Relative weights for each column
+		weights := []int{2, 2, 1, 1, 1, 1}
+		//n := v.model.columnCount(core.NewQModelIndex())
+		total := 0
+		for _, weight := range weights {
+			total += weight
+		}
+
+		for i, weight := range weights {
+			hdr.ResizeSection(i, (w*weight)/total)
+		}
+
+		// set up sorting (by clicking on column headers)
+		hdr.SetSortIndicatorShown(true)
+		hdr.ConnectSortIndicatorChanged(func(logicalIndex int, order core.Qt__SortOrder) {
+			if v.model.results == nil {
+				return
+			}
+			field := ""
+			switch logicalIndex {
+			case 0:
+				field = "url"
+			case 1:
+				field = "headline"
+			case 2:
+				field = "published"
+			case 3:
+				field = "pub"
+			case 4:
+				field = "tags"
+			case 5:
+				field = "similar"
+			default:
+				return
+			}
+
+			var dir int
+			if order == core.Qt__DescendingOrder {
+				dir = -1
+			} else {
+				dir = 1
+			}
+
+			newResults := v.model.results.Sort(field, dir)
+			v.model.setResults(newResults)
+
+			// TODO: need to sort the original query using the current gui setting...
+
+			//			fmt.Printf("Bing. %d\n", logicalIndex)
+		})
 	}
+
 	tv.SelectionModel().ConnectSelectionChanged(func(selected *core.QItemSelection, deselected *core.QItemSelection) {
 		v.rethinkSelectionSummary()
 		v.rethinkActionStates()

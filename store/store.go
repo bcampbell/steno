@@ -1171,59 +1171,56 @@ func (store *Store) Sort(artIDs ArtList, fieldName string, order SortOrder) (Art
 		dbOrder = "DESC"
 	}
 
+	q := ""
 	dbField := ""
 	switch fieldName {
 	case "headline":
 		dbField = "headline"
+		q = fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
 	case "published":
 		dbField = "published"
+		q = fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
 	case "pub":
 		dbField = "pub"
-	case "url":
-		dbField = "canonical_url"
+		q = fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
 	case "section":
 		dbField = "section"
+		q = fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
 	case "retweets":
 		dbField = "retweet_count"
+		q = fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
 	case "favourites":
 		dbField = "favourite_count"
-	case "tags":
-		dbField = "t.tag"
-	case "keywords":
-		dbField = "kw.name"
-	case "byline":
-		dbField = "auth.name"
-	case "links":
-		dbField = "l.url"
-	default:
-		return nil, fmt.Errorf("unsupported sort field '%s'", fieldName)
-	}
-
-	var q string
-	switch dbField {
-	case "t.tag": // tags
-		q = fmt.Sprintf(
-			`SELECT DISTINCT a.id
-            FROM (article a LEFT JOIN article_tag t ON t.article_id=a.id)
-            WHERE a.id IN (%s) ORDER BY %s %s`, artIDs.StringList(), dbField, dbOrder)
-	case "kw.name": // keywords
-		q = fmt.Sprintf(
-			`SELECT DISTINCT a.id
-            FROM (article a LEFT JOIN article_keyword kw ON kw.article_id=a.id)
-            WHERE a.id IN (%s) ORDER BY %s %s`, artIDs.StringList(), dbField, dbOrder)
-	case "auth.name": // byline
-		q = fmt.Sprintf(
-			`SELECT DISTINCT a.id
-            FROM (article a LEFT JOIN article_author auth ON auth.article_id=a.id)
-            WHERE a.id IN (%s) ORDER BY %s %s`, artIDs.StringList(), dbField, dbOrder)
-	case "l.url": // links
+		q = fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
+	case "url":
 		q = fmt.Sprintf(
 			`SELECT DISTINCT a.id
             FROM (article a LEFT JOIN article_link l ON l.article_id=a.id)
-            WHERE a.id IN (%s) ORDER BY %s %s`, artIDs.StringList(), dbField, dbOrder)
+            WHERE a.id IN (%s) ORDER BY canonical_url %s`, artIDs.StringList(), dbOrder)
+	case "tags":
+		q = fmt.Sprintf(
+			`SELECT DISTINCT a.id
+            FROM (article a LEFT JOIN article_tag t ON t.article_id=a.id)
+            WHERE a.id IN (%s) ORDER BY t.tag %s`, artIDs.StringList(), dbOrder)
+	case "keywords":
+		q = fmt.Sprintf(
+			`SELECT DISTINCT a.id
+            FROM (article a LEFT JOIN article_keyword kw ON kw.article_id=a.id)
+            WHERE a.id IN (%s) ORDER BY kw.name %s`, artIDs.StringList(), dbOrder)
+	case "byline":
+		q = fmt.Sprintf(
+			`SELECT DISTINCT a.id
+            FROM (article a LEFT JOIN article_author auth ON auth.article_id=a.id)
+            WHERE a.id IN (%s) ORDER BY auth.name %s`, artIDs.StringList(), dbOrder)
+	case "similar":
+		q = fmt.Sprintf(
+			`SELECT article_id
+			FROM similar
+			WHERE article_id IN (%s)
+			GROUP BY (article_id)
+			ORDER BY COUNT(*) %s`, artIDs.StringList(), dbOrder)
 	default:
-		// the nice simple case - no joins
-		q = fmt.Sprintf("SELECT id FROM article WHERE id IN (%s) ORDER BY %s %s", artIDs.StringList(), dbField, dbOrder)
+		return nil, fmt.Errorf("unsupported sort field '%s'", fieldName)
 	}
 
 	rows, err := store.db.Query(q)

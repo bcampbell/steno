@@ -50,13 +50,15 @@ func (m *ResultsModel) headerData(section int, orientation core.Qt__Orientation,
 		return core.NewQVariant1("Pub")
 	case 4:
 		return core.NewQVariant1("Tags")
+	case 5:
+		return core.NewQVariant1("Similar")
 	}
 	return core.NewQVariant()
 }
 
 func (m *ResultsModel) columnCount(*core.QModelIndex) int {
 	//	fmt.Printf("columnCount()\n")
-	return 5
+	return 6
 }
 
 func (m *ResultsModel) rowCount(*core.QModelIndex) int {
@@ -90,6 +92,8 @@ func (m *ResultsModel) data(index *core.QModelIndex, role int) *core.QVariant {
 		return core.NewQVariant1(art.Pub)
 	case 4:
 		return core.NewQVariant1(strings.Join(art.Tags, ","))
+	case 5:
+		return core.NewQVariant1(len(art.Similar))
 	}
 	return core.NewQVariant()
 }
