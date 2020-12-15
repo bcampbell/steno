@@ -449,6 +449,7 @@ func (v *ProjWindow) initResultsView() *widgets.QTableView {
 		})
 	}
 
+	// Callbacks for selecting items in results list
 	tv.SelectionModel().ConnectSelectionChanged(func(selected *core.QItemSelection, deselected *core.QItemSelection) {
 		v.rethinkSelectionSummary()
 		v.rethinkActionStates()
@@ -468,6 +469,8 @@ func (v *ProjWindow) initResultsView() *widgets.QTableView {
 			}
 		}
 	})
+
+	// Context menu for results list
 	tv.SetContextMenuPolicy(core.Qt__CustomContextMenu) // Qt::CustomContextMenu
 	tv.ConnectCustomContextMenuRequested(func(pt *core.QPoint) {
 		row := tv.RowAt(pt.Y())
@@ -489,6 +492,22 @@ func (v *ProjWindow) initResultsView() *widgets.QTableView {
 			menu.Popup(tv.MapToGlobal(pt), nil)
 		}
 	})
+
+	tv.ConnectDoubleClicked(func(index *core.QModelIndex) {
+		row := index.Row()
+		var art *store.Article
+		if row >= 0 && row < len(v.model.results.Arts) {
+			art = v.model.results.Art(row)
+		}
+		if art != nil {
+			// double-clicked on an valid article
+			w := NewSimWindow(nil, 0)
+			w.SetProject(v.Proj)
+			w.SetArticle(art)
+			w.Show()
+		}
+	})
+
 	return tv
 }
 
