@@ -1321,6 +1321,14 @@ func (store *Store) IterateAllArts() *Iter {
 	}
 }
 
+// IterateArts returns an Iter which steps over each article in turn
+func (store *Store) IterateArts(arts ...ArtID) *Iter {
+	return &Iter{
+		store: store,
+		arts:  arts,
+	}
+}
+
 func (store *Store) IterateTaggedArts() *Iter {
 	it := &Iter{
 		store: store,
