@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bcampbell/steno/sim"
 	"github.com/bcampbell/steno/store"
 	"strings"
@@ -9,7 +10,7 @@ import (
 const minWords = 10
 
 // BuildSimilarity populates the 'similar' table in the store.
-func BuildSimilarity(db *store.Store, progressFn func(int, int, string)) error {
+func BuildSimilarity(db *store.Store, progressFn func(int, int, string) bool) error {
 
 	// part one - build up index of all documents in the store
 
@@ -37,7 +38,10 @@ func BuildSimilarity(db *store.Store, progressFn func(int, int, string)) error {
 		//			progFunc(cnt, tot)
 		//		}
 		if progressFn != nil {
-			progressFn(cnt, tot, "indexing")
+			cancel := progressFn(cnt, tot, "Building Index")
+			if cancel {
+				return fmt.Errorf("Canceled")
+			}
 		}
 	}
 	if it.Err() != nil {
@@ -73,7 +77,11 @@ func BuildSimilarity(db *store.Store, progressFn func(int, int, string)) error {
 			return err
 		}
 		if progressFn != nil {
-			progressFn(cnt, tot, "matching")
+			cancel := progressFn(cnt, tot, "Calculating matches")
+			if cancel {
+				batch.Rollback()
+				return fmt.Errorf("Canceled")
+			}
 		}
 		cnt++
 	}

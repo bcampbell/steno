@@ -250,10 +250,29 @@ func (v *ProjWindow) init() {
 			v.doRunScript()
 		})
 		v.action.runSimilarity.ConnectTriggered(func(checked bool) {
-			err := BuildSimilarity(v.Proj.Store, func(curr int, expect int, msg string) {
-				fmt.Printf("%s %d/%d\n", msg, curr, expect)
 
-			})
+			button := widgets.QMessageBox_Question(nil, "Build similarity data",
+				"This can take a few minutes. Are you sure you want to continue?", widgets.QMessageBox__Ok|widgets.QMessageBox__Cancel, widgets.QMessageBox__Ok)
+			if button != widgets.QMessageBox__Ok {
+				return // cancelled.
+			}
+
+			progressDlg := widgets.NewQProgressDialog(nil, core.Qt__Widget)
+			progressDlg.SetModal(true)
+			progressDlg.SetMinimumDuration(0)
+			progressDlg.SetWindowModality(core.Qt__ApplicationModal)
+			progressDlg.SetWindowTitle("Building similarity data...")
+			progFn := func(currCnt int, expectedCnt int, msg string) bool {
+				progressDlg.SetRange(0, expectedCnt)
+				progressDlg.SetValue(currCnt)
+
+				txt := fmt.Sprintf("%s %d/%d", msg, currCnt, expectedCnt)
+				progressDlg.SetLabelText(txt)
+				return progressDlg.WasCanceled()
+			}
+
+			err := BuildSimilarity(v.Proj.Store, progFn)
+			progressDlg.Hide()
 			if err != nil {
 				fmt.Printf("POOP: %s\n", err)
 			} else {
