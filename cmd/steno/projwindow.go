@@ -28,12 +28,13 @@ type ProjWindow struct {
 
 	// currently-shown query results stored here.
 	// (each window has it's own results)
+	// TODO: just keep *Results here. Hide ResultsModel inside resultsview.go
 	model *ResultsModel
 
 	// controls we want to keep track of
 	c struct {
 		query         *widgets.QLineEdit
-		resultView    *widgets.QTableView
+		resultView    *ResultsView
 		resultSummary *widgets.QLabel
 		//
 		selSummary *widgets.QLabel
@@ -396,77 +397,10 @@ func (v *ProjWindow) doRunScript() {
 }
 
 // set up the tableview for displaying the list of articles.
-func (v *ProjWindow) initResultsView() *widgets.QTableView {
+func (v *ProjWindow) initResultsView() *ResultsView {
 
-	tv := widgets.NewQTableView(nil)
-	tv.SetShowGrid(false)
-	tv.SetSelectionBehavior(widgets.QAbstractItemView__SelectRows)
-	tv.SetSelectionMode(widgets.QAbstractItemView__ExtendedSelection)
-	tv.VerticalHeader().SetVisible(false)
-	//tv.HorizontalHeader().SetSectionResizeMode(widgets.QHeaderView__Stretch)
-
-	tv.SetModel(v.model)
-	tv.ResizeColumnsToContents()
-
-	{
-		hdr := tv.HorizontalHeader()
-		// cheesy autosize.
-		w := tv.Width()
-		if w < 600 {
-			w = 600
-		}
-
-		// Relative weights for each column
-		weights := []int{2, 2, 1, 1, 1, 1}
-		//n := v.model.columnCount(core.NewQModelIndex())
-		total := 0
-		for _, weight := range weights {
-			total += weight
-		}
-
-		for i, weight := range weights {
-			hdr.ResizeSection(i, (w*weight)/total)
-		}
-
-		// set up sorting (by clicking on column headers)
-		hdr.SetSortIndicatorShown(true)
-		hdr.ConnectSortIndicatorChanged(func(logicalIndex int, order core.Qt__SortOrder) {
-			if v.model.results == nil {
-				return
-			}
-			field := ""
-			switch logicalIndex {
-			case 0:
-				field = "url"
-			case 1:
-				field = "headline"
-			case 2:
-				field = "published"
-			case 3:
-				field = "pub"
-			case 4:
-				field = "tags"
-			case 5:
-				field = "similar"
-			default:
-				return
-			}
-
-			var dir int
-			if order == core.Qt__DescendingOrder {
-				dir = -1
-			} else {
-				dir = 1
-			}
-
-			newResults := v.model.results.Sort(field, dir)
-			v.model.setResults(newResults)
-
-			// TODO: need to sort the original query using the current gui setting...
-
-			//			fmt.Printf("Bing. %d\n", logicalIndex)
-		})
-	}
+	tv := NewResultsView(nil)
+	tv.SetResultsModel(v.model)
 
 	// Callbacks for selecting items in results list
 	tv.SelectionModel().ConnectSelectionChanged(func(selected *core.QItemSelection, deselected *core.QItemSelection) {
