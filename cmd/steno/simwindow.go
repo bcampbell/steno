@@ -157,7 +157,7 @@ func (v *SimWindow) SetArticle(art *store.Article) {
 }
 
 func (v *SimWindow) rethinkWindowTitle() {
-	title := "Steno"
+	title := "Similar articles"
 	/*	if v.proj != nil {
 			title += " - " + filepath.Base(v.proj.Store.Filename())
 		}
@@ -189,37 +189,7 @@ func (v *SimWindow) initSimListView() *widgets.QTableView {
 		// set up sorting (by clicking on column headers)
 		hdr.SetSortIndicatorShown(true)
 		hdr.ConnectSortIndicatorChanged(func(logicalIndex int, order core.Qt__SortOrder) {
-			/*
-				field := ""
-				switch logicalIndex {
-				case 0:
-					field = "url"
-				case 1:
-					field = "headline"
-				case 2:
-					field = "published"
-				case 3:
-					field = "pub"
-				case 4:
-					field = "tags"
-				case 5:
-					field = "similar"
-				default:
-					return
-				}
-
-				var dir int
-				if order == core.Qt__DescendingOrder {
-					dir = -1
-				} else {
-					dir = 1
-				}
-
-				newResults := v.model.results.Sort(field, dir)
-				v.model.setResults(newResults)
-
-				// TODO: need to sort the original query using the current gui setting...
-			*/
+			// TODO
 		})
 	}
 
@@ -231,62 +201,24 @@ func (v *SimWindow) initSimListView() *widgets.QTableView {
 
 			rawHTML := htmlDiff(v.art, otherArt)
 			v.c.otherView.SetHtml(rawHTML)
-
-			/*
-				artIdx := v.model.Arts[current.Row()]
-				arts, err := v.proj.Store.Fetch(artIdx)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Err: %s\n", err)
-					return
-				} else {
-					art := arts[0]
-					rawHTML, _ := HTMLArt(art)
-					v.c.artView.SetHtml(rawHTML)
-				}
-			*/
 		}
 	})
 
-	/*
-		// Context menu for results list
-		tv.SetContextMenuPolicy(core.Qt__CustomContextMenu) // Qt::CustomContextMenu
-		tv.ConnectCustomContextMenuRequested(func(pt *core.QPoint) {
-			row := tv.RowAt(pt.Y())
-			//col := tv.ColumnAt(pt.X())
-			var focusArt *store.Article
-			if row >= 0 && row < len(v.model.results.Arts) {
-				// clicked on an valid article
-				focusArt = v.model.results.Art(row)
-			}
+	tv.ConnectDoubleClicked(func(index *core.QModelIndex) {
+		row := index.Row()
+		var art *store.Article
+		if row >= 0 && row < len(v.model.arts) {
+			art = v.model.arts[row]
+		}
 
-			if focusArt != nil {
-				menu := widgets.NewQMenu(tv)
-				action := menu.AddAction("Open " + focusArt.CanonicalURL)
-				action.ConnectTriggered(func(checked bool) {
-					u := core.NewQUrl3(focusArt.CanonicalURL, core.QUrl__TolerantMode)
-					gui.QDesktopServices_OpenUrl(u)
-				})
-				menu.Popup(tv.MapToGlobal(pt), nil)
-			}
-		})
-	*/
-
-	/*
-		tv.ConnectDoubleClicked(func(index *core.QModelIndex) {
-			row := index.Row()
-			var art *store.Article
-			if row >= 0 && row < len(v.model.results.Arts) {
-				art = v.model.results.Art(row)
-			}
-			if art != nil {
-				// double-clicked on an valid article
-				w := NewSimWindow(nil, 0)
-				w.SetProject(v.proj)
-				w.SetArticle(art)
-				w.Show()
-			}
-		})
-	*/
+		if art != nil {
+			// double-clicked on an valid article
+			w := NewSimWindow(nil, 0)
+			w.SetProject(v.proj)
+			w.SetArticle(art)
+			w.Show()
+		}
+	})
 	return tv
 }
 
@@ -323,26 +255,27 @@ func (m *SimListModel) headerData(section int, orientation core.Qt__Orientation,
 
 	switch section {
 	case 0:
-		return core.NewQVariant1("URL")
-	case 1:
-		return core.NewQVariant1("Headline")
-	case 2:
-		return core.NewQVariant1("Published")
-	case 3:
-		return core.NewQVariant1("Pub")
-	case 4:
-		return core.NewQVariant1("Tags")
-	case 5:
-		return core.NewQVariant1("Similar")
-	case 6:
 		return core.NewQVariant1("Score")
+	case 1:
+		return core.NewQVariant1("URL")
+	case 2:
+		return core.NewQVariant1("Headline")
+	case 3:
+		return core.NewQVariant1("Published")
+		/*	case 3:
+				return core.NewQVariant1("Pub")
+			case 4:
+				return core.NewQVariant1("Tags")
+			case 5:
+				return core.NewQVariant1("Similar")
+		*/
 	}
 	return core.NewQVariant()
 }
 
 func (m *SimListModel) columnCount(*core.QModelIndex) int {
 	//	fmt.Printf("columnCount()\n")
-	return 7
+	return 4
 }
 
 func (m *SimListModel) rowCount(*core.QModelIndex) int {
@@ -360,19 +293,13 @@ func (m *SimListModel) data(index *core.QModelIndex, role int) *core.QVariant {
 	//	fmt.Printf("data(): %d %d\n", rowNum, index.Column())
 	switch index.Column() {
 	case 0:
-		return core.NewQVariant1(art.CanonicalURL)
-	case 1:
-		return core.NewQVariant1(art.Headline)
-	case 2:
-		return core.NewQVariant1(art.Published)
-	case 3:
-		return core.NewQVariant1(art.Pub)
-	case 4:
-		return core.NewQVariant1(strings.Join(art.Tags, ","))
-	case 5:
-		return core.NewQVariant1(len(art.Similar))
-	case 6:
 		return core.NewQVariant1(m.scores[rowNum])
+	case 1:
+		return core.NewQVariant1(art.CanonicalURL)
+	case 2:
+		return core.NewQVariant1(art.Headline)
+	case 3:
+		return core.NewQVariant1(art.Published)
 	}
 	return core.NewQVariant()
 }

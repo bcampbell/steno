@@ -10,7 +10,7 @@ import (
 const minWords = 10
 
 // BuildSimilarity populates the 'similar' table in the store.
-func BuildSimilarity(db *store.Store, progressFn func(int, int, string) bool) error {
+func BuildSimilarity(db *store.Store, progressFn func(int, int, string) bool, threshold float64) error {
 
 	// part one - build up index of all documents in the store
 
@@ -59,7 +59,7 @@ func BuildSimilarity(db *store.Store, progressFn func(int, int, string) bool) er
 	cnt = 0
 	for docID, hashes := range idx.Docs {
 		artID := store.ArtID(docID)
-		matches := idx.Match(hashes, 0.80)
+		matches := idx.Match(hashes, threshold)
 
 		// need to convert structs and filter out self-matches
 		filteredMatches := make([]store.Match, 0, len(matches))

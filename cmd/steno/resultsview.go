@@ -14,6 +14,7 @@ type ResultsView struct {
 	model *ResultsModel
 }
 
+// TODO: use this to drive ResultsModel too
 var resultColumns = []struct {
 	name   string
 	weight int

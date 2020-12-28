@@ -251,11 +251,23 @@ func (v *ProjWindow) init() {
 			v.doRunScript()
 		})
 		v.action.runSimilarity.ConnectTriggered(func(checked bool) {
+			/*
+				button := widgets.QMessageBox_Question(nil, "Build similarity data",
+					"This can take a few minutes. Are you sure you want to continue?", widgets.QMessageBox__Ok|widgets.QMessageBox__Cancel, widgets.QMessageBox__Ok)
+				if button != widgets.QMessageBox__Ok {
+					return // cancelled.
+				}
+			*/
+			var ok bool
+			label := `Matches below this threshold will be are discarded.
 
-			button := widgets.QMessageBox_Question(nil, "Build similarity data",
-				"This can take a few minutes. Are you sure you want to continue?", widgets.QMessageBox__Ok|widgets.QMessageBox__Cancel, widgets.QMessageBox__Ok)
-			if button != widgets.QMessageBox__Ok {
-				return // cancelled.
+0.0 = no match, 1.0 = contained entirely
+
+NOTE: this might take a few minutes`
+
+			threshold := widgets.QInputDialog_GetDouble(v, "Enter match threshold", label, 0.75, 0.0, 1.0, 2, &ok, 0)
+			if !ok {
+				return // cancelled
 			}
 
 			progressDlg := widgets.NewQProgressDialog(nil, core.Qt__Widget)
@@ -271,8 +283,7 @@ func (v *ProjWindow) init() {
 				progressDlg.SetLabelText(txt)
 				return progressDlg.WasCanceled()
 			}
-
-			err := BuildSimilarity(v.Proj.Store, progFn)
+			err := BuildSimilarity(v.Proj.Store, progFn, threshold)
 			progressDlg.Hide()
 			if err != nil {
 				fmt.Printf("POOP: %s\n", err)
