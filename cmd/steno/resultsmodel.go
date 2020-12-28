@@ -56,24 +56,6 @@ func (m *ResultsModel) headerData(section int, orientation core.Qt__Orientation,
 			return core.NewQVariant1("Similar")
 		}
 		return core.NewQVariant()
-	} else if role == int(core.Qt__SizeHintRole) {
-		//		fmt.Printf("bing %d %d %d\n", section, int(orientation), role)
-		switch section {
-		case 0:
-			return core.NewQVariant1(core.NewQSize2(1500, 20))
-		case 1:
-			return core.NewQVariant1(core.NewQSize2(1500, 20))
-		case 2:
-			return core.NewQVariant1(core.NewQSize2(500, 20))
-		case 3:
-			return core.NewQVariant1(core.NewQSize2(500, 20))
-		case 4:
-			return core.NewQVariant1(core.NewQSize2(500, 20))
-		case 5:
-			return core.NewQVariant1(core.NewQSize2(200, 20))
-		}
-		return core.NewQVariant()
-
 	} else {
 		return m.HeaderDataDefault(section, orientation, role)
 	}

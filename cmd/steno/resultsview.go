@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/therecipe/qt/core"
+	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 )
 
@@ -13,7 +14,23 @@ type ResultsView struct {
 	model *ResultsModel
 }
 
+var resultColumns = []struct {
+	name   string
+	weight int
+}{
+	{"url", 10},
+	{"headline", 10},
+	{"published", 3},
+	{"pub", 3},
+	{"tags", 3},
+	{"similar", 1},
+}
+
 func (tv *ResultsView) init() {
+
+	// override member functions
+	tv.ConnectSizeHintForColumn(tv.sizeHintForColumn)
+	tv.ConnectResizeEvent(tv.resizeEvent)
 
 	tv.SetShowGrid(false)
 	tv.SetSelectionBehavior(widgets.QAbstractItemView__SelectRows)
@@ -24,52 +41,18 @@ func (tv *ResultsView) init() {
 
 	{
 		hdr := tv.HorizontalHeader()
-		/*
-			// cheesy autosize.
-			w := tv.Width()
-			if w < 600 {
-				w = 600
-			}
-
-			// Relative weights for each column
-			weights := []int{2, 2, 1, 1, 1, 1}
-			//n := v.model.columnCount(core.NewQModelIndex())
-			total := 0
-			for _, weight := range weights {
-				total += weight
-			}
-
-			for i, weight := range weights {
-				hdr.ResizeSection(i, (w*weight)/total)
-			}
-		*/
 		hdr.SetCascadingSectionResizes(true)
 		hdr.SetStretchLastSection(true)
-		//hdr.SetSectionResizeMode(widgets.QHeaderView__ResizeToContents)
-		//hdr.SetSectionResizeMode(widgets.QHeaderView__Stretch)
 		// set up sorting (by clicking on column headers)
 		hdr.SetSortIndicatorShown(true)
 		hdr.ConnectSortIndicatorChanged(func(logicalIndex int, order core.Qt__SortOrder) {
 			if tv.model.results == nil {
 				return
 			}
-			field := ""
-			switch logicalIndex {
-			case 0:
-				field = "url"
-			case 1:
-				field = "headline"
-			case 2:
-				field = "published"
-			case 3:
-				field = "pub"
-			case 4:
-				field = "tags"
-			case 5:
-				field = "similar"
-			default:
+			if logicalIndex < 0 || logicalIndex > len(resultColumns) {
 				return
 			}
+			field := resultColumns[logicalIndex].name
 
 			var dir int
 			if order == core.Qt__DescendingOrder {
@@ -88,9 +71,30 @@ func (tv *ResultsView) init() {
 	}
 }
 
+// sizeHintForColumn provides hints used by ResizeColumnsToContents()
+func (tv *ResultsView) sizeHintForColumn(col int) int {
+	if col < 0 || col > len(resultColumns) {
+		return -1
+	}
+	var total int = 0
+	for _, def := range resultColumns {
+		total = total + def.weight
+	}
+	weight := resultColumns[col].weight
+	totalw := tv.Size().Width()
+	w := (weight * totalw) / total
+
+	return w
+}
+
 //TODO: change this to SetResults(results *Results)
 // and manage the ResultsModel internally
 func (tv *ResultsView) SetResultsModel(model *ResultsModel) {
 	tv.model = model
 	tv.SetModel(model)
+}
+
+func (tv *ResultsView) resizeEvent(ev *gui.QResizeEvent) {
+	// TODO: preserve existing column width ratios!
+	tv.ResizeColumnsToContents()
 }
