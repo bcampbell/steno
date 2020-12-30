@@ -2,12 +2,11 @@ package main
 
 import (
 	"github.com/therecipe/qt/core"
-	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 )
 
 type ResultsView struct {
-	widgets.QTableView
+	ProportionalTableView
 
 	_ func() `constructor:"init"`
 
@@ -31,7 +30,6 @@ func (tv *ResultsView) init() {
 
 	// override member functions
 	tv.ConnectSizeHintForColumn(tv.sizeHintForColumn)
-	tv.ConnectResizeEvent(tv.resizeEvent)
 
 	tv.SetShowGrid(false)
 	tv.SetSelectionBehavior(widgets.QAbstractItemView__SelectRows)
@@ -42,8 +40,6 @@ func (tv *ResultsView) init() {
 
 	{
 		hdr := tv.HorizontalHeader()
-		hdr.SetCascadingSectionResizes(true)
-		hdr.SetStretchLastSection(true)
 		// set up sorting (by clicking on column headers)
 		hdr.SetSortIndicatorShown(true)
 		hdr.ConnectSortIndicatorChanged(func(logicalIndex int, order core.Qt__SortOrder) {
@@ -93,9 +89,4 @@ func (tv *ResultsView) sizeHintForColumn(col int) int {
 func (tv *ResultsView) SetResultsModel(model *ResultsModel) {
 	tv.model = model
 	tv.SetModel(model)
-}
-
-func (tv *ResultsView) resizeEvent(ev *gui.QResizeEvent) {
-	// TODO: preserve existing column width ratios!
-	tv.ResizeColumnsToContents()
 }

@@ -29,9 +29,9 @@ type SimWindow struct {
 
 	// controls we want to keep track of
 	c struct {
-		resultView *widgets.QTableView
-		artView    *widgets.QTextBrowser
-		otherView  *widgets.QTextBrowser
+		//		resultView *ProportionalTableView
+		artView   *widgets.QTextBrowser
+		otherView *widgets.QTextBrowser
 	}
 
 	// actions
@@ -125,6 +125,7 @@ func (v *SimWindow) init() {
 func (v *SimWindow) SetProject(proj *Project) {
 	v.proj = proj
 	v.proj.attachView(v)
+	v.rethinkWindowTitle()
 }
 
 func (v *SimWindow) SetArticle(art *store.Article) {
@@ -157,7 +158,7 @@ func (v *SimWindow) SetArticle(art *store.Article) {
 }
 
 func (v *SimWindow) rethinkWindowTitle() {
-	title := "Similar articles"
+	title := "Steno - compare articles"
 	/*	if v.proj != nil {
 			title += " - " + filepath.Base(v.proj.Store.Filename())
 		}
@@ -172,9 +173,9 @@ func (v *SimWindow) rethinkActionStates() {
 
 // Set up the table for displaying the list of similar articles.
 // TODO: mostly shared by projectwindow - factor out a results widget instead?
-func (v *SimWindow) initSimListView() *widgets.QTableView {
+func (v *SimWindow) initSimListView() *ProportionalTableView {
 
-	tv := widgets.NewQTableView(nil)
+	tv := NewProportionalTableView(nil)
 	tv.SetShowGrid(false)
 	tv.SetSelectionBehavior(widgets.QAbstractItemView__SelectRows)
 	//	tv.SetSelectionMode(widgets.QAbstractItemView__ExtendedSelection)
