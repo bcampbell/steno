@@ -131,7 +131,9 @@ func (store *Store) createSchema() error {
 	if err != nil {
 		return err
 	}
-	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (6)`)
+
+	// Set schema to current version
+	_, err = store.db.Exec(`INSERT INTO version (ver) VALUES (7)`)
 	if err != nil {
 		return err
 	}

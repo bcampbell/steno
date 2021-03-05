@@ -885,7 +885,7 @@ func (store *Store) doStash(tx *sql.Tx, art *Article) error {
 	}
 
 	// add similar articles
-	simStmt, err := tx.Prepare("INSERT INTO similar(article_id, other_id, tag) VALUES(?, ?)")
+	simStmt, err := tx.Prepare("INSERT INTO similar(article_id, other_id, score) VALUES(?, ?, ?)")
 	if err != nil {
 		return err
 	}
