@@ -58,6 +58,7 @@ type ProjWindow struct {
 		slurp         *widgets.QAction
 		runScript     *widgets.QAction
 		importJSON    *widgets.QAction
+		exportArts    *widgets.QAction
 		tagArts       *widgets.QAction
 		untagArts     *widgets.QAction
 		deleteArts    *widgets.QAction
@@ -121,6 +122,7 @@ func (v *ProjWindow) init() {
 	v.action.slurp = m.AddAction("Slurp...")
 	v.action.runScript = m.AddAction("Run script...")
 	v.action.importJSON = m.AddAction("Import JSON...")
+	v.action.exportArts = m.AddAction("Export CSV...")
 	v.action.tagArts = m.AddAction("Tag")
 	v.action.untagArts = m.AddAction("Untag")
 	v.action.deleteArts = m.AddAction("Delete")
@@ -293,6 +295,9 @@ NOTE: this might take a few minutes`
 		})
 		v.action.importJSON.ConnectTriggered(func(checked bool) {
 			v.doImportJSON()
+		})
+		v.action.exportArts.ConnectTriggered(func(checked bool) {
+			v.doExportArts()
 		})
 
 		v.action.close.ConnectTriggered(func(checked bool) {
@@ -549,9 +554,11 @@ func (v *ProjWindow) rethinkActionStates() {
 	v.action.newWindow.SetEnabled(haveProj)
 	v.action.slurp.SetEnabled(haveProj)
 	v.action.importJSON.SetEnabled(haveProj)
+	v.action.exportArts.SetEnabled(haveProj && haveSel)
 	v.action.tagArts.SetEnabled(haveProj && haveSel && haveTxt)
 	v.action.untagArts.SetEnabled(haveProj && haveSel && haveTxt)
 	v.action.deleteArts.SetEnabled(haveProj && haveSel)
+	v.action.runSimilarity.SetEnabled(haveProj)
 }
 
 func (v *ProjWindow) doOpenProject() {
@@ -655,4 +662,43 @@ func (v *ProjWindow) doImportJSON() {
 		ids = append(ids, art.ID)
 	}
 
+}
+
+// reportError() shows an error message to the user via a dialog box, and
+// logs it to whatever logging setup we've got set up.
+func (v *ProjWindow) reportError(title string, message string, err error) {
+	if title == "" {
+		title = "Error"
+	}
+	if message == "" {
+		message = err.Error()
+	}
+
+	widgets.QMessageBox_Warning(nil, title, message, widgets.QMessageBox__Ok, widgets.QMessageBox__Ok)
+	dbug.Printf("%s\n", message)
+}
+
+func (v *ProjWindow) doExportArts() {
+	fileDialog := widgets.NewQFileDialog2(v, "Export to CSV...", "", "")
+	fileDialog.SetAcceptMode(widgets.QFileDialog__AcceptSave)
+	//	fileDialog.SetFileMode(widgets.QFileDialog__ExistingFile)
+	//	var mimeTypes = []string{"text/html", "text/plain"}
+	//	fileDialog.SetMimeTypeFilters(mimeTypes)
+	if fileDialog.Exec() != int(widgets.QDialog__Accepted) {
+		return
+	}
+	filename := fileDialog.SelectedFiles()[0]
+
+	// export selected arts to text file.
+	outFile, err := os.Create(filename)
+	if err != nil {
+		v.reportError("Export", "", err)
+		return
+	}
+	defer outFile.Close()
+
+	err = v.Proj.ExportToCSV(v.selectedArts(), outFile)
+	if err != nil {
+		v.reportError("Export to CSV", "", err)
+	}
 }

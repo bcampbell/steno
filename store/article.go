@@ -258,6 +258,8 @@ func (art *Article) FieldString(fieldName string) string {
 		return art.Pub
 	case "byline":
 		return art.Byline
+	case "content_text":
+		return art.PlainTextContent()
 	default:
 		return ""
 	}

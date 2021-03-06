@@ -3,6 +3,9 @@ package main
 // NOTE: this stuff should be gui-agnostic, and could be moved into non-GUI package.
 
 import (
+	"encoding/csv"
+	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -115,4 +118,62 @@ func (proj *Project) DoDeleteArts(artIDs store.ArtList) {
 	}
 
 	proj.ArtsDeleted(artIDs)
+}
+
+func (proj *Project) ExportToText(artIDs store.ArtList, out io.Writer, plainText bool) error {
+	iter := proj.Store.IterateArts(artIDs...)
+	for iter.Next() {
+		art := iter.Cur()
+
+		fmt.Fprintf(out, "Headline: %s\n", art.Headline)
+		fmt.Fprintf(out, "Published: %s\n", art.Published)
+		fmt.Fprintf(out, "Byline: %s\n", art.BylineString())
+		fmt.Fprintf(out, "Tags: %s\n", art.TagsString())
+		fmt.Fprintf(out, "Keywords: %s\n", art.KeywordsString())
+		fmt.Fprintf(out, "URL: %s\n", art.URL())
+		fmt.Fprintf(out, "--------------------\n")
+		fmt.Fprintf(out, art.PlainTextContent())
+		fmt.Fprintf(out, "\n--------------------\n\n")
+	}
+	err := iter.Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (proj *Project) ExportToCSV(artIDs store.ArtList, out io.Writer) error {
+	w := csv.NewWriter(out)
+
+	fields := []string{"url", "headline", "published", "content_text", "section", "keywords"}
+
+	err := w.Write(fields)
+	if err != nil {
+		return err
+	}
+	iter := proj.Store.IterateArts(artIDs...)
+	for iter.Next() {
+		art := iter.Cur()
+
+		row := make([]string, 0, len(fields))
+		for _, field := range fields {
+			row = append(row, art.FieldString(field))
+		}
+		if w.Write(row) != nil {
+			break
+		}
+	}
+	w.Flush()
+
+	// any errors while reading?
+	err = iter.Err()
+	if err != nil {
+		return err
+	}
+	// any errors while writing?
+	err = w.Error()
+	if err != nil {
+		return err
+	}
+	return nil
 }
