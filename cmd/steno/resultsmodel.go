@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bcampbell/steno/steno"
+	"github.com/bcampbell/steno/store"
 	"github.com/therecipe/qt/core"
 	//"github.com/therecipe/qt/widgets"
 )
@@ -32,6 +33,26 @@ func (m *ResultsModel) setResults(r *steno.Results) {
 	m.BeginResetModel()
 	m.results = r
 	m.EndResetModel()
+}
+
+// Tell the model that some articles in the store have changed (they may
+// or may not be articles in the current model!)
+func (m *ResultsModel) artsChanged(changed store.ArtList) {
+	lookup := map[store.ArtID]struct{}{}
+	for _, artID := range changed {
+		lookup[artID] = struct{}{}
+	}
+	// flush the changed articles from the result cache
+	m.results.Dehydrate(changed)
+
+	nColumns := m.columnCount(core.NewQModelIndex())
+	for rowIdx, artID := range m.results.Arts {
+		// emit dataChanged
+		if _, got := lookup[artID]; got {
+			//fmt.Printf("dataChanged artID=%d row=%d\n", artID, rowIdx)
+			m.DataChanged(m.Index(rowIdx, 0, core.NewQModelIndex()), m.Index(rowIdx, nColumns, core.NewQModelIndex()), []int{int(core.Qt__DisplayRole)})
+		}
+	}
 }
 
 func (m *ResultsModel) headerData(section int, orientation core.Qt__Orientation, role int) *core.QVariant {

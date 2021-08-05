@@ -67,8 +67,8 @@ type ProjWindow struct {
 }
 
 // View implementation
-func (v *ProjWindow) OnArtsModified(store.ArtList) {
-	v.rerun()
+func (v *ProjWindow) OnArtsModified(modified store.ArtList) {
+	v.model.artsChanged(modified)
 }
 
 func (v *ProjWindow) OnArtsAdded(store.ArtList) {

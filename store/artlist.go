@@ -5,9 +5,8 @@ import (
 	"strings"
 )
 
+// ArtList is a list of article IDs from a Store.
 type ArtList []ArtID
-
-//type ArtSet map[ArtID]struct{}{}
 
 func (arts ArtList) StringList() string {
 	frags := make([]string, len(arts))

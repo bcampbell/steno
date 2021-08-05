@@ -129,6 +129,15 @@ func (res *Results) FindReverse(artIdx int, needle string) int {
 	return -1
 }
 
+// Dehydrate removes artIDs from cache, forcing them to be fetched from db next time.
+func (res *Results) Dehydrate(artIDs store.ArtList) {
+	for _, artID := range artIDs {
+		if _, got := res.hydrated[artID]; got {
+			delete(res.hydrated, artID)
+		}
+	}
+}
+
 // TODO: make db access explict! + proper error handling
 func (res *Results) Art(idx int) *store.Article {
 	if idx < 0 || idx >= len(res.Arts) {
@@ -140,10 +149,13 @@ func (res *Results) Art(idx int) *store.Article {
 	}
 
 	artID := res.Arts[idx]
+
 	art, got := res.hydrated[artID]
 	if got {
+		//fmt.Printf("Art %d from cache\n", artID)
 		return art
 	}
+	//fmt.Printf("Art %d from db\n", artID)
 	// not in cache - fetch it!
 
 	//dbug.Printf("fetch art %d\n", artID)
