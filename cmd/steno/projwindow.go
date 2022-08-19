@@ -58,6 +58,7 @@ type ProjWindow struct {
 		slurp         *widgets.QAction
 		runScript     *widgets.QAction
 		importJSON    *widgets.QAction
+		exportJSON    *widgets.QAction
 		exportArts    *widgets.QAction
 		tagArts       *widgets.QAction
 		untagArts     *widgets.QAction
@@ -122,6 +123,7 @@ func (v *ProjWindow) init() {
 	v.action.slurp = m.AddAction("Slurp...")
 	v.action.runScript = m.AddAction("Run script...")
 	v.action.importJSON = m.AddAction("Import JSON...")
+	v.action.exportJSON = m.AddAction("Export JSON...")
 	v.action.exportArts = m.AddAction("Export CSV...")
 	v.action.tagArts = m.AddAction("Tag")
 	v.action.untagArts = m.AddAction("Untag")
@@ -295,6 +297,9 @@ NOTE: this might take a few minutes`
 		})
 		v.action.importJSON.ConnectTriggered(func(checked bool) {
 			v.doImportJSON()
+		})
+		v.action.exportJSON.ConnectTriggered(func(checked bool) {
+			v.doExportJSON()
 		})
 		v.action.exportArts.ConnectTriggered(func(checked bool) {
 			v.doExportArts()
@@ -662,6 +667,32 @@ func (v *ProjWindow) doImportJSON() {
 		ids = append(ids, art.ID)
 	}
 
+}
+
+func (v *ProjWindow) doExportJSON() {
+	fileDialog := widgets.NewQFileDialog2(v, "Export to JSON...", "", "")
+	fileDialog.SetAcceptMode(widgets.QFileDialog__AcceptSave)
+	//	fileDialog.SetFileMode(widgets.QFileDialog__ExistingFile)
+	//	var mimeTypes = []string{"text/html", "text/plain"}
+	//	fileDialog.SetMimeTypeFilters(mimeTypes)
+	if fileDialog.Exec() != int(widgets.QDialog__Accepted) {
+		return
+	}
+	filename := fileDialog.SelectedFiles()[0]
+
+	// export selected arts to JSON file.
+	outFile, err := os.Create(filename)
+	if err != nil {
+		v.reportError("Export", "", err)
+		return
+	}
+	defer outFile.Close()
+
+	err = ExportToJSON(v.Proj.Store, v.selectedArts(), outFile)
+	if err != nil {
+		v.reportError("Export to JSON", "", err)
+	}
+	// TODO: Close/Flush and check error!
 }
 
 // reportError() shows an error message to the user via a dialog box, and
