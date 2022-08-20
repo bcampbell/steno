@@ -556,7 +556,9 @@ func (v *ProjWindow) rethinkActionStates() {
 
 	v.action.newWindow.SetEnabled(haveProj)
 	v.action.slurp.SetEnabled(haveProj)
+	v.action.runScript.SetEnabled(haveProj)
 	v.action.importJSON.SetEnabled(haveProj)
+	v.action.exportJSON.SetEnabled(haveProj && haveSel)
 	v.action.exportArts.SetEnabled(haveProj && haveSel)
 	v.action.tagArts.SetEnabled(haveProj && haveSel && haveTxt)
 	v.action.untagArts.SetEnabled(haveProj && haveSel && haveTxt)
