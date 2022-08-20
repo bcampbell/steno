@@ -2,12 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	//"fmt"
 	"github.com/bcampbell/scrapeomat/slurp"
 	"github.com/bcampbell/steno/store"
 	"io"
-	//	"os"
-	//	"time"
 )
 
 // ToSlurpArt converts a store article into the wire-format slurp article,
@@ -29,18 +26,16 @@ func ToSlurpArt(in *store.Article) *slurp.Article {
 		},
 		Keywords: make([]slurp.Keyword, len(in.Keywords)),
 		Section:  in.Section,
+		Tags:     make([]string, len(in.Tags)),
 	}
-
 	out.Extra.RetweetCount = in.Retweets
 	out.Extra.FavoriteCount = in.Favourites
 	out.Extra.Links = make([]string, len(in.Links))
-	for i, link := range in.Links {
-		out.Extra.Links[i] = link
-	}
 
-	for i, u := range in.URLs {
-		out.URLs[i] = u
-	}
+	copy(out.Tags, in.Tags)
+	copy(out.URLs, in.URLs)
+	copy(out.Extra.Links, in.Links)
+
 	for i, a := range in.Authors {
 		out.Authors[i] = slurp.Author{
 			Name:    a.Name,
@@ -53,26 +48,18 @@ func ToSlurpArt(in *store.Article) *slurp.Article {
 		out.Keywords[i] = slurp.Keyword{Name: k, URL: ""}
 	}
 
+	// Assorted bodges
 	if out.CanonicalURL == "" && len(out.URLs) > 0 {
 		out.CanonicalURL = out.URLs[0]
 	}
+	if out.Publication.Code == "" {
+		out.Publication.Code = in.Pub
+	}
 
-	// truncate date to day
-	/*
-		if len(out.Published) > 10 {
-			// ugh :-)
-			out.Published = msg.Article.Published[0:10]
-		}
-	*/
-
-	// TODO: TAGS!!!!
 	return out
 }
 
-// ExportToJSON writes out the specified articles into a JSON file.
-// TODO: streamed objects or collection?
-// TODO: should move this function into the store? Or a new package which uses
-// store and slurp.Article?
+// ExportToJSON writes out the specified articles into a stream of JSON objects.
 func ExportToJSON(db *store.Store, artIDs store.ArtList, out io.Writer) error {
 	var err error
 	enc := json.NewEncoder(out)

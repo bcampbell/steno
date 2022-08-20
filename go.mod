@@ -3,6 +3,7 @@ module github.com/bcampbell/steno
 go 1.14
 
 require (
+	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/adrg/xdg v0.2.1
@@ -18,7 +19,7 @@ require (
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/mattn/go-sqlite3 v1.14.0
+	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/sergi/go-diff v1.1.0
@@ -26,5 +27,7 @@ require (
 	github.com/therecipe/qt v0.0.0-20200904063919-c0c124a5770d
 	github.com/therecipe/qt/internal/binding/files/docs/5.12.0 v0.0.0-20200904063919-c0c124a5770d // indirect
 	github.com/therecipe/qt/internal/binding/files/docs/5.13.0 v0.0.0-20200904063919-c0c124a5770d // indirect
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/net v0.0.0-20220412020605-290c469a71a5
 )
+
+replace github.com/bcampbell/scrapeomat => ../scrapeomat

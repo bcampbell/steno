@@ -139,6 +139,7 @@ func Slurp(db *store.Store, server *SlurpSource, timeFrom, timeTo time.Time, pro
 	return newlySlurped, nil
 }
 
+// TODO: ditch this in favour of ToStoreArt() in gui code!
 // convert the wire-format article into our local form
 func convertArt(in *slurp.Article) *store.Article {
 	out := &store.Article{

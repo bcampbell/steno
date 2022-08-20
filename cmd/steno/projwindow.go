@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	//	"strings"
 	"time"
 
 	"github.com/adrg/xdg"
@@ -630,43 +628,22 @@ func (v *ProjWindow) doImportJSON() {
 	}
 	filename := fileDialog.SelectedFiles()[0]
 
-	// TODO: move the rest of this into Project
-
 	inFile, err := os.Open(filename)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed: %s\n", err)
-		// TODO: show error!
+		v.reportError("Import JSON", "", err)
 		return
 	}
 	defer inFile.Close()
 
-	dec := json.NewDecoder(inFile)
-
-	stasher := store.NewStasher(v.Proj.Store)
-	defer func() {
-		stasher.Close()
-		v.Proj.ArtsAdded(stasher.StashedIDs)
-	}()
-	ids := store.ArtList{}
-	for dec.More() {
-		art := store.Article{}
-		err = dec.Decode(&art)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "decode failed: %s\n", err)
-			// TODO: show error!
-			return
-		}
-
-		err = stasher.Stash(&art)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "decode failed: %s\n", err)
-			// TODO: show error!
-			return
-		}
-		// Stash() sets the article ID field
-		ids = append(ids, art.ID)
+	imported, err := ImportFromJSON(v.Proj.Store, inFile)
+	// Even if there was an error, some might have been imported.
+	if len(imported) > 0 {
+		v.Proj.ArtsAdded(imported)
 	}
-
+	if err != nil {
+		v.reportError("Import JSON", "", err)
+		return
+	}
 }
 
 func (v *ProjWindow) doExportJSON() {
@@ -692,7 +669,6 @@ func (v *ProjWindow) doExportJSON() {
 	if err != nil {
 		v.reportError("Export to JSON", "", err)
 	}
-	// TODO: Close/Flush and check error!
 }
 
 // reportError() shows an error message to the user via a dialog box, and
